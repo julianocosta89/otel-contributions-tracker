@@ -816,6 +816,28 @@ const normCompany = s =>
    .replace(/\s+/g, ' ')
    .trim();
 
+// ── Acronym / alias map — keys and values are normCompany'd strings ──
+// Both directions must be present so matching works regardless of which side is the affiliation.
+const COMPANY_ALIASES = {
+  'cncf':                              'cloud native computing foundation',
+  'cloud native computing foundation': 'cncf',
+  'mit':                               'massachusetts institute of technology',
+  'm i t':                             'massachusetts institute of technology',
+  'massachusetts institute of technology': 'mit',
+};
+
+function resolveAlias(normalized) {
+  return COMPANY_ALIASES[normalized] ?? normalized;
+}
+
+function orgMatchesSearch(orgName, q) {
+  if (!orgName) return false;
+  if (orgName.toLowerCase().includes(q)) return true;
+  const qn = normCompany(q);
+  const on = normCompany(orgName);
+  return resolveAlias(qn) === resolveAlias(on);
+}
+
 // ── Placeholder SVGs ──────────────────────────────────────────────
 const SVG_PERSON   = `<svg viewBox="0 0 24 24" fill="none" class="w-full h-full"><rect width="24" height="24" rx="12" fill="#374151"/><circle cx="12" cy="9" r="3.5" fill="#9CA3AF"/><path fill-rule="evenodd" clip-rule="evenodd" d="M5 20c0-3.866 3.134-7 7-7s7 3.134 7 7H5z" fill="#9CA3AF"/></svg>`;
 const SVG_BUILDING = `<svg viewBox="0 0 24 24" fill="none" class="w-full h-full"><rect width="24" height="24" rx="4" fill="#D1D5DB"/><rect x="7" y="3" width="10" height="16" fill="#4B5563"/><rect x="8.5" y="5.5" width="2.5" height="2" rx=".4" fill="#9CA3AF"/><rect x="13" y="5.5" width="2.5" height="2" rx=".4" fill="#9CA3AF"/><rect x="8.5" y="9" width="2.5" height="2" rx=".4" fill="#9CA3AF"/><rect x="13" y="9" width="2.5" height="2" rx=".4" fill="#9CA3AF"/><rect x="8.5" y="12.5" width="2.5" height="2" rx=".4" fill="#9CA3AF"/><rect x="13" y="12.5" width="2.5" height="2" rx=".4" fill="#9CA3AF"/><rect x="11" y="15.5" width="2" height="3.5" rx=".4" fill="#9CA3AF"/></svg>`;
@@ -1516,7 +1538,7 @@ async function loadOrganizations() {
       S.orgs.total = cacheData().organizations.total;
       const q = el('org-search').value.toLowerCase().trim();
       S.orgs.filtered = q
-        ? all.filter(o => o.name?.toLowerCase().includes(q))
+        ? all.filter(o => orgMatchesSearch(o.name, q))
         : all;
       el('orgs-total-label').textContent = q
         ? `${S.orgs.filtered.length} matches`
@@ -1607,7 +1629,7 @@ function onOrgSearch() {
   S.pages.organizations = 0;
   if (usingCache()) {
     const all = cacheData().organizations.data;
-    S.orgs.filtered = q ? all.filter(o => o.name?.toLowerCase().includes(q)) : all;
+    S.orgs.filtered = q ? all.filter(o => orgMatchesSearch(o.name, q)) : all;
     el('orgs-total-label').textContent = q ? `${S.orgs.filtered.length} matches` : `${num(S.orgs.total)} total`;
     renderOrgsPage();
   }
@@ -1931,7 +1953,14 @@ function closeSigModal() {
 function companyMatchesOrg(companyName, orgName) {
   const cn = normCompany(companyName);
   const on = normCompany(orgName);
-  return cn === on || cn.includes(on) || on.includes(cn);
+  if (cn === on || cn.includes(on) || on.includes(cn)) return true;
+  // Space-stripped comparison (handles "MercadoLibre" vs "Mercado Libre")
+  const cns = cn.replace(/\s/g, '');
+  const ons = on.replace(/\s/g, '');
+  if (cns === ons || cns.includes(ons) || ons.includes(cns)) return true;
+  // Alias comparison (handles acronyms like "CNCF" vs "Cloud Native Computing Foundation")
+  // Compare resolved aliases so any two spellings in the same group match transitively.
+  return resolveAlias(cn) === resolveAlias(on);
 }
 
 function contributorsForOrg(orgName) {

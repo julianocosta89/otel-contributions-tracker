@@ -1,0 +1,2281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OpenTelemetry Contributions Tracker</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-chart-geo@4.3.3/build/index.umd.min.js"></script>
+  <style>
+    body { font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+    .spinner {
+      display: inline-block;
+      border: 2px solid rgba(255,255,255,0.1);
+      border-top-color: #3b82f6;
+      border-radius: 50%;
+      width: 20px; height: 20px;
+      animation: spin 0.7s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    ::-webkit-scrollbar { width: 5px; height: 5px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #374151; border-radius: 3px; }
+    .tab-btn { transition: color 0.15s, border-color 0.15s; }
+    .tab-btn.active { color: #60a5fa; border-bottom: 2px solid #60a5fa; }
+    .tab-btn:not(.active) { color: #9ca3af; border-bottom: 2px solid transparent; }
+    .tab-btn:not(.active):hover { color: #e5e7eb; }
+    tr:last-child td { border-bottom: none; }
+    .contrib-row { cursor: pointer; }
+    #contrib-modal-panel { will-change: transform; }
+    #contrib-modal-panel.open { transform: translateX(0); }
+
+    /* ── Light mode ───────────────────────────────────────────────── */
+    html.light body                          { background-color: #f1f5f9; color: #0f172a; }
+    html.light .bg-gray-950                  { background-color: #f1f5f9 !important; }
+    html.light .bg-gray-900                  { background-color: #ffffff !important; }
+    html.light .bg-gray-800                  { background-color: #e2e8f0 !important; }
+    html.light .border-gray-800             { border-color: #e2e8f0 !important; }
+    html.light .border-gray-700             { border-color: #cbd5e1 !important; }
+    html.light .text-gray-100               { color: #0f172a !important; }
+    html.light .text-gray-300               { color: #334155 !important; }
+    html.light .text-gray-400               { color: #475569 !important; }
+    html.light .text-gray-500               { color: #64748b !important; }
+    html.light .text-gray-600               { color: #94a3b8 !important; }
+    html.light .text-white                  { color: #0f172a !important; }
+    html.light .bg-blue-600.text-white      { color: #ffffff !important; }
+    html.light .hover\:text-white:hover     { color: #0f172a !important; }
+    html.light .hover\:bg-gray-700:hover    { background-color: #cbd5e1 !important; }
+    html.light .hover\:bg-gray-800\/20:hover { background-color: rgba(226,232,240,0.5) !important; }
+    html.light .bg-gray-800\/20             { background-color: rgba(226,232,240,0.3) !important; }
+    html.light .bg-gray-800\/30             { background-color: rgba(226,232,240,0.5) !important; }
+    html.light .bg-blue-900\/60             { background-color: #dbeafe !important; }
+    html.light .text-blue-300               { color: #1d4ed8 !important; }
+    html.light .text-blue-400               { color: #2563eb !important; }
+    html.light .border-blue-400             { border-color: #2563eb !important; }
+    html.light .text-blue-500               { color: #2563eb !important; }
+    html.light ::-webkit-scrollbar-thumb    { background: #cbd5e1 !important; }
+    html.light input[type="date"],
+    html.light select                       { background-color: #ffffff; border-color: #cbd5e1; color: #0f172a; }
+    html.light option                       { background-color: #ffffff; color: #0f172a; }
+    html.light .spinner                     { border-color: rgba(0,0,0,0.08); border-top-color: #3b82f6; }
+    html.light #error-toast                 { background-color: #ffffff; }
+    html.light .tab-btn.active              { color: #2563eb; border-color: #2563eb; }
+    html.light .tab-btn:not(.active)        { color: #64748b; }
+    html.light .tab-btn:not(.active):hover  { color: #0f172a; }
+    html.light .text-green-400              { color: #16a34a !important; }
+    html.light .text-red-400                { color: #dc2626 !important; }
+    .org-row { cursor: pointer; }
+    #org-modal-panel { will-change: transform; }
+    #org-modal-panel.open { transform: translateX(0); }
+    .sig-row { cursor: pointer; }
+    #sig-modal-panel { will-change: transform; }
+    #sig-modal-panel.open { transform: translateX(0); }
+    html.light #org-modal-panel         { background-color: #ffffff !important; border-color: #e2e8f0 !important; }
+    html.light #org-modal-panel .bg-gray-900\/95 { background-color: rgba(255,255,255,0.95) !important; }
+    html.light #org-modal-panel .bg-gray-800\/50 { background-color: rgba(226,232,240,0.6) !important; }
+    html.light #org-modal-panel .border-gray-800 { border-color: #e2e8f0 !important; }
+    html.light #org-modal-panel .text-gray-500   { color: #64748b !important; }
+    html.light #org-modal-panel .text-gray-600   { color: #94a3b8 !important; }
+    html.light #org-modal-panel .bg-gray-800     { background-color: #e2e8f0 !important; }
+    html.light #org-modal-panel .hover\:bg-gray-800:hover { background-color: #e2e8f0 !important; }
+    html.light #org-modal-panel .bg-gray-800\/30 { background-color: rgba(226,232,240,0.4) !important; }
+    html.light #org-modal-panel .hover\:bg-gray-800\/60:hover { background-color: rgba(226,232,240,0.8) !important; }
+    html.light #contrib-modal-panel         { background-color: #ffffff !important; border-color: #e2e8f0 !important; }
+    html.light #contrib-modal-panel .bg-gray-900\/95 { background-color: rgba(255,255,255,0.95) !important; }
+    html.light #contrib-modal-panel .bg-gray-800\/50 { background-color: rgba(226,232,240,0.6) !important; }
+    html.light #contrib-modal-panel .border-gray-800 { border-color: #e2e8f0 !important; }
+    html.light #contrib-modal-panel .text-gray-500   { color: #64748b !important; }
+    html.light #contrib-modal-panel .text-gray-600   { color: #94a3b8 !important; }
+    html.light #contrib-modal-panel .bg-gray-800     { background-color: #e2e8f0 !important; }
+    html.light #contrib-modal-panel .hover\:bg-gray-800:hover { background-color: #e2e8f0 !important; }
+    html.light #sig-modal-panel         { background-color: #ffffff !important; border-color: #e2e8f0 !important; }
+    html.light #sig-modal-panel .bg-gray-900\/95 { background-color: rgba(255,255,255,0.95) !important; }
+    html.light #sig-modal-panel .bg-gray-800\/50 { background-color: rgba(226,232,240,0.6) !important; }
+    html.light #sig-modal-panel .border-gray-800 { border-color: #e2e8f0 !important; }
+    html.light #sig-modal-panel .text-gray-500   { color: #64748b !important; }
+    html.light #sig-modal-panel .text-gray-200   { color: #1e293b !important; }
+    html.light #sig-modal-panel .bg-gray-800\/40 { background-color: rgba(226,232,240,0.6) !important; }
+    html.light #sig-modal-panel .bg-gray-800     { background-color: #e2e8f0 !important; }
+    html.light #sig-modal-panel .text-gray-600   { color: #94a3b8 !important; }
+  </style>
+</head>
+<body class="bg-gray-950 text-gray-100 min-h-screen">
+
+<!-- ================================================================ HEADER -->
+<header class="bg-gray-900 border-b border-gray-800 sticky top-0 z-40 shadow-xl">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6">
+
+    <!-- Row 1: Brand -->
+    <div class="flex items-center h-14">
+      <div class="flex items-center gap-2.5 shrink-0">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+          <circle cx="12" cy="12" r="9" stroke="#3b82f6" stroke-width="1.5"/>
+          <circle cx="12" cy="12" r="3" fill="#3b82f6"/>
+          <path d="M12 3v3M12 18v3M3 12h3M18 12h3" stroke="#3b82f6" stroke-width="1.5" stroke-linecap="round"/>
+        </svg>
+        <span class="font-semibold text-sm tracking-tight">OTel Contributions</span>
+        <span id="source-badge" class="hidden text-xs px-2 py-0.5 rounded-full border font-medium"></span>
+      </div>
+    </div>
+
+    <!-- Row 2: Filters + theme toggle (wraps freely on small screens) -->
+    <div class="flex items-center gap-2 flex-wrap pb-2.5">
+      <!-- Date presets -->
+      <div class="flex bg-gray-800 rounded-lg p-0.5 gap-0.5 text-xs">
+        <button data-preset="30d"  onclick="setPreset('30d')"  class="preset-btn px-2.5 py-1 rounded-md text-gray-400 hover:text-white transition-colors">30d</button>
+        <button data-preset="90d"  onclick="setPreset('90d')"  class="preset-btn px-2.5 py-1 rounded-md text-gray-400 hover:text-white transition-colors">90d</button>
+        <button data-preset="6m"   onclick="setPreset('6m')"   class="preset-btn px-2.5 py-1 rounded-md text-gray-400 hover:text-white transition-colors">6m</button>
+        <button data-preset="1y"   onclick="setPreset('1y')"   class="preset-btn px-2.5 py-1 rounded-md bg-blue-600 text-white">1y</button>
+        <button data-preset="2y"   onclick="setPreset('2y')"   class="preset-btn px-2.5 py-1 rounded-md text-gray-400 hover:text-white transition-colors">2y</button>
+        <button data-preset="3y"   onclick="setPreset('3y')"   class="preset-btn px-2.5 py-1 rounded-md text-gray-400 hover:text-white transition-colors">3y</button>
+        <button data-preset="all"  onclick="setPreset('all')"  class="preset-btn px-2.5 py-1 rounded-md text-gray-400 hover:text-white transition-colors">all</button>
+      </div>
+
+      <!-- Custom dates -->
+      <input type="date" id="startDate" onchange="onDateChange()"
+        class="bg-gray-800 border border-gray-700 rounded px-2 py-1 text-xs text-gray-300 focus:outline-none focus:border-blue-500">
+      <span class="text-gray-600 text-xs">→</span>
+      <input type="date" id="endDate" onchange="onDateChange()"
+        class="bg-gray-800 border border-gray-700 rounded px-2 py-1 text-xs text-gray-300 focus:outline-none focus:border-blue-500">
+
+      <!-- Platform -->
+      <select id="platform" onchange="onFilterChange()"
+        class="bg-gray-800 border border-gray-700 rounded px-2 py-1 text-xs text-gray-300 focus:outline-none focus:border-blue-500">
+        <option value="all">All platforms</option>
+        <option value="github">GitHub</option>
+        <option value="git">Git</option>
+        <option value="gerrit">Gerrit</option>
+        <option value="gitlab">GitLab</option>
+        <option value="confluence">Confluence</option>
+        <option value="jira">Jira</option>
+      </select>
+
+      <!-- Theme toggle -->
+      <button onclick="toggleTheme()" title="Toggle light/dark mode"
+        class="ml-auto p-1.5 rounded-lg bg-gray-800 border border-gray-700 text-gray-400 hover:text-white transition-colors shrink-0">
+        <svg id="icon-moon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+        </svg>
+        <svg id="icon-sun" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="hidden">
+          <circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/>
+          <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+          <line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/>
+          <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+        </svg>
+      </button>
+    </div>
+
+  </div>
+</header>
+
+<!-- ================================================================ TABS -->
+<nav class="bg-gray-900 border-b border-gray-800">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 flex overflow-x-auto">
+    <button class="tab-btn active px-4 py-3 text-sm font-medium whitespace-nowrap" onclick="setTab('overview')">Overview</button>
+    <button class="tab-btn         px-4 py-3 text-sm font-medium whitespace-nowrap" onclick="setTab('contributors')">Contributors</button>
+    <button class="tab-btn         px-4 py-3 text-sm font-medium whitespace-nowrap" onclick="setTab('organizations')">Organizations</button>
+    <button class="tab-btn         px-4 py-3 text-sm font-medium whitespace-nowrap" onclick="setTab('sigs')">SIGs</button>
+    <button class="tab-btn         px-4 py-3 text-sm font-medium whitespace-nowrap" onclick="setTab('concentration')">Concentration</button>
+    <button class="tab-btn         px-4 py-3 text-sm font-medium whitespace-nowrap" onclick="setTab('geography')">Geography</button>
+  </div>
+</nav>
+
+<!-- ================================================================ MAIN -->
+<main class="max-w-7xl mx-auto px-4 sm:px-6 py-6 space-y-4">
+
+  <!-- ── OVERVIEW TAB ─────────────────────────────────────────────── -->
+  <div id="tab-overview" class="tab-panel space-y-4">
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+      <div class="bg-gray-900 rounded-xl p-4 border border-gray-800">
+        <p class="text-gray-400 text-xs mb-1">Total Contributors</p>
+        <p class="text-2xl font-bold" id="stat-contributors"><span class="spinner"></span></p>
+        <p class="text-xs mt-1" id="stat-contributors-change"></p>
+      </div>
+      <div class="bg-gray-900 rounded-xl p-4 border border-gray-800">
+        <p class="text-gray-400 text-xs mb-1">Organizations</p>
+        <p class="text-2xl font-bold" id="stat-orgs"><span class="spinner"></span></p>
+        <p class="text-xs mt-1" id="stat-orgs-change"></p>
+      </div>
+      <div class="bg-gray-900 rounded-xl p-4 border border-gray-800">
+        <p class="text-gray-400 text-xs mb-1">Maintainers</p>
+        <p class="text-2xl font-bold" id="stat-maintainers">—</p>
+        <p class="text-xs mt-1 text-gray-600">Active project maintainers</p>
+      </div>
+      <div class="bg-gray-900 rounded-xl p-4 border border-gray-800">
+        <p class="text-gray-400 text-xs mb-1">Reviewers</p>
+        <p class="text-2xl font-bold" id="stat-reviewers">—</p>
+        <p class="text-xs mt-1 text-gray-600">Pull request reviewers</p>
+      </div>
+    </div>
+
+    <div class="grid md:grid-cols-2 gap-4">
+      <div class="bg-gray-900 rounded-xl p-4 border border-gray-800">
+        <h2 class="text-sm font-semibold mb-0.5">Contribution Concentration</h2>
+        <p class="text-xs text-gray-500 mb-3">Share of work across top vs. other contributors</p>
+        <div id="ov-conc-loading" class="flex justify-center py-10"><span class="spinner"></span></div>
+        <div id="ov-conc-wrap" class="hidden">
+          <canvas id="ovConcChart"></canvas>
+          <p id="ov-conc-summary" class="text-xs text-gray-400 mt-3 text-center leading-relaxed"></p>
+        </div>
+      </div>
+      <div class="bg-gray-900 rounded-xl p-4 border border-gray-800">
+        <h2 class="text-sm font-semibold mb-0.5">Top Organizations</h2>
+        <p class="text-xs text-gray-500 mb-3">Most active contributing companies</p>
+        <div id="ov-orgs-loading" class="flex justify-center py-10"><span class="spinner"></span></div>
+        <div id="ov-orgs-list" class="hidden space-y-1.5"></div>
+      </div>
+    </div>
+
+    <div class="bg-gray-900 rounded-xl p-4 border border-gray-800">
+      <h2 class="text-sm font-semibold mb-0.5">Geographic Reach
+        <span class="text-gray-500 font-normal text-xs ml-1">— top 10 known countries</span>
+      </h2>
+      <div id="ov-geo-loading" class="flex justify-center py-8"><span class="spinner"></span></div>
+      <div id="ov-geo-wrap" class="hidden" style="position:relative; height:220px;">
+        <canvas id="ovGeoChart"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── CONTRIBUTORS TAB ──────────────────────────────────────────── -->
+  <div id="tab-contributors" class="tab-panel hidden">
+    <div class="bg-gray-900 rounded-xl border border-gray-800">
+      <div class="flex items-center justify-between p-4 border-b border-gray-800 flex-wrap gap-2">
+        <h2 class="text-sm font-semibold">Contributor Leaderboard</h2>
+        <div class="flex items-center gap-2">
+          <div class="relative">
+            <input type="text" id="contributor-search" placeholder="Search name or @handle…"
+              class="bg-gray-800 border border-gray-700 rounded px-3 py-1.5 text-xs text-gray-300 focus:outline-none focus:border-blue-500 w-52 pr-7"
+              oninput="onContribSearch()">
+            <button id="contrib-search-clear" onclick="clearContribSearch()"
+              class="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-300 hidden text-sm leading-none">✕</button>
+          </div>
+          <span id="contrib-total-label" class="text-xs text-gray-500 whitespace-nowrap"></span>
+        </div>
+      </div>
+      <div id="contrib-loading" class="flex justify-center py-14"><span class="spinner"></span></div>
+      <div id="contrib-table-wrap" class="hidden overflow-x-auto">
+        <table class="w-full">
+          <thead>
+            <tr class="border-b border-gray-800 text-xs text-gray-500 uppercase tracking-wide">
+              <th class="text-left px-4 py-3 w-8">#</th>
+              <th class="text-left px-4 py-3">Contributor</th>
+              <th class="text-right px-4 py-3">Contributions</th>
+              <th class="text-right px-4 py-3">Share</th>
+              <th class="text-left px-4 py-3">Company</th>
+              <th class="text-left px-4 py-3">Roles</th>
+            </tr>
+          </thead>
+          <tbody id="contrib-tbody"></tbody>
+        </table>
+      </div>
+      <div class="flex items-center justify-between px-4 py-3 border-t border-gray-800">
+        <button id="contrib-prev" onclick="changePage('contributors',-1)"
+          class="px-3 py-1.5 text-xs bg-gray-800 rounded hover:bg-gray-700 disabled:opacity-30 disabled:cursor-not-allowed transition-colors">← Prev</button>
+        <span id="contrib-page-info" class="text-xs text-gray-500"></span>
+        <button id="contrib-next" onclick="changePage('contributors', 1)"
+          class="px-3 py-1.5 text-xs bg-gray-800 rounded hover:bg-gray-700 disabled:opacity-30 disabled:cursor-not-allowed transition-colors">Next →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── ORGANIZATIONS TAB ─────────────────────────────────────────── -->
+  <div id="tab-organizations" class="tab-panel hidden">
+    <div>
+      <div id="org-chart-loading" class="hidden"></div>
+      <div id="org-chart-wrap" class="hidden"><canvas id="orgChart"></canvas></div>
+      <div class="bg-gray-900 rounded-xl border border-gray-800 flex flex-col">
+        <div class="flex items-center justify-between p-4 border-b border-gray-800 flex-wrap gap-2">
+          <h2 class="text-sm font-semibold">Organization Leaderboard</h2>
+          <div class="flex items-center gap-2">
+            <div class="relative">
+              <input type="text" id="org-search" placeholder="Search organization…"
+                class="bg-gray-800 border border-gray-700 rounded px-3 py-1.5 text-xs text-gray-300 focus:outline-none focus:border-blue-500 w-52 pr-7"
+                oninput="onOrgSearch()">
+              <button id="org-search-clear" onclick="clearOrgSearch()"
+                class="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-300 hidden text-sm leading-none">✕</button>
+            </div>
+            <span id="orgs-total-label" class="text-xs text-gray-500 whitespace-nowrap"></span>
+          </div>
+        </div>
+        <div id="orgs-loading" class="flex justify-center py-14"><span class="spinner"></span></div>
+        <div id="orgs-table-wrap" class="hidden overflow-x-auto flex-1">
+          <table class="w-full">
+            <thead>
+              <tr class="border-b border-gray-800 text-xs text-gray-500 uppercase tracking-wide">
+                <th class="text-left px-4 py-3 w-8">#</th>
+                <th class="text-left px-4 py-3">Organization</th>
+                <th class="text-right px-4 py-3">Contributions</th>
+                <th class="text-right px-4 py-3">Share</th>
+              </tr>
+            </thead>
+            <tbody id="orgs-tbody"></tbody>
+          </table>
+        </div>
+        <div class="flex items-center justify-between px-4 py-3 border-t border-gray-800 mt-auto">
+          <button id="orgs-prev" onclick="changePage('organizations',-1)"
+            class="px-3 py-1.5 text-xs bg-gray-800 rounded hover:bg-gray-700 disabled:opacity-30 disabled:cursor-not-allowed transition-colors">← Prev</button>
+          <span id="orgs-page-info" class="text-xs text-gray-500"></span>
+          <button id="orgs-next" onclick="changePage('organizations', 1)"
+            class="px-3 py-1.5 text-xs bg-gray-800 rounded hover:bg-gray-700 disabled:opacity-30 disabled:cursor-not-allowed transition-colors">Next →</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── CONCENTRATION TAB ─────────────────────────────────────────── -->
+  <div id="tab-concentration" class="tab-panel hidden space-y-4">
+    <div class="grid md:grid-cols-2 gap-4">
+      <div class="bg-gray-900 rounded-xl border border-gray-800 p-4">
+        <h2 class="text-sm font-semibold">Contributor Bus Factor</h2>
+        <p class="text-xs text-gray-500 mt-0.5 mb-4">How much of the project depends on a small group? High concentration in few contributors is a project health risk.</p>
+        <div id="bc-loading" class="flex justify-center py-10"><span class="spinner"></span></div>
+        <div id="bc-content" class="hidden">
+          <div class="flex items-start gap-6 mb-5">
+            <div class="text-center">
+              <div class="text-3xl font-bold text-blue-400" id="bc-top-n">—</div>
+              <div class="text-xs text-gray-500 mt-1">core contributors</div>
+            </div>
+            <div class="text-center">
+              <div class="text-3xl font-bold text-orange-400" id="bc-top-pct">—</div>
+              <div class="text-xs text-gray-500 mt-1">of all activity</div>
+            </div>
+            <div class="text-center">
+              <div class="text-3xl font-bold text-gray-400" id="bc-other-n">—</div>
+              <div class="text-xs text-gray-500 mt-1">other contributors</div>
+            </div>
+          </div>
+          <canvas id="bcChart" height="200"></canvas>
+        </div>
+      </div>
+      <div class="bg-gray-900 rounded-xl border border-gray-800 p-4">
+        <h2 class="text-sm font-semibold">Core Contributor List</h2>
+        <p class="text-xs text-gray-500 mt-0.5 mb-4">The small group driving most of the project's activity</p>
+        <div id="bc-list-loading" class="flex justify-center py-10"><span class="spinner"></span></div>
+        <div id="bc-list" class="hidden space-y-1 overflow-y-auto max-h-72 pr-1"></div>
+      </div>
+    </div>
+    <div class="bg-gray-900 rounded-xl border border-gray-800 p-4">
+      <h2 class="text-sm font-semibold">Organization Dependency</h2>
+      <p class="text-xs text-gray-500 mt-0.5 mb-4">How much of the project is controlled by a few companies? Healthy projects spread contributions across many independent organizations.</p>
+      <div id="od-loading" class="flex justify-center py-10"><span class="spinner"></span></div>
+      <div id="od-content" class="hidden">
+        <div class="flex items-start gap-6 mb-5">
+          <div class="text-center">
+            <div class="text-3xl font-bold text-purple-400" id="od-top-n">—</div>
+            <div class="text-xs text-gray-500 mt-1">top organizations</div>
+          </div>
+          <div class="text-center">
+            <div class="text-3xl font-bold text-pink-400" id="od-top-pct">—</div>
+            <div class="text-xs text-gray-500 mt-1">of all activity</div>
+          </div>
+          <div class="text-center">
+            <div class="text-3xl font-bold text-gray-400" id="od-other-n">—</div>
+            <div class="text-xs text-gray-500 mt-1">other organizations</div>
+          </div>
+        </div>
+        <div class="grid md:grid-cols-2 gap-4">
+          <canvas id="odChart" height="180"></canvas>
+          <div id="od-list" class="space-y-1 overflow-y-auto max-h-52 pr-1"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── GEOGRAPHY TAB ─────────────────────────────────────────────── -->
+  <div id="tab-geography" class="tab-panel hidden">
+    <div class="grid md:grid-cols-2 gap-4">
+      <div class="bg-gray-900 rounded-xl border border-gray-800 p-4">
+        <h2 class="text-sm font-semibold mb-0.5">World Map</h2>
+        <p class="text-xs text-gray-500 mb-3">Contributor distribution by country</p>
+        <div id="geo-chart-loading" class="flex justify-center py-10"><span class="spinner"></span></div>
+        <div id="geo-chart-wrap" class="hidden" style="position:relative; height:420px;">
+          <canvas id="geoChart"></canvas>
+        </div>
+      </div>
+      <div class="bg-gray-900 rounded-xl border border-gray-800 flex flex-col">
+        <div class="p-4 border-b border-gray-800">
+          <h2 class="text-sm font-semibold">All Countries</h2>
+          <p class="text-xs text-gray-500 mt-0.5" id="geo-country-count"></p>
+        </div>
+        <div id="geo-table-loading" class="flex justify-center py-14"><span class="spinner"></span></div>
+        <div id="geo-table-wrap" class="hidden overflow-y-auto" style="max-height:430px;">
+          <table class="w-full">
+            <thead class="sticky top-0 bg-gray-900 z-10">
+              <tr class="border-b border-gray-800 text-xs text-gray-500 uppercase tracking-wide">
+                <th class="text-left px-4 py-3">Country</th>
+                <th class="text-right px-4 py-3">Count</th>
+                <th class="text-right px-4 py-3">Share</th>
+              </tr>
+            </thead>
+            <tbody id="geo-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── SIGS TAB ──────────────────────────────────────────────────── -->
+  <div id="tab-sigs" class="tab-panel hidden">
+    <div class="bg-gray-900 rounded-xl border border-gray-800">
+      <div class="flex items-center justify-between p-4 border-b border-gray-800 flex-wrap gap-2">
+        <div>
+          <h2 class="text-sm font-semibold">Repositories / SIGs</h2>
+          <p class="text-xs text-gray-500 mt-0.5">Sorted by contributor count for the selected period</p>
+        </div>
+        <div class="flex items-center gap-2">
+          <div class="relative">
+            <input type="text" id="sigs-search" placeholder="Search repository…"
+              class="bg-gray-800 border border-gray-700 rounded px-3 py-1.5 text-xs text-gray-300 focus:outline-none focus:border-blue-500 w-52 pr-7"
+              oninput="onSigsSearch()">
+            <button id="sigs-search-clear" onclick="clearSigsSearch()"
+              class="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-300 hidden text-sm leading-none">✕</button>
+          </div>
+          <span id="sigs-total-label" class="text-xs text-gray-500 whitespace-nowrap"></span>
+        </div>
+      </div>
+      <div id="sigs-loading" class="hidden flex justify-center py-14"><span class="spinner"></span></div>
+      <div id="sigs-empty" class="hidden text-center py-14 text-gray-500 text-sm leading-relaxed">
+        SIG data not available.<br>
+        <span class="text-xs text-gray-600">Run <code class="bg-gray-800 px-1.5 py-0.5 rounded text-gray-400">node scripts/fetch-sigs.mjs</code> to build it.</span>
+      </div>
+      <div id="sigs-table-wrap" class="hidden overflow-x-auto">
+        <table class="w-full">
+          <thead>
+            <tr class="border-b border-gray-800 text-xs text-gray-500 uppercase tracking-wide">
+              <th class="text-left px-4 py-3 w-8">#</th>
+              <th class="text-left px-4 py-3">Repository</th>
+              <th class="text-right px-4 py-3">Contributors</th>
+              <th class="text-right px-4 py-3">Organizations</th>
+            </tr>
+          </thead>
+          <tbody id="sigs-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<!-- ================================================================ ORGANIZATION MODAL -->
+<div id="org-modal" class="hidden fixed inset-0 z-50 flex items-start justify-end">
+  <div id="org-modal-backdrop" class="absolute inset-0 bg-black/60 backdrop-blur-sm" onclick="closeOrgModal()"></div>
+  <div id="org-modal-panel"
+    class="relative w-full max-w-md h-full bg-gray-900 border-l border-gray-800 shadow-2xl overflow-y-auto
+           translate-x-full transition-transform duration-200 ease-out">
+
+    <!-- Header -->
+    <div class="sticky top-0 bg-gray-900/95 backdrop-blur border-b border-gray-800 px-4 py-3 flex items-center gap-3">
+      <img id="org-modal-logo" src="" alt="" class="w-8 h-8 rounded object-contain shrink-0" onerror="this.style.display='none'">
+      <span id="org-modal-logo-ph" class="w-8 h-8 shrink-0 hidden inline-block"><svg viewBox="0 0 24 24" fill="none" class="w-full h-full"><rect width="24" height="24" rx="4" fill="#D1D5DB"/><rect x="7" y="3" width="10" height="16" fill="#4B5563"/><rect x="8.5" y="5.5" width="2.5" height="2" rx=".4" fill="#9CA3AF"/><rect x="13" y="5.5" width="2.5" height="2" rx=".4" fill="#9CA3AF"/><rect x="8.5" y="9" width="2.5" height="2" rx=".4" fill="#9CA3AF"/><rect x="13" y="9" width="2.5" height="2" rx=".4" fill="#9CA3AF"/><rect x="8.5" y="12.5" width="2.5" height="2" rx=".4" fill="#9CA3AF"/><rect x="13" y="12.5" width="2.5" height="2" rx=".4" fill="#9CA3AF"/><rect x="11" y="15.5" width="2" height="3.5" rx=".4" fill="#9CA3AF"/></svg></span>
+      <div class="flex-1 min-w-0">
+        <div id="org-modal-name" class="font-semibold text-sm leading-tight truncate"></div>
+        <div class="text-xs text-gray-500 mt-0.5">OpenTelemetry contributors</div>
+      </div>
+      <button onclick="closeOrgModal()" title="Close"
+        class="shrink-0 w-7 h-7 flex items-center justify-center rounded-lg text-gray-500 hover:text-white hover:bg-gray-800 transition-colors text-lg leading-none">×</button>
+    </div>
+
+    <!-- Stats row -->
+    <div class="grid grid-cols-3 gap-2 px-4 py-3 border-b border-gray-800">
+      <div class="bg-gray-800/50 rounded-lg p-2.5">
+        <div class="text-xs text-gray-500 mb-1">Contributions</div>
+        <div id="org-modal-contributions" class="text-lg font-bold font-mono leading-none"></div>
+      </div>
+      <div class="bg-gray-800/50 rounded-lg p-2.5">
+        <div class="text-xs text-gray-500 mb-1">Contributors</div>
+        <div id="org-modal-contributor-count" class="text-lg font-bold leading-none"></div>
+      </div>
+      <div class="bg-gray-800/50 rounded-lg p-2.5">
+        <div class="text-xs text-gray-500 mb-1">Repositories</div>
+        <div id="org-modal-repo-count" class="text-lg font-bold leading-none flex items-center gap-1.5">
+          <span id="org-repo-count-spinner" class="spinner" style="width:14px;height:14px;border-width:1.5px"></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Contributors list -->
+    <div class="px-4 pt-4 pb-4 border-b border-gray-800">
+      <h3 class="text-sm font-semibold mb-3">Contributors</h3>
+      <div id="org-modal-contrib-list" class="space-y-1 max-h-60 overflow-y-auto pr-1"></div>
+      <p id="org-modal-contrib-more" class="hidden text-xs text-gray-600 pt-2 text-center"></p>
+    </div>
+
+    <!-- Repos section -->
+    <div class="px-4 pt-4 pb-6">
+      <div class="flex items-center justify-between mb-3">
+        <h3 class="text-sm font-semibold">Repositories in period</h3>
+        <span id="org-modal-period-label" class="text-xs text-gray-600"></span>
+      </div>
+      <div id="org-modal-repos-loading" class="flex flex-col items-center justify-center py-8 gap-2">
+        <span class="spinner"></span>
+        <span class="text-xs text-gray-600">Querying GitHub…</span>
+      </div>
+      <div id="org-modal-repos-list" class="hidden space-y-1.5"></div>
+      <div id="org-modal-repos-error" class="hidden text-xs text-gray-500 text-center py-6 leading-relaxed"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ================================================================ CONTRIBUTOR MODAL -->
+<div id="contrib-modal" class="hidden fixed inset-0 z-50 flex items-start justify-end">
+  <div id="contrib-modal-backdrop" class="absolute inset-0 bg-black/60 backdrop-blur-sm" onclick="closeContribModal()"></div>
+  <div id="contrib-modal-panel"
+    class="relative w-full max-w-md h-full bg-gray-900 border-l border-gray-800 shadow-2xl overflow-y-auto
+           translate-x-full transition-transform duration-200 ease-out">
+
+    <!-- Header -->
+    <div class="sticky top-0 bg-gray-900/95 backdrop-blur border-b border-gray-800 px-4 py-3 flex items-center gap-3">
+      <img id="modal-avatar" src="" alt="" class="w-10 h-10 rounded-full shrink-0" onerror="this.style.display='none'">
+      <span id="modal-avatar-ph" class="w-10 h-10 shrink-0 hidden inline-block"><svg viewBox="0 0 24 24" fill="none" class="w-full h-full"><rect width="24" height="24" rx="12" fill="#374151"/><circle cx="12" cy="9" r="3.5" fill="#9CA3AF"/><path fill-rule="evenodd" clip-rule="evenodd" d="M5 20c0-3.866 3.134-7 7-7s7 3.134 7 7H5z" fill="#9CA3AF"/></svg></span>
+      <div class="flex-1 min-w-0">
+        <div id="modal-name" class="font-semibold text-sm leading-tight truncate"></div>
+        <div id="modal-handles" class="text-xs text-gray-500 mt-0.5"></div>
+      </div>
+      <div id="modal-roles-wrap" class="hidden flex gap-1.5 flex-wrap justify-end shrink-0"></div>
+      <button onclick="closeContribModal()" title="Close"
+        class="shrink-0 w-7 h-7 flex items-center justify-center rounded-lg text-gray-500 hover:text-white hover:bg-gray-800 transition-colors text-lg leading-none">×</button>
+    </div>
+
+    <!-- Stats row -->
+    <div class="grid grid-cols-3 gap-2 px-4 py-3 border-b border-gray-800">
+      <div class="bg-gray-800/50 rounded-lg p-2.5">
+        <div class="text-xs text-gray-500 mb-1">Contributions</div>
+        <div id="modal-contributions" class="text-lg font-bold font-mono leading-none"></div>
+      </div>
+      <div class="bg-gray-800/50 rounded-lg p-2.5">
+        <div class="text-xs text-gray-500 mb-1">Share</div>
+        <div id="modal-share" class="text-lg font-bold leading-none"></div>
+      </div>
+      <div class="bg-gray-800/50 rounded-lg p-2.5 flex flex-col">
+        <div class="text-xs text-gray-500 mb-1">Company</div>
+        <div id="modal-company" class="flex items-center min-h-[2rem]"></div>
+      </div>
+    </div>
+
+    <!-- Repos section -->
+    <div class="px-4 pt-4 pb-6">
+      <div class="flex items-center justify-between mb-3">
+        <h3 class="text-sm font-semibold">Repositories in period</h3>
+        <span id="modal-period-label" class="text-xs text-gray-600"></span>
+      </div>
+      <div id="modal-repos-loading" class="flex flex-col items-center justify-center py-10 gap-2">
+        <span class="spinner"></span>
+        <span class="text-xs text-gray-600">Querying GitHub…</span>
+      </div>
+      <div id="modal-repos-list" class="hidden space-y-1.5"></div>
+      <div id="modal-repos-error" class="hidden text-xs text-gray-500 text-center py-8 leading-relaxed"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ================================================================ SIG MODAL -->
+<div id="sig-modal" class="hidden fixed inset-0 z-50 flex items-start justify-end">
+  <div id="sig-modal-backdrop" class="absolute inset-0 bg-black/60 backdrop-blur-sm" onclick="closeSigModal()"></div>
+  <div id="sig-modal-panel"
+    class="relative w-full max-w-lg h-full bg-gray-900 border-l border-gray-800 shadow-2xl overflow-y-auto
+           translate-x-full transition-transform duration-200 ease-out">
+
+    <!-- Header -->
+    <div class="sticky top-0 bg-gray-900/95 backdrop-blur border-b border-gray-800 px-4 py-3 flex items-center gap-3">
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor" class="text-gray-500 shrink-0">
+        <path d="M12 2C6.477 2 2 6.477 2 12c0 4.42 2.865 8.17 6.839 9.49.5.092.682-.217.682-.482 0-.237-.008-.866-.013-1.7-2.782.604-3.369-1.34-3.369-1.34-.454-1.156-1.11-1.464-1.11-1.464-.908-.62.069-.608.069-.608 1.003.07 1.531 1.03 1.531 1.03.892 1.529 2.341 1.087 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.11-4.555-4.943 0-1.091.39-1.984 1.029-2.683-.103-.253-.446-1.27.098-2.647 0 0 .84-.269 2.75 1.025A9.578 9.578 0 0 1 12 6.836c.85.004 1.705.114 2.504.336 1.909-1.294 2.747-1.025 2.747-1.025.546 1.377.202 2.394.1 2.647.64.699 1.028 1.592 1.028 2.683 0 3.842-2.339 4.687-4.566 4.935.359.309.678.919.678 1.852 0 1.336-.012 2.415-.012 2.741 0 .267.18.578.688.48C19.138 20.167 22 16.418 22 12c0-5.523-4.477-10-10-10z"/>
+      </svg>
+      <div class="flex-1 min-w-0">
+        <a id="sig-modal-name" href="#" target="_blank"
+          class="font-semibold text-sm leading-tight truncate block hover:text-blue-400 transition-colors"></a>
+        <div class="text-xs text-gray-500 mt-0.5">OpenTelemetry SIG</div>
+      </div>
+      <button onclick="closeSigModal()" title="Close"
+        class="shrink-0 w-7 h-7 flex items-center justify-center rounded-lg text-gray-500 hover:text-white hover:bg-gray-800 transition-colors text-lg leading-none">×</button>
+    </div>
+
+    <!-- Stats row -->
+    <div class="grid grid-cols-3 gap-2 px-4 py-3 border-b border-gray-800">
+      <div class="bg-gray-800/50 rounded-lg p-2.5">
+        <div class="text-xs text-gray-500 mb-1">Contributors</div>
+        <div id="sig-modal-contributors" class="text-lg font-bold leading-none"></div>
+      </div>
+      <div class="bg-gray-800/50 rounded-lg p-2.5">
+        <div class="text-xs text-gray-500 mb-1">Organizations</div>
+        <div id="sig-modal-organizations" class="text-lg font-bold leading-none"></div>
+      </div>
+      <div class="bg-gray-800/50 rounded-lg p-2.5">
+        <div class="text-xs text-gray-500 mb-1">Period</div>
+        <div id="sig-modal-period" class="text-xs font-medium leading-snug mt-0.5 text-gray-300"></div>
+      </div>
+    </div>
+
+    <!-- Contributors section -->
+    <div class="px-4 pt-4 pb-4 border-b border-gray-800">
+      <h3 class="text-sm font-semibold mb-3">Contributors</h3>
+      <div id="sig-modal-contrib-list" class="space-y-0.5 max-h-80 overflow-y-auto pr-1"></div>
+    </div>
+
+    <!-- Organizations section -->
+    <div class="px-4 pt-4 pb-6">
+      <h3 class="text-sm font-semibold mb-3">Organizations</h3>
+      <div id="sig-modal-orgs-list" class="space-y-0.5 max-h-72 overflow-y-auto pr-1"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ================================================================ TOAST -->
+<div id="error-toast"
+  class="hidden fixed bottom-5 right-5 z-50 bg-gray-900 border border-red-800 text-sm rounded-xl shadow-2xl p-4 max-w-sm">
+  <div class="flex items-start gap-3">
+    <div class="text-red-400 mt-0.5 shrink-0">⚠</div>
+    <div class="flex-1">
+      <p class="text-red-300 font-medium text-xs">Request failed</p>
+      <p id="error-msg" class="text-gray-400 text-xs mt-1"></p>
+      <p class="text-gray-600 text-xs mt-2">
+        Live API may require a session at
+        <a href="https://insights.linuxfoundation.org" target="_blank" class="text-blue-400 underline">insights.linuxfoundation.org</a>
+        due to CORS. Cached data is used as fallback.
+      </p>
+    </div>
+    <button onclick="hideError()" class="text-gray-600 hover:text-white text-lg leading-none shrink-0">×</button>
+  </div>
+</div>
+
+<!-- ================================================================ SCRIPT -->
+<script>
+'use strict';
+
+// ── Config ─────────────────────────────────────────────────────────
+const API_BASE  = 'https://insights.linuxfoundation.org/api/project/opentelemetry';
+const PAGE_SIZE = 25;
+const COLORS    = [
+  '#3b82f6','#8b5cf6','#10b981','#f59e0b','#ef4444',
+  '#06b6d4','#ec4899','#84cc16','#f97316','#a855f7',
+  '#14b8a6','#eab308','#6366f1','#22c55e','#fb923c',
+];
+
+// ── Theme ──────────────────────────────────────────────────────────
+const isDark   = () => !document.documentElement.classList.contains('light');
+const C = {
+  tick:    () => isDark() ? '#6b7280' : '#64748b',
+  grid:    () => isDark() ? '#1f2937' : '#e2e8f0',
+  legend:  () => isDark() ? '#9ca3af' : '#374151',
+  missing: () => isDark() ? '#374151' : '#e2e8f0',
+};
+
+function initTheme() {
+  const saved = localStorage.getItem('otel-theme');
+  if (saved === 'light') applyTheme('light');
+}
+
+function applyTheme(mode) {
+  const html = document.documentElement;
+  html.classList.toggle('light', mode === 'light');
+  el('icon-moon').classList.toggle('hidden', mode === 'light');
+  el('icon-sun').classList.toggle('hidden',  mode === 'dark');
+  localStorage.setItem('otel-theme', mode);
+}
+
+function toggleTheme() {
+  const next = isDark() ? 'light' : 'dark';
+  applyTheme(next);
+  reload(); // re-render charts with new palette
+}
+
+// ── State ──────────────────────────────────────────────────────────
+let CACHE             = null;  // loaded from data/cache.json
+let AFFILIATIONS      = {};    // loaded from data/affiliations.json (handle -> company, source: gitdm)
+let GH_COMPANIES      = {};    // loaded from data/github-companies.json (handle -> company, source: github)
+let ROLES             = {};    // loaded from data/roles.json (handle -> highest role)
+let SIGS_CACHE        = null;  // null = not yet fetched, false = unavailable, object = loaded
+
+const S = {
+  tab:    'overview',
+  preset: '1y',
+  filters: { startDate: '', endDate: '', platform: 'all' },
+  pages:  { contributors: 0, organizations: 0 },
+  charts: {},
+  // runtime search/filter state
+  contrib: { filtered: [], total: 0 },
+  orgs:    { filtered: [], total: 0 },
+};
+
+// ── Cached repo lookups (from SIGS_CACHE) ─────────────────────────
+// Both functions read from SIGS_CACHE so the contributor panel and SIG
+// modal always show the same numbers (same data source, same vintage).
+
+function reposFromSigsCache(normalizedHandles) {
+  if (!SIGS_CACHE?.periods) return null;
+  const periodData = SIGS_CACHE.periods[S.preset];
+  if (!periodData) return null;
+
+  const repoMap = new Map();
+  for (const [repoName, repoData] of Object.entries(periodData)) {
+    let repoTotal = 0;
+    for (const c of (repoData.contributors?.data ?? [])) {
+      if ((c.githubHandleArray || []).some(h => normalizedHandles.has(h.toLowerCase()))) {
+        repoTotal += c.contributions;
+      }
+    }
+    if (repoTotal > 0) {
+      const repoUrl = `https://github.com/open-telemetry/${repoName}`;
+      repoMap.set(repoUrl, { name: repoName, url: repoUrl, count: repoTotal });
+    }
+  }
+  return [...repoMap.values()].sort((a, b) => b.count - a.count);
+}
+
+function reposFromCache(handles) {
+  return reposFromSigsCache(new Set(handles.map(h => h.toLowerCase())));
+}
+
+function orgReposFromCache(contributors) {
+  const handles = new Set(
+    contributors.flatMap(c => (c.githubHandleArray || []).map(h => h.toLowerCase()))
+  );
+  return reposFromSigsCache(handles);
+}
+
+// Renders a repo list into a modal's list element.
+// unit: 'contribution' | 'PR'
+// barColor: tailwind class for the progress bar
+function renderReposList({ repos, unit, barColor, listElId, note }) {
+  if (!repos.length) return false;
+  const maxCount = repos[0].count;
+  const listEl = el(listElId);
+  listEl.innerHTML = repos.map(repo => {
+    const barW    = Math.round((repo.count / maxCount) * 100);
+    const label   = `${num(repo.count)} ${repo.count === 1 ? unit : unit + 's'}`;
+    const href    = repo.url.startsWith('https://github.com') ? repo.url : `https://github.com/${repo.url}`;
+    return `
+      <a href="${href}" target="_blank"
+        class="flex items-center gap-3 px-3 py-2 rounded-lg bg-gray-800/30 hover:bg-gray-800/60 transition-colors group">
+        <div class="flex-1 min-w-0">
+          <div class="text-xs font-medium text-gray-300 group-hover:text-gray-100 truncate transition-colors">${repo.name}</div>
+        </div>
+        <span class="text-xs text-gray-500 font-mono shrink-0">${label}</span>
+        <svg class="w-3 h-3 text-gray-600 group-hover:text-gray-400 shrink-0 transition-colors" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15,3 21,3 21,9"/><line x1="10" y1="14" x2="21" y2="3"/>
+        </svg>
+      </a>`;
+  }).join('');
+  if (note) {
+    listEl.innerHTML += `<p class="text-xs text-gray-600 text-center pt-1">${note}</p>`;
+  }
+  return true;
+}
+
+// ── Company name normalizer (shared by logo lookup + org matching) ──
+const normCompany = s =>
+  s.toLowerCase()
+   .replace(/[.,\-–]/g, ' ')
+   .replace(/\s+(inc|corp|llc|ltd|gmbh|co|dba)\.?\b/g, '')
+   .replace(/\s+/g, ' ')
+   .trim();
+
+// ── Placeholder SVGs ──────────────────────────────────────────────
+const SVG_PERSON   = `<svg viewBox="0 0 24 24" fill="none" class="w-full h-full"><rect width="24" height="24" rx="12" fill="#374151"/><circle cx="12" cy="9" r="3.5" fill="#9CA3AF"/><path fill-rule="evenodd" clip-rule="evenodd" d="M5 20c0-3.866 3.134-7 7-7s7 3.134 7 7H5z" fill="#9CA3AF"/></svg>`;
+const SVG_BUILDING = `<svg viewBox="0 0 24 24" fill="none" class="w-full h-full"><rect width="24" height="24" rx="4" fill="#D1D5DB"/><rect x="7" y="3" width="10" height="16" fill="#4B5563"/><rect x="8.5" y="5.5" width="2.5" height="2" rx=".4" fill="#9CA3AF"/><rect x="13" y="5.5" width="2.5" height="2" rx=".4" fill="#9CA3AF"/><rect x="8.5" y="9" width="2.5" height="2" rx=".4" fill="#9CA3AF"/><rect x="13" y="9" width="2.5" height="2" rx=".4" fill="#9CA3AF"/><rect x="8.5" y="12.5" width="2.5" height="2" rx=".4" fill="#9CA3AF"/><rect x="13" y="12.5" width="2.5" height="2" rx=".4" fill="#9CA3AF"/><rect x="11" y="15.5" width="2" height="3.5" rx=".4" fill="#9CA3AF"/></svg>`;
+
+const personPlaceholder  = cls => `<span class="${cls} shrink-0 inline-block">${SVG_PERSON}</span>`;
+const orgPlaceholder     = cls => `<span class="${cls} shrink-0 inline-block">${SVG_BUILDING}</span>`;
+
+// ── Static logo overrides for orgs not covered by LF Insights ─────
+// Keys are normalized (normCompany). Fuzzy-matched, so short keys are fine.
+// Logos served by Clearbit; onerror handlers on all <img> tags handle 404s.
+// To add more: find the company's domain and add clearbit URL here.
+const LOGO_OVERRIDES = {
+  'zillow':                        'https://github.com/zillow.png?size=64',
+  'embrace mobile':                'https://github.com/embrace-io.png?size=64',
+  'ctbc bank':                     'https://github.com/ctbcbank.png?size=64',
+  'picpay':                        'https://github.com/PicPay.png?size=64',
+  'sap labs':                      'https://github.com/SAP.png?size=64',
+  'bankhaus metzler':              'https://github.com/metzler.png?size=64',
+  'giatec':                        'https://github.com/giatec.png?size=64',
+  'springer':                      'https://github.com/springernature.png?size=64',
+  'lidl':                          'https://github.com/lidl.png?size=64',
+  '神策数据':                       'https://github.com/sensorsdata.png?size=64',
+};
+
+function overrideLogo(name) {
+  if (!name) return null;
+  const cn = normCompany(name);
+  for (const [key, url] of Object.entries(LOGO_OVERRIDES)) {
+    if (cn === key || cn.includes(key) || key.includes(cn)) return url;
+  }
+  return null;
+}
+
+// Returns logo for an org object. LOGO_OVERRIDES takes priority over the
+// API-provided logo so manual entries can replace low-quality favicons.
+function resolveOrgLogo(org) {
+  return overrideLogo(org.name) || org.logo;
+}
+
+// ── Org logo lookup ────────────────────────────────────────────────
+let _orgLogoMap = null;
+function orgLogoMap() {
+  if (_orgLogoMap) return _orgLogoMap;
+  _orgLogoMap = new Map();
+  for (const period of Object.values(CACHE?.periods ?? {})) {
+    for (const org of (period?.organizations?.data ?? [])) {
+      if (org.logo) _orgLogoMap.set(org.name.toLowerCase(), org.logo);
+    }
+  }
+  return _orgLogoMap;
+}
+
+function logoForCompany(companyName) {
+  if (!companyName || !CACHE) return null;
+  const over = overrideLogo(companyName);
+  if (over) return over;
+  const m  = orgLogoMap();
+  const cn = normCompany(companyName);
+  for (const [orgName, logo] of m) {
+    const on = normCompany(orgName);
+    if (cn === on || cn.includes(on) || on.includes(cn)) return logo;
+  }
+  return null;
+}
+
+// ── Helpers ────────────────────────────────────────────────────────
+const fmtDate = d  => d.toISOString().split('T')[0];
+const today   = () => fmtDate(new Date());
+const daysAgo = n  => { const d = new Date(); d.setDate(d.getDate() - n); return fmtDate(d); };
+const num     = n  => (n == null ? '—' : Number(n).toLocaleString());
+const pct     = (n, dec = 1) => (n == null ? '—' : (+n).toFixed(dec) + '%');
+const show    = id => document.getElementById(id).classList.remove('hidden');
+const hide    = id => document.getElementById(id).classList.add('hidden');
+const el      = id => document.getElementById(id);
+
+const changeBadge = p => {
+  if (p == null) return '';
+  const sign = p > 0 ? '+' : '';
+  const cls  = p > 0 ? 'text-green-400' : p < 0 ? 'text-red-400' : 'text-gray-400';
+  return `<span class="${cls}">${sign}${(+p).toFixed(1)}%</span> <span class="text-gray-600">vs prior period</span>`;
+};
+
+// ── Cache helpers ──────────────────────────────────────────────────
+function usingCache() {
+  if (CACHE === null) return false;
+  if (CACHE.periods) {
+    if (S.filters.platform === 'all') return S.preset in CACHE.periods;
+    return !!(CACHE.filterCombos?.[S.preset]?.[S.filters.platform]);
+  }
+  return S.filters.platform === 'all' && S.preset === '1y'; // legacy
+}
+
+// Returns the cached data object for the active preset + filters.
+function cacheData() {
+  if (!CACHE.periods) return CACHE; // legacy
+  return S.filters.platform === 'all'
+    ? CACHE.periods[S.preset]
+    : CACHE.filterCombos[S.preset][S.filters.platform];
+}
+
+async function loadCache() {
+  try {
+    const res = await fetch('./data/cache.json');
+    if (!res.ok) return;
+    CACHE = await res.json();
+    showSourceBadge('cache', CACHE.fetchedAt);
+  } catch {
+    // cache not available — use live API
+  }
+}
+
+async function loadAffiliations() {
+  try {
+    const [r1, r2, r3] = await Promise.all([
+      fetch('./data/affiliations.json'),
+      fetch('./data/github-companies.json'),
+      fetch('./data/roles.json'),
+    ]);
+    if (r1.ok) AFFILIATIONS = await r1.json();
+    if (r2.ok) GH_COMPANIES  = await r2.json();
+    if (r3.ok) { const d = await r3.json(); ROLES = d.roles ?? {}; }
+  } catch { /* optional enrichment, silent fail */ }
+}
+
+// Returns the highest role for a contributor, or null.
+// Accepts an array of github handles (uses first match found).
+const ROLE_RANK = { maintainer: 4, approver: 3, 'code-owner': 2, triager: 1 };
+
+function roleFor(githubHandleArray) {
+  let best = null;
+  for (const h of (githubHandleArray || [])) {
+    const r = ROLES[h.toLowerCase()];
+    if (r && (!best || ROLE_RANK[r] > ROLE_RANK[best])) best = r;
+  }
+  return best;
+}
+
+const ROLE_STYLE = {
+  maintainer:   'bg-blue-900/60 text-blue-300 border border-blue-800',
+  approver:     'bg-violet-900/60 text-violet-300 border border-violet-800',
+  'code-owner': 'bg-teal-900/60 text-teal-300 border border-teal-800',
+  triager:      'bg-gray-800 text-gray-400 border border-gray-700',
+};
+
+async function loadSigsCache() {
+  try {
+    const res = await fetch('./data/sigs.json');
+    SIGS_CACHE = res.ok ? await res.json() : false;
+  } catch {
+    SIGS_CACHE = false;
+  }
+}
+
+// Returns { company, source } where source is 'gitdm' or 'github', or null.
+function affiliationFor(githubHandleArray) {
+  for (const h of (githubHandleArray || [])) {
+    const company = AFFILIATIONS[h.toLowerCase()];
+    if (company) return { company, source: 'gitdm' };
+  }
+  for (const h of (githubHandleArray || [])) {
+    const company = GH_COMPANIES[h.toLowerCase()];
+    if (company) return { company, source: 'github' };
+  }
+  return null;
+}
+
+function showSourceBadge(source, isoDate) {
+  const badge = el('source-badge');
+  badge.classList.remove('hidden');
+  if (source === 'cache') {
+    const d = isoDate ? new Date(isoDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '';
+    badge.className = 'text-xs px-2 py-0.5 rounded-full border font-medium border-gray-700 text-gray-400';
+    badge.textContent = `cached ${d}`;
+  } else {
+    badge.className = 'text-xs px-2 py-0.5 rounded-full border font-medium border-green-800 text-green-400';
+    badge.textContent = 'live';
+  }
+}
+
+// ── Date / filter controls ─────────────────────────────────────────
+function setPreset(preset) {
+  S.preset = preset;
+  const days = { '30d': 30, '90d': 90, '6m': 182, '1y': 365, '2y': 730, '3y': 1095 };
+  S.filters.endDate = today();
+  S.filters.startDate = preset === 'all' ? '2019-01-01' : daysAgo(days[preset]);
+  el('startDate').value = S.filters.startDate;
+  el('endDate').value   = S.filters.endDate;
+
+  document.querySelectorAll('.preset-btn').forEach(b => {
+    const on = b.dataset.preset === preset;
+    b.className = `preset-btn px-2.5 py-1 rounded-md transition-colors ${on ? 'bg-blue-600 text-white' : 'text-gray-400 hover:text-white'}`;
+  });
+
+  if (usingCache()) showSourceBadge('cache', CACHE?.fetchedAt);
+  else              showSourceBadge('live');
+
+  reload();
+}
+
+function onDateChange() {
+  S.preset            = 'custom';
+  S.filters.startDate = el('startDate').value;
+  S.filters.endDate   = el('endDate').value;
+  document.querySelectorAll('.preset-btn').forEach(b => {
+    b.className = 'preset-btn px-2.5 py-1 rounded-md text-gray-400 hover:text-white transition-colors';
+  });
+  showSourceBadge('live');
+  if (S.filters.startDate && S.filters.endDate) reload();
+}
+
+function onFilterChange() {
+  S.filters.platform = el('platform').value;
+  if (usingCache()) showSourceBadge('cache', CACHE?.fetchedAt);
+  else              showSourceBadge('live');
+  reload();
+}
+
+// ── Live API ───────────────────────────────────────────────────────
+function buildQS(extra = {}) {
+  return new URLSearchParams({
+    startDate: S.filters.startDate, endDate: S.filters.endDate,
+    platform: S.filters.platform, activityType: 'all',
+    ...extra,
+  }).toString();
+}
+
+async function liveApi(path, extra = {}) {
+  const res = await fetch(`${API_BASE}/${path}?${buildQS(extra)}`);
+  if (!res.ok) throw new Error(`HTTP ${res.status} — ${path}`);
+  return res.json();
+}
+
+// ── Error toast ────────────────────────────────────────────────────
+function showError(msg) {
+  el('error-msg').textContent = msg;
+  show('error-toast');
+  setTimeout(hideError, 9000);
+}
+function hideError() { hide('error-toast'); }
+
+// ── Chart helpers ──────────────────────────────────────────────────
+function destroyChart(id) {
+  if (S.charts[id]) { S.charts[id].destroy(); delete S.charts[id]; }
+}
+
+// ── Deep-link helpers ──────────────────────────────────────────────
+const VALID_TABS = ['overview', 'contributors', 'organizations', 'concentration', 'geography', 'sigs'];
+
+function setHash(tab, detail) {
+  if (!detail) {
+    history.replaceState(null, '', `#${tab}`);
+  } else if (detail.startsWith('page/')) {
+    // page numbers are URL-safe — don't encode the slash
+    history.replaceState(null, '', `#${tab}/${detail}`);
+  } else {
+    history.replaceState(null, '', `#${tab}/${encodeURIComponent(detail)}`);
+  }
+}
+
+// Returns 'page/N' (1-indexed) for the given 0-indexed page, or null for page 0.
+function pageDetail(pageIndex) {
+  return pageIndex > 0 ? `page/${pageIndex + 1}` : null;
+}
+
+function parseHash() {
+  const raw = location.hash.slice(1);
+  if (!raw) return {};
+  const slash = raw.indexOf('/');
+  if (slash === -1) return { tab: decodeURIComponent(raw) };
+  return {
+    tab:    decodeURIComponent(raw.slice(0, slash)),
+    detail: decodeURIComponent(raw.slice(slash + 1)),
+  };
+}
+
+// ── Tab management ─────────────────────────────────────────────────
+function setTab(tab, { updateHash = true } = {}) {
+  if (tab !== S.tab) {
+    // Clear all search inputs when switching tabs
+    [['contributor-search', 'contrib-search-clear'],
+     ['org-search',         'org-search-clear'],
+     ['sigs-search',        'sigs-search-clear']].forEach(([inputId, btnId]) => {
+      el(inputId).value = '';
+      el(btnId).classList.add('hidden');
+    });
+  }
+  S.tab = tab;
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.add('hidden'));
+  show(`tab-${tab}`);
+  document.querySelectorAll('.tab-btn').forEach(b => {
+    b.classList.toggle('active', b.getAttribute('onclick') === `setTab('${tab}')`);
+  });
+  if (updateHash) setHash(tab);
+  loadTab(tab);
+}
+
+function reload() {
+  S.pages.contributors  = 0;
+  S.pages.organizations = 0;
+  loadTab(S.tab);
+}
+
+function loadTab(tab) {
+  ({ overview: loadOverview, contributors: loadContributors,
+     organizations: loadOrganizations, concentration: loadConcentration,
+     geography: loadGeography, sigs: loadSigs })[tab]?.();
+}
+
+function changePage(type, delta) {
+  S.pages[type] += delta;
+  if (type === 'contributors') {
+    setHash('contributors', pageDetail(S.pages.contributors));
+    loadContributors();
+  }
+  if (type === 'organizations') {
+    setHash('organizations', pageDetail(S.pages.organizations));
+    loadOrganizations();
+  }
+}
+
+function updatePager(prefix, page, totalPages) {
+  el(`${prefix}-page-info`).textContent = `Page ${page + 1} of ${totalPages}`;
+  el(`${prefix}-prev`).disabled = page === 0;
+  el(`${prefix}-next`).disabled = page >= totalPages - 1;
+}
+
+// ══════════════════════════════════════════════════════════════════
+// WORLD MAP — choropleth helpers
+// ══════════════════════════════════════════════════════════════════
+
+// ISO 3166-1 alpha-2 → numeric (world-atlas uses numeric IDs)
+const ISO_A2_TO_NUM = {
+  AD:20,AE:784,AF:4,AG:28,AI:660,AL:8,AM:51,AO:24,AR:32,AS:16,AT:40,AU:36,AW:533,AX:248,AZ:31,
+  BA:70,BB:52,BD:50,BE:56,BF:854,BG:100,BH:48,BI:108,BJ:204,BM:60,BN:96,BO:68,BR:76,BS:44,BT:64,BW:72,BY:112,BZ:84,
+  CA:124,CC:166,CD:180,CF:140,CG:178,CH:756,CI:384,CK:184,CL:152,CM:120,CN:156,CO:170,CR:188,CU:192,CV:132,CX:162,CY:196,CZ:203,
+  DE:276,DJ:262,DK:208,DM:212,DO:214,DZ:12,
+  EC:218,EE:233,EG:818,EH:732,ER:232,ES:724,ET:231,
+  FI:246,FJ:242,FK:238,FM:583,FO:234,FR:250,
+  GA:266,GB:826,GD:308,GE:268,GF:254,GG:831,GH:288,GI:292,GL:304,GM:270,GN:324,GP:312,GQ:226,GR:300,GS:239,GT:320,GU:316,GW:624,GY:328,
+  HK:344,HN:340,HR:191,HT:332,HU:348,
+  ID:360,IE:372,IL:376,IM:833,IN:356,IO:86,IQ:368,IR:364,IS:352,IT:380,
+  JE:832,JM:388,JO:400,JP:392,
+  KE:404,KG:417,KH:116,KI:296,KM:174,KN:659,KP:408,KR:410,KW:414,KY:136,KZ:398,
+  LA:418,LB:422,LC:662,LI:438,LK:144,LR:430,LS:426,LT:440,LU:442,LV:428,LY:434,
+  MA:504,MC:492,MD:498,ME:499,MG:450,MH:584,MK:807,ML:466,MM:104,MN:496,MO:446,MQ:474,MR:478,MS:500,MT:470,MU:480,MV:462,MW:454,MX:484,MY:458,MZ:508,
+  NA:516,NC:540,NE:562,NF:574,NG:566,NI:558,NL:528,NO:578,NP:524,NR:520,NZ:554,
+  OM:512,
+  PA:591,PE:604,PF:258,PG:598,PH:608,PK:586,PL:616,PM:666,PN:612,PR:630,PS:275,PT:620,PW:585,PY:600,
+  QA:634,
+  RE:638,RO:642,RS:688,RU:643,RW:646,
+  SA:682,SB:90,SC:690,SD:736,SE:752,SG:702,SH:654,SI:705,SK:703,SL:694,SM:674,SN:686,SO:706,SR:740,SS:728,ST:678,SV:222,SY:760,SZ:748,
+  TC:796,TD:148,TF:260,TG:768,TH:764,TJ:762,TK:772,TL:626,TM:795,TN:788,TO:776,TR:792,TT:780,TV:798,TW:158,TZ:834,
+  UA:804,UG:800,US:840,UY:858,UZ:860,
+  VA:336,VC:670,VE:862,VG:92,VI:850,VN:704,VU:548,
+  WF:876,WS:882,
+  YE:887,YT:175,
+  ZA:710,ZM:894,ZW:716,
+};
+
+let WORLD_DATA = null;
+
+async function getWorldData() {
+  if (!WORLD_DATA) {
+    const res = await fetch('https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json');
+    WORLD_DATA = await res.json();
+  }
+  return WORLD_DATA;
+}
+
+async function renderChoropleth(canvasId, chartKey, geoRows) {
+  const world    = await getWorldData();
+  const features = ChartGeo.topojson.feature(world, world.objects.countries).features;
+
+  // Build lookup: numeric ID → row from API
+  const byNum = {};
+  geoRows.forEach(c => {
+    const n = ISO_A2_TO_NUM[c.code];
+    if (n) byNum[n] = c;
+  });
+
+  destroyChart(chartKey);
+  S.charts[chartKey] = new Chart(el(canvasId), {
+    type: 'choropleth',
+    data: {
+      labels:   features.map(d => byNum[+d.id]?.name ?? ''),
+      datasets: [{
+        label:       'Contributors',
+        data:        features.map(d => ({ feature: d, value: byNum[+d.id]?.count ?? NaN })),
+        borderColor: 'rgba(255,255,255,0.08)',
+        borderWidth: 0.5,
+      }],
+    },
+    options: {
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            title: ctx => byNum[+ctx[0]?.raw?.feature?.id]?.name ?? 'No data',
+            label: ctx => {
+              const d = byNum[+ctx.raw?.feature?.id];
+              return d
+                ? `${num(d.count)} contributors · ${d.percentage}%`
+                : 'No data';
+            },
+          },
+        },
+      },
+      scales: {
+        projection: { axis: 'x', projection: 'naturalEarth1' },
+        color: {
+          axis: 'x',
+          quantize: 5,
+          interpolate: v => `rgba(245,168,0,${(0.25 + v * 0.75).toFixed(2)})`,
+          missing: C.missing(),
+        },
+      },
+      responsive: true,
+      maintainAspectRatio: false,
+    },
+  });
+}
+
+// ══════════════════════════════════════════════════════════════════
+// OVERVIEW
+// ══════════════════════════════════════════════════════════════════
+async function loadOverview() {
+  try {
+    let contrib, orgs, conc, geo;
+
+    if (usingCache()) {
+      contrib = cacheData().activeContributors;
+      orgs    = cacheData().activeOrganizations;
+      conc    = cacheData().contributorDependency;
+      geo     = cacheData().geographicalDistribution;
+    } else {
+      [contrib, orgs, conc, geo] = await Promise.all([
+        liveApi('contributors/active-contributors'),
+        liveApi('contributors/active-organizations'),
+        liveApi('contributors/contributor-dependency'),
+        liveApi('contributors/geographical-distribution'),
+      ]);
+    }
+
+    // Stat cards
+    el('stat-contributors').textContent      = num(contrib.summary.current);
+    el('stat-contributors-change').innerHTML = changeBadge(contrib.summary.percentageChange);
+    el('stat-maintainers').textContent       = num(contrib.maintainerCount);
+    el('stat-reviewers').textContent         = num(contrib.reviewerCount);
+    el('stat-orgs').textContent              = num(orgs.summary.current);
+    el('stat-orgs-change').innerHTML         = changeBadge(orgs.summary.percentageChange);
+
+    // Concentration doughnut
+    const topPct   = conc.topContributors.percentage;
+    const otherPct = conc.otherContributors.percentage;
+    hide('ov-conc-loading'); show('ov-conc-wrap');
+    destroyChart('ovConcChart');
+    S.charts.ovConcChart = new Chart(el('ovConcChart'), {
+      type: 'doughnut',
+      data: {
+        labels: [
+          `Top ${conc.topContributors.count} (${pct(topPct)})`,
+          `Other ${num(conc.otherContributors.count)} (${pct(otherPct)})`,
+        ],
+        datasets: [{ data: [topPct, otherPct], backgroundColor: ['#3b82f6', C.grid()], borderWidth: 0 }],
+      },
+      options: {
+        cutout: '68%',
+        plugins: {
+          legend: { position: 'bottom', labels: { color: C.legend(), font: { size: 11 }, padding: 12, boxWidth: 12 } },
+          tooltip: { callbacks: { label: c => ` ${(+c.parsed).toFixed(1)}%` } },
+        },
+      },
+    });
+    el('ov-conc-summary').textContent =
+      `${conc.topContributors.count} contributors account for ${pct(topPct)} of all activity ` +
+      `while ${num(conc.otherContributors.count)} others share the remaining ${pct(otherPct)}.`;
+
+    // Top orgs list
+    let topOrgs;
+    if (usingCache()) {
+      topOrgs = { data: cacheData().organizations.data.slice(0, 15) };
+    } else {
+      topOrgs = await liveApi('contributors/organization-leaderboard', { offset: 0, limit: 15 });
+    }
+    const maxC = topOrgs.data[0]?.contributions || 1;
+    hide('ov-orgs-loading'); show('ov-orgs-list');
+    el('ov-orgs-list').innerHTML = topOrgs.data.map((o, i) => `
+      <div class="flex items-center gap-2">
+        <span class="text-gray-600 text-xs w-4 shrink-0">${i + 1}</span>
+        ${resolveOrgLogo(o) ? `<img src="${resolveOrgLogo(o)}" class="w-5 h-5 rounded object-contain shrink-0" onerror="this.style.display='none'">` : orgPlaceholder('w-5 h-5')}
+        <span class="text-sm flex-1 truncate">${o.name}</span>
+        <span class="text-xs text-gray-400 font-mono shrink-0">${num(o.contributions)}</span>
+      </div>`).join('') +
+      `<div class="pt-1 text-right">
+        <button onclick="setTab('organizations')" class="text-xs text-blue-400 hover:text-blue-300 transition-colors">more →</button>
+      </div>`;
+
+    // Geo world map
+    hide('ov-geo-loading'); show('ov-geo-wrap');
+    await renderChoropleth('ovGeoChart', 'ovGeoChart', geo.data || []);
+
+  } catch (e) {
+    showError(e.message);
+    console.error('[overview]', e);
+  }
+}
+
+// ══════════════════════════════════════════════════════════════════
+// CONTRIBUTORS
+// When using cache: full dataset in memory, client-side pagination
+//                   and search across all contributors.
+// When using live API: server-side pagination, page-scoped search.
+// ══════════════════════════════════════════════════════════════════
+async function loadContributors() {
+  show('contrib-loading'); hide('contrib-table-wrap');
+
+  try {
+    if (usingCache()) {
+      const all = cacheData().contributors.data;
+      S.contrib.total = cacheData().contributors.total;
+      const q = el('contributor-search').value.toLowerCase().trim();
+      S.contrib.filtered = q
+        ? all.filter(c =>
+            c.name?.toLowerCase().includes(q) ||
+            (c.githubHandleArray || []).some(h => h.toLowerCase().includes(q)))
+        : all;
+      el('contrib-total-label').textContent = q
+        ? `${S.contrib.filtered.length} matches`
+        : `${num(S.contrib.total)} total`;
+      renderContribPage();
+    } else {
+      const offset = S.pages.contributors * PAGE_SIZE;
+      const data   = await liveApi('contributors/contributor-leaderboard', { offset, limit: PAGE_SIZE });
+      S.contrib.filtered = data.data;
+      S.contrib.total    = data.meta.total;
+      el('contrib-total-label').textContent = `${num(data.meta.total)} total`;
+      renderContribTable(data.data, offset);
+      updatePager('contrib', S.pages.contributors, Math.ceil(data.meta.total / PAGE_SIZE));
+    }
+    resolvePendingDetail('contributors');
+  } catch (e) {
+    showError(e.message);
+    hide('contrib-loading');
+  }
+}
+
+function renderContribPage() {
+  const page     = S.pages.contributors;
+  const slice    = S.contrib.filtered.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
+  const startIdx = page * PAGE_SIZE;
+  const q        = el('contributor-search').value.trim();
+
+  let ranks = null;
+  if (q && usingCache()) {
+    const allData = cacheData().contributors.data;
+    const rankMap = new Map(allData.map((c, i) => [c, i + 1]));
+    ranks = slice.map(c => rankMap.get(c) ?? 0);
+  }
+
+  renderContribTable(slice, startIdx, ranks);
+  updatePager('contrib', page, Math.ceil(S.contrib.filtered.length / PAGE_SIZE));
+}
+
+function renderContribTable(rows, baseOffset, ranks) {
+  // Store rows on the table element so click handler can look up contributor data
+  el('contrib-tbody')._rows = rows;
+
+  el('contrib-tbody').innerHTML = rows.map((c, i) => {
+    const rank    = ranks ? ranks[i] : baseOffset + i + 1;
+    const handles = (c.githubHandleArray || []).slice(0, 2)
+      .map(h => `<a href="https://github.com/${h}" target="_blank" class="text-blue-400 hover:text-blue-300" onclick="event.stopPropagation()">@${h}</a>`)
+      .join(', ');
+    const role  = roleFor(c.githubHandleArray);
+    const roles = role
+      ? `<span class="px-1.5 py-0.5 rounded text-xs ${ROLE_STYLE[role]}">${role}</span>`
+      : '';
+    const affiliation = affiliationFor(c.githubHandleArray);
+    const company = affiliation
+      ? `${affiliation.company} <a href="${affiliation.source === 'gitdm'
+          ? 'https://github.com/cncf/gitdm'
+          : `https://github.com/${(c.githubHandleArray||[])[0]}`
+        }" target="_blank" onclick="event.stopPropagation()" class="inline-block px-1 py-0.5 rounded text-gray-500 hover:text-gray-300 border border-gray-700 hover:border-gray-500 text-[10px] leading-none transition-colors ml-1">${affiliation.source}</a>`
+      : null;
+    const barW = Math.min(100, (c.percentage || 0) * 6).toFixed(0);
+    return `
+      <tr class="contrib-row border-b border-gray-800/40 hover:bg-gray-800/20 transition-colors" data-idx="${i}" title="Click to see repositories">
+        <td class="px-4 py-2.5 text-gray-600 text-xs">${rank}</td>
+        <td class="px-4 py-2.5">
+          <div class="flex items-center gap-2.5">
+            ${c.avatar ? `<img src="${c.avatar}" class="w-7 h-7 rounded-full shrink-0" onerror="this.style.display='none'">` : personPlaceholder('w-7 h-7')}
+            <div>
+              <div class="text-sm font-medium leading-tight">${c.name}</div>
+              <div class="text-xs text-gray-500">${handles}</div>
+            </div>
+          </div>
+        </td>
+        <td class="px-4 py-2.5 text-right">
+          <div class="text-sm font-mono">${num(c.contributions)}</div>
+        </td>
+        <td class="px-4 py-2.5 text-right text-xs text-gray-400">${pct(c.percentage, 2)}</td>
+        <td class="px-4 py-2.5 text-xs text-gray-300">${company ?? '<span class="text-gray-600">—</span>'}</td>
+        <td class="px-4 py-2.5 text-xs">${roles}</td>
+      </tr>`;
+  }).join('');
+  hide('contrib-loading'); show('contrib-table-wrap');
+}
+
+// Delegated click handler — opens contributor modal when a row is clicked
+document.addEventListener('click', e => {
+  const row = e.target.closest('tr.contrib-row');
+  if (!row) return;
+  const idx  = parseInt(row.dataset.idx, 10);
+  const rows = el('contrib-tbody')._rows;
+  if (rows && rows[idx]) openContribModal(rows[idx]);
+});
+
+function clearContribSearch() {
+  el('contributor-search').value = '';
+  onContribSearch();
+  el('contributor-search').focus();
+}
+
+function onContribSearch() {
+  const q = el('contributor-search').value.toLowerCase().trim();
+  el('contrib-search-clear').classList.toggle('hidden', !q);
+  S.pages.contributors = 0;
+
+  if (usingCache()) {
+    // Search across ALL cached contributors instantly
+    S.contrib.filtered = q
+      ? cacheData().contributors.data.filter(c =>
+          c.name?.toLowerCase().includes(q) ||
+          (c.githubHandleArray || []).some(h => h.toLowerCase().includes(q)))
+      : cacheData().contributors.data;
+    el('contrib-total-label').textContent = q
+      ? `${S.contrib.filtered.length} matches`
+      : `${num(S.contrib.total)} total`;
+    renderContribPage();
+  } else {
+    // Live API: only search current page
+    const filtered = q
+      ? S.contrib.filtered.filter(c =>
+          c.name?.toLowerCase().includes(q) ||
+          (c.githubHandleArray || []).some(h => h.toLowerCase().includes(q)))
+      : S.contrib.filtered;
+    renderContribTable(filtered, 0);
+    el('contrib-page-info').textContent = q ? `${filtered.length} matches on this page` : '';
+  }
+}
+
+// ══════════════════════════════════════════════════════════════════
+// ORGANIZATIONS
+// ══════════════════════════════════════════════════════════════════
+async function loadOrganizations() {
+  show('orgs-loading'); hide('orgs-table-wrap');
+
+  try {
+    if (usingCache()) {
+      const all = cacheData().organizations.data;
+      S.orgs.total = cacheData().organizations.total;
+      const q = el('org-search').value.toLowerCase().trim();
+      S.orgs.filtered = q
+        ? all.filter(o => o.name?.toLowerCase().includes(q))
+        : all;
+      el('orgs-total-label').textContent = q
+        ? `${S.orgs.filtered.length} matches`
+        : `${num(S.orgs.total)} total`;
+      renderOrgsPage();
+    } else {
+      const offset = S.pages.organizations * PAGE_SIZE;
+      const page   = await liveApi('contributors/organization-leaderboard', { offset, limit: PAGE_SIZE });
+      S.orgs.filtered = page.data;
+      S.orgs.total    = page.meta.total;
+      el('orgs-total-label').textContent = `${num(page.meta.total)} total`;
+      renderOrgsTable(page.data, offset);
+      updatePager('orgs', S.pages.organizations, Math.ceil(page.meta.total / PAGE_SIZE));
+    }
+    resolvePendingDetail('organizations');
+
+  } catch (e) {
+    showError(e.message);
+    hide('orgs-loading');
+  }
+}
+
+function renderOrgsPage() {
+  const page  = S.pages.organizations;
+  const slice = S.orgs.filtered.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
+  const q     = el('org-search').value.trim();
+
+  let ranks = null;
+  if (q && usingCache()) {
+    const allData = cacheData().organizations.data;
+    const rankMap = new Map(allData.map((o, i) => [o, i + 1]));
+    ranks = slice.map(o => rankMap.get(o) ?? 0);
+  }
+
+  renderOrgsTable(slice, page * PAGE_SIZE, ranks);
+  updatePager('orgs', page, Math.ceil(S.orgs.filtered.length / PAGE_SIZE));
+}
+
+function renderOrgsTable(rows, baseOffset, ranks) {
+  el('orgs-tbody')._rows = rows;
+  el('orgs-tbody').innerHTML = rows.map((o, i) => {
+    const rank = ranks ? ranks[i] : baseOffset + i + 1;
+    return `
+      <tr class="org-row border-b border-gray-800/40 hover:bg-gray-800/20 transition-colors" data-idx="${i}" title="Click to see contributors & repositories">
+        <td class="px-4 py-2.5 text-gray-600 text-xs">${rank}</td>
+        <td class="px-4 py-2.5">
+          <div class="flex items-center gap-2">
+            ${resolveOrgLogo(o) ? `<img src="${resolveOrgLogo(o)}" class="w-6 h-6 rounded object-contain shrink-0" onerror="this.style.display='none'">` : orgPlaceholder('w-6 h-6')}
+            <span class="text-sm">${o.name}</span>
+          </div>
+        </td>
+        <td class="px-4 py-2.5 text-right">
+          <div class="text-sm font-mono">${num(o.contributions)}</div>
+        </td>
+        <td class="px-4 py-2.5 text-right text-xs text-gray-400">${pct(o.percentage, 2)}</td>
+      </tr>`;
+  }).join('');
+  hide('orgs-loading'); show('orgs-table-wrap');
+}
+
+// Delegated click handler for org rows
+document.addEventListener('click', e => {
+  const row = e.target.closest('tr.org-row');
+  if (!row) return;
+  const idx  = parseInt(row.dataset.idx, 10);
+  const rows = el('orgs-tbody')._rows;
+  if (rows && rows[idx]) openOrgModal(rows[idx]);
+});
+
+function onOrgSearch() {
+  const q = el('org-search').value.toLowerCase().trim();
+  el('org-search-clear').classList.toggle('hidden', !q);
+  S.pages.organizations = 0;
+  if (usingCache()) {
+    const all = cacheData().organizations.data;
+    S.orgs.filtered = q ? all.filter(o => o.name?.toLowerCase().includes(q)) : all;
+    el('orgs-total-label').textContent = q ? `${S.orgs.filtered.length} matches` : `${num(S.orgs.total)} total`;
+    renderOrgsPage();
+  }
+}
+
+function clearOrgSearch() {
+  el('org-search').value = '';
+  onOrgSearch();
+  el('org-search').focus();
+}
+
+// ══════════════════════════════════════════════════════════════════
+// CONCENTRATION
+// ══════════════════════════════════════════════════════════════════
+async function loadConcentration() {
+  show('bc-loading');  hide('bc-content');
+  show('bc-list-loading'); hide('bc-list');
+  show('od-loading');  hide('od-content');
+
+  try {
+    let conc, orgDep;
+    if (usingCache()) {
+      conc   = cacheData().contributorDependency;
+      orgDep = cacheData().organizationDependency;
+    } else {
+      [conc, orgDep] = await Promise.all([
+        liveApi('contributors/contributor-dependency'),
+        liveApi('contributors/organization-dependency'),
+      ]);
+    }
+
+    // Contributor bus factor
+    el('bc-top-n').textContent   = conc.topContributors.count;
+    el('bc-top-pct').textContent = pct(conc.topContributors.percentage);
+    el('bc-other-n').textContent = num(conc.otherContributors.count);
+    hide('bc-loading'); show('bc-content');
+
+    destroyChart('bcChart');
+    S.charts.bcChart = new Chart(el('bcChart'), {
+      type: 'doughnut',
+      data: {
+        labels: [
+          `Top ${conc.topContributors.count} (${pct(conc.topContributors.percentage)})`,
+          `Other ${num(conc.otherContributors.count)} (${pct(conc.otherContributors.percentage)})`,
+        ],
+        datasets: [{
+          data: [conc.topContributors.percentage, conc.otherContributors.percentage],
+          backgroundColor: ['#3b82f6', C.grid()], borderColor: ['#2563eb', C.grid()], borderWidth: 1,
+        }],
+      },
+      options: {
+        cutout: '70%',
+        plugins: {
+          legend: { position: 'bottom', labels: { color: C.legend(), font: { size: 11 }, padding: 12, boxWidth: 12 } },
+          tooltip: { callbacks: { label: c => ` ${(+c.parsed).toFixed(1)}%` } },
+        },
+      },
+    });
+
+    hide('bc-list-loading'); show('bc-list');
+    el('bc-list').innerHTML = (conc.list || []).map((c, i) => {
+      const handle = (c.githubHandleArray || [])[0];
+      return `
+        <div class="flex items-center gap-2 py-0.5">
+          <span class="text-gray-600 text-xs w-5 text-right shrink-0">${i + 1}</span>
+          ${c.avatar ? `<img src="${c.avatar}" class="w-5 h-5 rounded-full shrink-0">` : personPlaceholder('w-5 h-5')}
+          <span class="text-xs flex-1 truncate">${c.name}</span>
+          ${handle ? `<a href="https://github.com/${handle}" target="_blank" class="text-blue-500 text-xs shrink-0 hover:text-blue-300">@${handle}</a>` : ''}
+          <span class="text-xs text-gray-500 font-mono shrink-0">${num(c.contributions)}</span>
+        </div>`;
+    }).join('');
+
+    // Org dependency
+    const top   = orgDep.topOrganizations  || {};
+    const other = orgDep.otherOrganizations || {};
+    el('od-top-n').textContent   = top.count ?? '—';
+    el('od-top-pct').textContent = pct(top.percentage);
+    el('od-other-n').textContent = num(other.count);
+    hide('od-loading'); show('od-content');
+
+    destroyChart('odChart');
+    S.charts.odChart = new Chart(el('odChart'), {
+      type: 'doughnut',
+      data: {
+        labels: [
+          `Top ${top.count ?? '?'} orgs (${pct(top.percentage)})`,
+          `Other orgs (${pct(other.percentage)})`,
+        ],
+        datasets: [{
+          data: [top.percentage || 0, other.percentage || 0],
+          backgroundColor: ['#8b5cf6', C.grid()], borderColor: ['#7c3aed', C.grid()], borderWidth: 1,
+        }],
+      },
+      options: {
+        cutout: '70%',
+        plugins: {
+          legend: { position: 'bottom', labels: { color: C.legend(), font: { size: 11 }, padding: 12, boxWidth: 12 } },
+          tooltip: { callbacks: { label: c => ` ${(+c.parsed).toFixed(1)}%` } },
+        },
+      },
+    });
+
+    el('od-list').innerHTML = (orgDep.list || []).map((o, i) => `
+      <div class="flex items-center gap-2 py-0.5">
+        <span class="text-gray-600 text-xs w-5 text-right shrink-0">${i + 1}</span>
+        ${resolveOrgLogo(o) ? `<img src="${resolveOrgLogo(o)}" class="w-5 h-5 rounded shrink-0" onerror="this.style.display='none'">` : orgPlaceholder('w-5 h-5')}
+        <span class="text-xs flex-1 truncate">${o.name}</span>
+        <span class="text-xs text-gray-500 font-mono shrink-0">${num(o.contributions)}</span>
+      </div>`).join('');
+
+  } catch (e) {
+    showError(e.message);
+    hide('bc-loading'); hide('bc-list-loading'); hide('od-loading');
+  }
+}
+
+// ══════════════════════════════════════════════════════════════════
+// GEOGRAPHY
+// ══════════════════════════════════════════════════════════════════
+async function loadGeography() {
+  show('geo-chart-loading'); hide('geo-chart-wrap');
+  show('geo-table-loading'); hide('geo-table-wrap');
+
+  try {
+    const geo  = usingCache()
+      ? cacheData().geographicalDistribution
+      : await liveApi('contributors/geographical-distribution');
+
+    const all = (geo.data || []).sort((a, b) => b.count - a.count);
+
+    el('geo-country-count').textContent = `${all.length} regions reported`;
+
+    hide('geo-chart-loading'); show('geo-chart-wrap');
+    await renderChoropleth('geoChart', 'geoChart', all);
+
+    el('geo-tbody').innerHTML = all.map(c => `
+      <tr class="border-b border-gray-800/40 hover:bg-gray-800/20 transition-colors">
+        <td class="px-4 py-2.5 text-sm"><span class="mr-1.5">${c.flag || ''}</span>${c.name}</td>
+        <td class="px-4 py-2.5 text-right text-sm font-mono">${num(c.count)}</td>
+        <td class="px-4 py-2.5 text-right">
+          <span class="text-xs text-gray-400">${c.percentage}%</span>
+        </td>
+      </tr>`).join('');
+    hide('geo-table-loading'); show('geo-table-wrap');
+
+  } catch (e) {
+    showError(e.message);
+    hide('geo-chart-loading'); hide('geo-table-loading');
+  }
+}
+
+// ══════════════════════════════════════════════════════════════════
+// SIGS
+// ══════════════════════════════════════════════════════════════════
+async function loadSigs() {
+  if (SIGS_CACHE !== null) {
+    renderSigsList();
+    resolvePendingDetail('sigs');
+    return;
+  }
+
+  show('sigs-loading'); hide('sigs-table-wrap'); hide('sigs-empty');
+  await loadSigsCache();
+
+  if (!SIGS_CACHE?.periods) {
+    hide('sigs-loading'); show('sigs-empty');
+    return;
+  }
+
+  renderSigsList();
+  resolvePendingDetail('sigs');
+}
+
+function renderSigsList() {
+  const period = SIGS_CACHE?.periods?.[S.preset];
+
+  if (!period) {
+    hide('sigs-loading'); hide('sigs-table-wrap'); show('sigs-empty');
+    return;
+  }
+
+  const q = el('sigs-search')?.value.toLowerCase().trim() ?? '';
+
+  const allEntries = Object.entries(period)
+    .map(([repo, data]) => ({
+      repo,
+      contributors: data.contributors?.total ?? 0,
+      organizations: data.organizations?.total ?? 0,
+    }))
+    .filter(e => e.contributors > 0)
+    .sort((a, b) => b.contributors - a.contributors)
+    .map((e, i) => ({ ...e, rank: i + 1 }));
+
+  const entries = q ? allEntries.filter(e => e.repo.toLowerCase().includes(q)) : allEntries;
+
+  el('sigs-total-label').textContent = q ? `${entries.length} matches` : `${entries.length} active repo${entries.length === 1 ? '' : 's'}`;
+
+  const maxC = allEntries[0]?.contributors || 1;
+  el('sigs-tbody').innerHTML = entries.map((e) => {
+    const barW = Math.round((e.contributors / maxC) * 100);
+    return `
+      <tr class="sig-row border-b border-gray-800/40 hover:bg-gray-800/20 transition-colors"
+          data-repo="${e.repo}" title="Click to see contributors &amp; organizations">
+        <td class="px-4 py-2.5 text-gray-600 text-xs">${e.rank}</td>
+        <td class="px-4 py-2.5">
+          <div class="flex items-center gap-2">
+            <span class="text-sm font-medium text-gray-100">${e.repo}</span>
+          </div>
+        </td>
+        <td class="px-4 py-2.5 text-right">
+          <div class="text-sm font-mono">${num(e.contributors)}</div>
+        </td>
+        <td class="px-4 py-2.5 text-right text-sm text-gray-400">${num(e.organizations)}</td>
+      </tr>`;
+  }).join('');
+
+  hide('sigs-loading'); hide('sigs-empty'); show('sigs-table-wrap');
+}
+
+document.addEventListener('click', e => {
+  const row = e.target.closest('tr.sig-row');
+  if (!row) return;
+  openSigModal(row.dataset.repo);
+});
+
+function onSigsSearch() {
+  const q = el('sigs-search').value;
+  el('sigs-search-clear').classList.toggle('hidden', !q.trim());
+  renderSigsList();
+}
+
+function clearSigsSearch() {
+  el('sigs-search').value = '';
+  onSigsSearch();
+  el('sigs-search').focus();
+}
+
+function openSigModal(repoName) {
+  const period = SIGS_CACHE?.periods?.[S.preset]?.[repoName];
+  if (!period) return;
+
+  const contribs = period.contributors?.data ?? [];
+  const orgs     = period.organizations?.data ?? [];
+
+  el('sig-modal-name').textContent = repoName;
+  el('sig-modal-name').href = `https://github.com/open-telemetry/${repoName}`;
+  el('sig-modal-contributors').textContent  = num(period.contributors?.total ?? 0);
+  el('sig-modal-organizations').textContent = num(period.organizations?.total ?? 0);
+  el('sig-modal-period').textContent = `${S.filters.startDate} → ${S.filters.endDate}`;
+
+  const maxC = contribs[0]?.contributions ?? 1;
+  el('sig-modal-contrib-list').innerHTML = contribs.length
+    ? contribs.map((c, i) => {
+        const handle = (c.githubHandleArray || [])[0];
+        const aff    = affiliationFor(c.githubHandleArray);
+        const barW   = Math.round((c.contributions / maxC) * 100);
+        return `
+          <div class="flex items-center gap-2 px-2 py-1.5 rounded hover:bg-gray-800/40 transition-colors">
+            <span class="text-gray-600 text-xs w-5 shrink-0 text-right">${i + 1}</span>
+            ${c.avatar
+              ? `<img src="${c.avatar}" class="w-6 h-6 rounded-full shrink-0" onerror="this.style.display='none'">`
+              : `<span class="w-6 h-6 shrink-0 inline-block">${SVG_PERSON}</span>`}
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center gap-1.5 min-w-0">
+                <span class="text-xs font-medium text-gray-200 truncate">${c.name}</span>
+                ${handle ? `<a href="https://github.com/${handle}" target="_blank" class="text-blue-400 hover:text-blue-300 text-xs shrink-0" onclick="event.stopPropagation()">@${handle}</a>` : ''}
+              </div>
+              ${aff ? `<div class="text-xs text-gray-500 truncate">${aff.company}</div>` : ''}
+            </div>
+            <div class="text-right shrink-0">
+              <div class="text-xs text-gray-300 font-mono">${num(c.contributions)}</div>
+              <div class="text-xs text-gray-500">${pct(c.percentage, 1)}</div>
+            </div>
+          </div>`;
+      }).join('')
+    : '<p class="text-xs text-gray-600 text-center py-4">No contributors in this period</p>';
+
+  const maxO = orgs[0]?.contributions ?? 1;
+  el('sig-modal-orgs-list').innerHTML = orgs.length
+    ? orgs.map((o, i) => {
+        const logo = resolveOrgLogo(o);
+        const barW = Math.round((o.contributions / maxO) * 100);
+        return `
+          <div class="flex items-center gap-2 px-2 py-1.5 rounded hover:bg-gray-800/40 transition-colors">
+            <span class="text-gray-600 text-xs w-5 shrink-0 text-right">${i + 1}</span>
+            ${logo
+              ? `<img src="${logo}" class="w-6 h-6 rounded object-contain shrink-0" onerror="this.style.display='none'">`
+              : `<span class="w-6 h-6 shrink-0 inline-block">${SVG_BUILDING}</span>`}
+            <div class="flex-1 min-w-0">
+              <div class="text-xs font-medium text-gray-200 truncate">${o.name}</div>
+            </div>
+            <div class="text-right shrink-0">
+              <div class="text-xs text-gray-300 font-mono">${num(o.contributions)}</div>
+              <div class="text-xs text-gray-500">${pct(o.percentage, 1)}</div>
+            </div>
+          </div>`;
+      }).join('')
+    : '<p class="text-xs text-gray-600 text-center py-4">No organizations in this period</p>';
+
+  const modal = el('sig-modal');
+  const panel = el('sig-modal-panel');
+  panel.scrollTop = 0;
+  modal.classList.remove('hidden');
+  requestAnimationFrame(() => requestAnimationFrame(() => panel.classList.add('open')));
+  document.body.style.overflow = 'hidden';
+  setHash('sigs', repoName);
+}
+
+function closeSigModal() {
+  const panel = el('sig-modal-panel');
+  panel.classList.remove('open');
+  document.body.style.overflow = '';
+  setTimeout(() => el('sig-modal').classList.add('hidden'), 200);
+  setHash('sigs');
+}
+
+// ══════════════════════════════════════════════════════════════════
+// ORGANIZATION MODAL — drill-down: contributors + repos
+// ══════════════════════════════════════════════════════════════════
+
+function companyMatchesOrg(companyName, orgName) {
+  const cn = normCompany(companyName);
+  const on = normCompany(orgName);
+  return cn === on || cn.includes(on) || on.includes(cn);
+}
+
+function contributorsForOrg(orgName) {
+  if (!CACHE) return [];
+  return (cacheData().contributors.data || []).filter(c => {
+    const aff = affiliationFor(c.githubHandleArray);
+    return aff && companyMatchesOrg(aff.company, orgName);
+  });
+}
+
+function openOrgModal(org) {
+  const panel = el('org-modal-panel');
+
+  // Header
+  const orgLogo = resolveOrgLogo(org);
+  el('org-modal-logo').src           = orgLogo || '';
+  el('org-modal-logo').style.display = orgLogo ? '' : 'none';
+  el('org-modal-logo-ph').style.display = orgLogo ? 'none' : '';
+  el('org-modal-name').textContent = org.name;
+
+  // Stats
+  el('org-modal-contributions').textContent = num(org.contributions);
+  el('org-modal-period-label').textContent   = `${S.filters.startDate} → ${S.filters.endDate}`;
+
+  // Find contributors from cache
+  const contribs = contributorsForOrg(org.name);
+  el('org-modal-contributor-count').textContent = contribs.length || '—';
+
+  // Repo count spinner
+  el('org-modal-repo-count').innerHTML =
+    '<span id="org-repo-count-spinner" class="spinner" style="width:14px;height:14px;border-width:1.5px"></span>';
+
+  // Render full contributor list (scrollable)
+  el('org-modal-contrib-list').innerHTML = contribs.map((c, i) => {
+    const handle = (c.githubHandleArray || [])[0];
+    return `
+      <div class="flex items-center gap-2 py-1">
+        <span class="text-gray-600 text-xs w-5 text-right shrink-0">${i + 1}</span>
+        ${c.avatar ? `<img src="${c.avatar}" class="w-5 h-5 rounded-full shrink-0" onerror="this.style.display='none'">` : personPlaceholder('w-5 h-5')}
+        <span class="text-xs flex-1 truncate">${c.name}</span>
+        ${handle ? `<a href="https://github.com/${handle}" target="_blank" class="text-blue-500 text-xs shrink-0 hover:text-blue-300" onclick="event.stopPropagation()">@${handle}</a>` : ''}
+        <span class="text-xs text-gray-500 font-mono shrink-0">${num(c.contributions)}</span>
+        <span class="text-xs text-gray-600 shrink-0">${pct(c.contributions / org.contributions * 100)}</span>
+      </div>`;
+  }).join('');
+
+  el('org-modal-contrib-more').classList.add('hidden');
+
+  // Reset repos area
+  show('org-modal-repos-loading');
+  hide('org-modal-repos-list');
+  hide('org-modal-repos-error');
+  el('org-modal-repos-list').innerHTML = '';
+
+  // Show modal + animate
+  el('org-modal').classList.remove('hidden');
+  requestAnimationFrame(() => requestAnimationFrame(() => panel.classList.add('open')));
+  document.body.style.overflow = 'hidden';
+  setHash('organizations', org.name);
+
+  if (contribs.length === 0) {
+    hide('org-modal-repos-loading');
+    show('org-modal-repos-error');
+    el('org-modal-repos-error').textContent = 'No contributors found in cache for this period.';
+    el('org-modal-repo-count').textContent = '—';
+    return;
+  }
+
+  // Prefer LFX cache (all contributors); fall back to GitHub API (top 8)
+  const cachedOrgRepos = orgReposFromCache(contribs);
+  if (cachedOrgRepos !== null) {
+    hide('org-modal-repos-loading');
+    el('org-modal-repo-count').textContent = cachedOrgRepos.length || '—';
+    const total = cachedOrgRepos.reduce((s, r) => s + r.count, 0);
+    const ok = renderReposList({
+      repos: cachedOrgRepos, unit: 'contribution', barColor: 'bg-purple-500',
+      listElId: 'org-modal-repos-list',
+      note: cachedOrgRepos.length
+        ? `${num(total)} contributions across ${cachedOrgRepos.length} repo${cachedOrgRepos.length === 1 ? '' : 's'}`
+        : null,
+    });
+    ok ? show('org-modal-repos-list') : (show('org-modal-repos-error'), el('org-modal-repos-error').textContent = 'No repository activity found for this period.');
+  } else {
+    // Fall back to GitHub API using top 8 contributors
+    const TOP_N     = 8;
+    const topContribs = contribs.slice(0, TOP_N);
+    fetchOrgRepos(topContribs, org, S.filters.startDate, S.filters.endDate)
+      .then(({ repos, truncated, totalPRs }) => renderOrgRepos(repos, truncated, totalPRs, org, topContribs.length < contribs.length))
+      .catch(err => {
+        hide('org-modal-repos-loading');
+        show('org-modal-repos-error');
+        el('org-modal-repos-error').innerHTML =
+          `<p class="mb-2">Could not load repositories.</p><p class="text-gray-600">${err.message}</p>`;
+        el('org-modal-repo-count').textContent = '—';
+      });
+  }
+}
+
+function closeOrgModal() {
+  el('org-modal-panel').classList.remove('open');
+  document.body.style.overflow = '';
+  setTimeout(() => el('org-modal').classList.add('hidden'), 200);
+  setHash('organizations', pageDetail(S.pages.organizations));
+}
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') { closeOrgModal(); closeContribModal(); closeSigModal(); }
+});
+
+async function fetchOrgRepos(contributors, org, startDate, endDate) {
+  // Fetch repos for each contributor in parallel, then merge
+  const results = await Promise.allSettled(
+    contributors.map(c => fetchContribRepos(c.githubHandleArray, startDate, endDate))
+  );
+
+  const repoMap = new Map();
+  let totalPRs  = 0;
+  let truncated = false;
+
+  for (const r of results) {
+    if (r.status !== 'fulfilled') continue;
+    totalPRs  += r.value.totalPRs;
+    if (r.value.truncated) truncated = true;
+    for (const repo of r.value.repos) {
+      if (repoMap.has(repo.fullName)) {
+        repoMap.get(repo.fullName).count += repo.count;
+      } else {
+        repoMap.set(repo.fullName, { ...repo });
+      }
+    }
+  }
+
+  return {
+    repos: [...repoMap.values()].sort((a, b) => b.count - a.count),
+    totalPRs,
+    truncated,
+  };
+}
+
+function renderOrgRepos(repos, truncated, totalPRs, org, isPartial) {
+  hide('org-modal-repos-loading');
+
+  // Update repo count in stats
+  el('org-modal-repo-count').textContent = repos.length || '—';
+
+  if (!repos.length) {
+    show('org-modal-repos-error');
+    el('org-modal-repos-error').textContent = 'No pull requests found in this period.';
+    return;
+  }
+
+  const maxCount = repos[0].count;
+  const listEl   = el('org-modal-repos-list');
+
+  listEl.innerHTML = repos.map(repo => {
+    const barW    = Math.round((repo.count / maxCount) * 100);
+    const prLabel = repo.count === 1 ? '1 PR' : `${repo.count} PRs`;
+    return `
+      <a href="${repo.htmlUrl}" target="_blank"
+        class="flex items-center gap-3 px-3 py-2 rounded-lg bg-gray-800/30 hover:bg-gray-800/60 transition-colors group">
+        <div class="flex-1 min-w-0">
+          <div class="text-xs font-medium text-gray-300 group-hover:text-gray-100 truncate transition-colors">${repo.name}</div>
+        </div>
+        <span class="text-xs text-gray-500 font-mono shrink-0">${prLabel}</span>
+        <svg class="w-3 h-3 text-gray-600 group-hover:text-gray-400 shrink-0 transition-colors" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15,3 21,3 21,9"/><line x1="10" y1="14" x2="21" y2="3"/>
+        </svg>
+      </a>`;
+  }).join('');
+
+  const note = isPartial
+    ? `Based on top ${Math.min(8, repos.length)} contributors`
+    : null;
+
+  listEl.innerHTML += `
+    <p class="text-xs text-gray-600 text-center pt-1">
+      ${num(totalPRs)} PRs across ${repos.length} repo${repos.length === 1 ? '' : 's'}${note ? ` · <span class="italic">${note}</span>` : ''}
+    </p>`;
+
+  show('org-modal-repos-list');
+}
+
+// ══════════════════════════════════════════════════════════════════
+// CONTRIBUTOR MODAL — drill-down: repos contributed in period
+// ══════════════════════════════════════════════════════════════════
+
+function openContribModal(contributor) {
+  const modal   = el('contrib-modal');
+  const panel   = el('contrib-modal-panel');
+  const handles = contributor.githubHandleArray || [];
+  const aff     = affiliationFor(handles);
+
+  // Populate header
+  el('modal-avatar').src = contributor.avatar || '';
+  el('modal-avatar').style.display    = contributor.avatar ? '' : 'none';
+  el('modal-avatar-ph').style.display = contributor.avatar ? 'none' : '';
+  el('modal-name').textContent = contributor.name;
+  el('modal-handles').innerHTML = handles
+    .map(h => `<a href="https://github.com/${h}" target="_blank" class="text-blue-400 hover:text-blue-300">@${h}</a>`)
+    .join(', ') || '—';
+
+  // Stats
+  el('modal-contributions').textContent = num(contributor.contributions);
+  el('modal-share').textContent = pct(contributor.percentage, 2);
+  const logo = logoForCompany(aff?.company);
+  const companyEl = el('modal-company');
+  if (logo && aff?.company) {
+    companyEl.innerHTML = `<img src="${logo}" alt="${aff.company}" title="${aff.company}"
+      class="w-8 h-8 rounded object-contain"
+      onerror="this.outerHTML='<span class=\\'text-xs font-medium\\'>${aff.company.replace(/'/g,'&#39;')}</span>'">`;
+  } else {
+    companyEl.textContent = aff?.company ?? '—';
+  }
+
+  // Roles
+  const rolesWrap = el('modal-roles-wrap');
+  const role = roleFor(contributor.githubHandleArray);
+  if (role) {
+    rolesWrap.classList.remove('hidden');
+    rolesWrap.innerHTML = `<span class="px-2 py-0.5 rounded text-xs ${ROLE_STYLE[role]}">${role}</span>`;
+  } else {
+    rolesWrap.classList.add('hidden');
+  }
+
+  // Period label
+  el('modal-period-label').textContent =
+    `${S.filters.startDate} → ${S.filters.endDate}`;
+
+  // Reset repo area
+  show('modal-repos-loading');
+  hide('modal-repos-list');
+  hide('modal-repos-error');
+  el('modal-repos-list').innerHTML = '';
+
+  // Show modal + animate panel in
+  modal.classList.remove('hidden');
+  requestAnimationFrame(() => requestAnimationFrame(() => panel.classList.add('open')));
+
+  // Prevent body scroll
+  document.body.style.overflow = 'hidden';
+
+  const primaryHandle = (contributor.githubHandleArray || [])[0] || contributor.name;
+  setHash('contributors', primaryHandle);
+
+  // Prefer LFX cache; fall back to GitHub PR search
+  const cachedRepos = reposFromCache(handles);
+  if (cachedRepos !== null) {
+    hide('modal-repos-loading');
+    const total = cachedRepos.reduce((s, r) => s + r.count, 0);
+    const ok = renderReposList({
+      repos: cachedRepos, unit: 'contribution', barColor: 'bg-blue-500',
+      listElId: 'modal-repos-list',
+      note: cachedRepos.length
+        ? `${num(total)} contributions across ${cachedRepos.length} repo${cachedRepos.length === 1 ? '' : 's'}`
+        : null,
+    });
+    ok ? show('modal-repos-list') : (show('modal-repos-error'), el('modal-repos-error').textContent = 'No repository activity found for this period.');
+  } else if (handles.length) {
+    fetchContribRepos(handles, S.filters.startDate, S.filters.endDate)
+      .then(result => renderContribRepos(result, handles))
+      .catch(err => {
+        hide('modal-repos-loading');
+        show('modal-repos-error');
+        el('modal-repos-error').innerHTML =
+          `<p class="mb-2">Could not load repositories.</p>` +
+          `<p class="text-gray-600">${err.message}</p>` +
+          (handles[0]
+            ? `<a href="https://github.com/search?q=author%3A${handles[0]}+org%3Aopen-telemetry&type=pullrequests" target="_blank"
+                class="inline-block mt-3 px-3 py-1.5 rounded bg-gray-800 text-blue-400 hover:text-blue-300 text-xs transition-colors">
+                Search on GitHub →</a>`
+            : '');
+      });
+  } else {
+    hide('modal-repos-loading');
+    show('modal-repos-error');
+    el('modal-repos-error').textContent = 'No GitHub handle available.';
+  }
+}
+
+function closeContribModal() {
+  const panel = el('contrib-modal-panel');
+  panel.classList.remove('open');
+  document.body.style.overflow = '';
+  setTimeout(() => el('contrib-modal').classList.add('hidden'), 200);
+  setHash('contributors', pageDetail(S.pages.contributors));
+}
+
+// (Escape key handled by the org modal listener above)
+
+async function fetchContribRepos(handles, startDate, endDate) {
+  const handle = handles[0]; // primary handle
+  const dateFilter = `${startDate}..${endDate}`;
+
+  // Use GitHub Issues Search API: PRs authored by the contributor in open-telemetry org
+  const q = encodeURIComponent(`author:${handle} org:open-telemetry is:pr created:${dateFilter}`);
+  const url = `https://api.github.com/search/issues?q=${q}&per_page=100&sort=created&order=desc`;
+
+  const res = await fetch(url, { headers: { Accept: 'application/vnd.github.v3+json' } });
+  if (res.status === 403) throw new Error('GitHub rate limit reached. Try again in a minute.');
+  if (!res.ok) throw new Error(`GitHub API error: HTTP ${res.status}`);
+
+  const data = await res.json();
+  if (data.message) throw new Error(data.message); // e.g. API abuse detection
+
+  // Group PRs by repository
+  const repoMap = new Map();
+  for (const item of data.items) {
+    // repository_url: "https://api.github.com/repos/open-telemetry/opentelemetry-java"
+    const parts    = item.repository_url.split('/');
+    const repoName = parts[parts.length - 1];
+    const repoOrg  = parts[parts.length - 2];
+    const key      = `${repoOrg}/${repoName}`;
+    if (!repoMap.has(key)) {
+      repoMap.set(key, { fullName: key, name: repoName, count: 0, htmlUrl: `https://github.com/${key}` });
+    }
+    repoMap.get(key).count++;
+  }
+
+  return {
+    totalPRs: data.total_count,
+    truncated: data.total_count > 100,
+    repos: [...repoMap.values()].sort((a, b) => b.count - a.count),
+    searchUrl: `https://github.com/search?q=author%3A${handle}+org%3Aopen-telemetry+is%3Apr+created%3A${dateFilter}&type=pullrequests`,
+  };
+}
+
+function renderContribRepos(result, handles) {
+  hide('modal-repos-loading');
+
+  if (!result.repos.length) {
+    show('modal-repos-error');
+    el('modal-repos-error').innerHTML =
+      `No pull requests found in this period.<br>
+       <a href="${result.searchUrl}" target="_blank"
+         class="inline-block mt-3 px-3 py-1.5 rounded bg-gray-800 text-blue-400 hover:text-blue-300 text-xs transition-colors">
+         Search on GitHub →</a>`;
+    return;
+  }
+
+  const maxCount = result.repos[0].count;
+  const listEl   = el('modal-repos-list');
+
+  listEl.innerHTML = result.repos.map(repo => {
+    const barW = Math.round((repo.count / maxCount) * 100);
+    const prLabel = repo.count === 1 ? '1 PR' : `${repo.count} PRs`;
+    return `
+      <a href="${repo.htmlUrl}" target="_blank"
+        class="flex items-center gap-3 px-3 py-2 rounded-lg bg-gray-800/30 hover:bg-gray-800/60 transition-colors group">
+        <div class="flex-1 min-w-0">
+          <div class="text-xs font-medium text-gray-300 group-hover:text-gray-100 truncate transition-colors">${repo.name}</div>
+        </div>
+        <span class="text-xs text-gray-500 font-mono shrink-0">${prLabel}</span>
+        <svg class="w-3 h-3 text-gray-600 group-hover:text-gray-400 shrink-0 transition-colors" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15,3 21,3 21,9"/><line x1="10" y1="14" x2="21" y2="3"/>
+        </svg>
+      </a>`;
+  }).join('');
+
+  if (result.truncated) {
+    listEl.innerHTML += `
+      <p class="text-xs text-gray-600 text-center pt-1">
+        Showing repos from first 100 of ${num(result.totalPRs)} PRs ·
+        <a href="${result.searchUrl}" target="_blank" class="text-blue-500 hover:text-blue-400">see all →</a>
+      </p>`;
+  } else {
+    listEl.innerHTML += `
+      <p class="text-xs text-gray-600 text-center pt-1">
+        ${num(result.totalPRs)} pull request${result.totalPRs === 1 ? '' : 's'} in ${result.repos.length} repo${result.repos.length === 1 ? '' : 's'} ·
+        <a href="${result.searchUrl}" target="_blank" class="text-blue-500 hover:text-blue-400">view on GitHub →</a>
+      </p>`;
+  }
+
+  show('modal-repos-list');
+}
+
+// ══════════════════════════════════════════════════════════════════
+// INIT — load cache first, then render default tab
+// ══════════════════════════════════════════════════════════════════
+
+// Holds a modal detail (e.g. repo name, org name, contributor handle)
+// to be opened once the tab's data has finished loading.
+let PENDING_DETAIL = null;
+
+function resolvePendingDetail(tab) {
+  if (!PENDING_DETAIL || PENDING_DETAIL.tab !== tab) return;
+  const detail = PENDING_DETAIL.detail;
+  PENDING_DETAIL = null;
+  if (tab === 'sigs') {
+    openSigModal(detail);
+  } else if (tab === 'organizations') {
+    const data = usingCache() ? cacheData()?.organizations?.data : S.orgs.filtered;
+    const org = (data || []).find(o => o.name?.toLowerCase() === detail.toLowerCase());
+    if (org) openOrgModal(org);
+  } else if (tab === 'contributors') {
+    const data = usingCache() ? cacheData()?.contributors?.data : S.contrib.filtered;
+    const c = (data || []).find(c =>
+      (c.githubHandleArray || []).some(h => h.toLowerCase() === detail.toLowerCase())
+    );
+    if (c) openContribModal(c);
+  }
+}
+
+function applyPageDetail(tab, detail) {
+  if (!detail?.startsWith('page/')) return false;
+  const n = parseInt(detail.slice(5), 10);
+  if (isNaN(n) || n < 1) return false;
+  if (tab === 'contributors')  S.pages.contributors  = n - 1;
+  if (tab === 'organizations') S.pages.organizations = n - 1;
+  return true;
+}
+
+async function navigateToHash() {
+  const { tab, detail } = parseHash();
+  if (!VALID_TABS.includes(tab)) return;
+  if (applyPageDetail(tab, detail)) {
+    // Page navigation: if already on this tab just reload, otherwise switch
+    if (tab === S.tab) loadTab(tab);
+    else setTab(tab, { updateHash: false });
+  } else {
+    if (detail) PENDING_DETAIL = { tab, detail };
+    setTab(tab, { updateHash: false });
+  }
+}
+
+window.addEventListener('hashchange', () => navigateToHash());
+
+async function init() {
+  initTheme();
+  await Promise.all([loadCache(), loadAffiliations(), loadSigsCache()]);
+
+  const { tab, detail } = parseHash();
+  if (VALID_TABS.includes(tab)) {
+    if (!applyPageDetail(tab, detail) && detail) PENDING_DETAIL = { tab, detail };
+    setPreset('1y'); // resets pages to 0 — restore page after this
+    applyPageDetail(tab, detail); // re-apply after setPreset's reload() reset it
+    setTab(tab, { updateHash: false });
+  } else {
+    setPreset('1y');
+  }
+}
+
+init();
+</script>
+</body>
+</html>

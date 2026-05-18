@@ -13,7 +13,7 @@
  *   maintainer (4) > approver (3) > code-owner (2) > triager (1)
  *
  * Output: data/roles.json
- *   { fetchedAt, roles: { githubHandle: "maintainer" | "approver" | "code-owner" | "triager" } }
+ *   { fetchedAt, roles: { githubHandle: { role: "maintainer" | "approver" | "code-owner" | "triager", teams: string[] } } }
  *
  * Usage:
  *   node scripts/fetch-roles.mjs
@@ -96,13 +96,17 @@ async function main() {
   console.log(`   ${roleTeams.length} role teams to process\n`);
 
   // ── 3. Fetch members per team, apply hierarchy ─────────────────────
-  const roles = {}; // handle (lowercase) → highest role string
+  const roles = {}; // handle (lowercase) → { role, teams: string[] }
 
-  function applyRole(handle, role) {
+  function applyRole(handle, role, slug) {
     const h    = handle.toLowerCase();
     const curr = roles[h];
-    if (!curr || ROLE_RANK[role] > ROLE_RANK[curr]) {
-      roles[h] = role;
+    if (!curr) {
+      roles[h] = { role, teams: [slug] };
+    } else if (ROLE_RANK[role] > ROLE_RANK[curr.role]) {
+      roles[h] = { role, teams: [slug] };
+    } else if (ROLE_RANK[role] === ROLE_RANK[curr.role]) {
+      curr.teams.push(slug);
     }
   }
 
@@ -112,7 +116,7 @@ async function main() {
 
     try {
       const members = await ghGetAll(`/orgs/${ORG}/teams/${slug}/members`);
-      for (const m of members) applyRole(m.login, role);
+      for (const m of members) applyRole(m.login, role, slug);
       await sleep(120);
     } catch (e) {
       process.stdout.write(` ✗ ${e.message}\n`);
@@ -122,8 +126,8 @@ async function main() {
   process.stdout.write('\n');
 
   // ── 4. Summary ─────────────────────────────────────────────────────
-  const counts = Object.values(roles).reduce((acc, r) => {
-    acc[r] = (acc[r] || 0) + 1;
+  const counts = Object.values(roles).reduce((acc, { role }) => {
+    acc[role] = (acc[role] || 0) + 1;
     return acc;
   }, {});
   console.log('\nRole distribution:');

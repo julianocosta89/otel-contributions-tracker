@@ -44,6 +44,20 @@ const PERIODS = [
 // 'all' is handled by fetchPeriod (full pagination); others are filter combos.
 const PLATFORMS = ['github', 'git', 'gerrit', 'gitlab', 'confluence', 'jira'];
 
+// ── Concurrency helpers ──────────────────────────────────────────
+async function withConcurrency(items, concurrency, fn) {
+  const results = new Array(items.length);
+  let idx = 0;
+  async function worker() {
+    while (idx < items.length) {
+      const i = idx++;
+      results[i] = await fn(items[i], i);
+    }
+  }
+  await Promise.all(Array.from({ length: Math.min(concurrency, items.length) }, worker));
+  return results;
+}
+
 // ── Load existing cache ──────────────────────────────────────────
 function loadExistingCache() {
   try { return JSON.parse(readFileSync(CACHE_PATH, 'utf8')); } catch { return null; }
@@ -170,14 +184,13 @@ async function main() {
       continue;
     }
 
-    filterCombos[key] = filterCombos[key] ?? {};
+    filterCombos[key] = {};
 
-    for (const platform of PLATFORMS) {
-      process.stdout.write(`  ${key}  platform=${platform.padEnd(12)} `);
-      filterCombos[key][platform] = await fetchFilterCombo(startDate, platform);
-      process.stdout.write('✓\n');
-      await sleep(100);
-    }
+    await withConcurrency(PLATFORMS, 3, async platform => {
+      const data = await fetchFilterCombo(startDate, platform);
+      filterCombos[key][platform] = data;
+      console.log(`  ${key}  platform=${platform.padEnd(12)} ✓`);
+    });
   }
 
   // ── Write output ──────────────────────────────────────────────

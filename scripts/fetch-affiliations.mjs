@@ -31,13 +31,14 @@ function companyName(line) {
     .trim();
 }
 
-// Given a block of tab-indented affiliation lines, return the current company.
+// Given a block of tab-indented affiliation lines (each with { text, lineNum }),
+// return { company, lineNum } for the current affiliation, or null.
 // "Current" = no "until" date (or until date is in the future).
 // Among multiple current entries, pick the one with the latest "from" date.
-function currentCompany(affiliationLines) {
+function currentCompanyEntry(affiliationLines) {
   const now = new Date();
   const active = affiliationLines
-    .map(l => ({ line: l, ...parseDates(l) }))
+    .map(e => ({ ...e, ...parseDates(e.text) }))
     .filter(e => !e.until || e.until > now);
 
   if (!active.length) return null;
@@ -50,31 +51,41 @@ function currentCompany(affiliationLines) {
     return b.from - a.from;
   });
 
-  return companyName(active[0].line);
+  return { company: companyName(active[0].text), lineNum: active[0].lineNum };
 }
 
-async function fetchFile(n) {
+async function fetchFile(n, retries = 3) {
   const url = `${BASE_URL}${n}.txt`;
   console.log(`Fetching ${url}…`);
-  const res = await fetch(url);
-  if (!res.ok) throw new Error(`HTTP ${res.status} for ${url}`);
-  return res.text();
+  for (let attempt = 1; attempt <= retries; attempt++) {
+    try {
+      const res = await fetch(url);
+      if (!res.ok) throw new Error(`HTTP ${res.status} for ${url}`);
+      return await res.text();
+    } catch (e) {
+      if (attempt === retries) throw e;
+      console.log(`  retrying ${url} (attempt ${attempt + 1})…`);
+      await new Promise(r => setTimeout(r, 500 * attempt));
+    }
+  }
 }
 
-function parseAffiliations(text) {
+function parseAffiliations(text, fileNumber) {
   const map = {};
   const lines = text.split('\n');
   let currentHandle = null;
-  let affiliationLines = [];
+  let affiliationLines = []; // { text, lineNum }
 
   function flush() {
     if (currentHandle && affiliationLines.length) {
-      const company = currentCompany(affiliationLines);
-      if (company) map[currentHandle.toLowerCase()] = company;
+      const entry = currentCompanyEntry(affiliationLines);
+      if (entry) map[currentHandle] = { company: entry.company, file: fileNumber, line: entry.lineNum };
     }
   }
 
-  for (const raw of lines) {
+  for (let i = 0; i < lines.length; i++) {
+    const raw = lines[i];
+    const lineNum = i + 1;
     if (!raw.startsWith('\t') && raw.includes(':')) {
       flush();
       // New entry: "handle: email1, email2"
@@ -83,7 +94,7 @@ function parseAffiliations(text) {
       affiliationLines = [];
     } else if (raw.startsWith('\t') && currentHandle) {
       const trimmed = raw.trim();
-      if (trimmed) affiliationLines.push(trimmed);
+      if (trimmed) affiliationLines.push({ text: trimmed, lineNum });
     }
   }
   flush();
@@ -94,11 +105,16 @@ function parseAffiliations(text) {
 async function main() {
   const combined = {};
 
-  for (let n = 1; n <= FILE_COUNT; n++) {
-    const text = await fetchFile(n);
-    const partial = parseAffiliations(text);
+  const results = await Promise.all(
+    Array.from({ length: FILE_COUNT }, (_, i) => i + 1).map(async n => {
+      const text = await fetchFile(n);
+      return { n, partial: parseAffiliations(text, n) };
+    })
+  );
+
+  for (const { n, partial } of results.sort((a, b) => a.n - b.n)) {
     Object.assign(combined, partial);
-    console.log(`  → ${Object.keys(partial).length} handles`);
+    console.log(`  → file ${n}: ${Object.keys(partial).length} handles`);
   }
 
   console.log(`\nTotal: ${Object.keys(combined).length} handles with current company`);

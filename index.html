@@ -328,6 +328,7 @@
                 <th class="text-left px-4 py-3">Organization</th>
                 <th class="text-right px-4 py-3">Contributions</th>
                 <th class="text-right px-4 py-3">Share</th>
+                <th class="text-right px-4 py-3">Concentration</th>
               </tr>
             </thead>
             <tbody id="orgs-tbody"></tbody>
@@ -498,20 +499,44 @@
     </div>
 
     <!-- Stats row -->
-    <div class="grid grid-cols-3 gap-2 px-4 py-3 border-b border-gray-800">
-      <div class="bg-gray-800/50 rounded-lg p-2.5">
-        <div class="text-xs text-gray-500 mb-1">Contributions</div>
-        <div id="org-modal-contributions" class="text-lg font-bold font-mono leading-none"></div>
-      </div>
-      <div class="bg-gray-800/50 rounded-lg p-2.5">
-        <div class="text-xs text-gray-500 mb-1">Contributors</div>
-        <div id="org-modal-contributor-count" class="text-lg font-bold leading-none"></div>
-      </div>
-      <div class="bg-gray-800/50 rounded-lg p-2.5">
-        <div class="text-xs text-gray-500 mb-1">Repositories</div>
-        <div id="org-modal-repo-count" class="text-lg font-bold leading-none flex items-center gap-1.5">
-          <span id="org-repo-count-spinner" class="spinner" style="width:14px;height:14px;border-width:1.5px"></span>
+    <div class="px-4 pt-3 pb-2 border-b border-gray-800 space-y-2">
+      <div class="grid grid-cols-3 gap-2">
+        <div class="bg-gray-800/50 rounded-lg p-2.5">
+          <div class="text-xs text-gray-500 mb-1">Contributions</div>
+          <div id="org-modal-contributions" class="text-lg font-bold font-mono leading-none"></div>
         </div>
+        <div class="bg-gray-800/50 rounded-lg p-2.5">
+          <div class="text-xs text-gray-500 mb-1">Contributors</div>
+          <div id="org-modal-contributor-count" class="text-lg font-bold leading-none"></div>
+        </div>
+        <div class="bg-gray-800/50 rounded-lg p-2.5">
+          <div class="text-xs text-gray-500 mb-1">Repositories</div>
+          <div id="org-modal-repo-count" class="text-lg font-bold leading-none flex items-center gap-1.5">
+            <span id="org-repo-count-spinner" class="spinner" style="width:14px;height:14px;border-width:1.5px"></span>
+          </div>
+        </div>
+      </div>
+      <div class="grid grid-cols-2 gap-2">
+        <div class="bg-gray-800/50 rounded-lg p-2.5">
+          <div class="text-xs text-gray-500 mb-1">Maintainers</div>
+          <div id="org-modal-maintainer-count" class="text-lg font-bold leading-none"></div>
+        </div>
+        <div class="bg-gray-800/50 rounded-lg p-2.5">
+          <div class="text-xs text-gray-500 mb-1">Approvers</div>
+          <div id="org-modal-approver-count" class="text-lg font-bold leading-none"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Concentration tile -->
+    <div class="px-4 py-3 border-b border-gray-800">
+      <div class="bg-gray-800/50 rounded-lg px-3 py-2.5">
+        <div class="flex items-center justify-between mb-1.5">
+          <div class="text-xs text-gray-500">Contribution concentration</div>
+          <a href="docs/concentration.html" target="_blank"
+            class="w-4 h-4 rounded-full border border-gray-600 hover:border-gray-400 hover:text-gray-400 flex items-center justify-center text-xs text-gray-600 transition-colors shrink-0" title="How is this calculated?">?</a>
+        </div>
+        <div id="org-modal-concentration"></div>
       </div>
     </div>
 
@@ -1530,6 +1555,20 @@ function renderOrgsPage() {
   updatePager('orgs', page, Math.ceil(S.orgs.filtered.length / PAGE_SIZE));
 }
 
+function concentrationCell(orgName, orgTotal) {
+  if (!usingCache()) return `<td class="px-4 py-2.5 text-right text-xs text-gray-600">—</td>`;
+  const r = calcOrgConcentration(contributorsForOrg(orgName), orgTotal);
+  if (r.status === 'limited') return `<td class="px-4 py-2.5 text-right text-xs text-gray-600">—</td>`;
+  const dot   = r.color === 'green' ? 'bg-green-500'  : r.color === 'yellow' ? 'bg-yellow-500'  : 'bg-red-500';
+  const label = r.color === 'green' ? 'text-green-400' : r.color === 'yellow' ? 'text-yellow-400' : 'text-red-400';
+  return `<td class="px-4 py-2.5 text-right">
+    <span class="inline-flex items-center gap-1.5 justify-end">
+      <span class="w-1.5 h-1.5 rounded-full ${dot} shrink-0"></span>
+      <span class="text-xs ${label}">${r.label}</span>
+    </span>
+  </td>`;
+}
+
 function renderOrgsTable(rows, baseOffset, ranks) {
   el('orgs-tbody')._rows = rows;
   el('orgs-tbody').innerHTML = rows.map((o, i) => {
@@ -1547,6 +1586,7 @@ function renderOrgsTable(rows, baseOffset, ranks) {
           <div class="text-sm font-mono">${num(o.contributions)}</div>
         </td>
         <td class="px-4 py-2.5 text-right text-xs text-gray-400">${pct(o.percentage, 2)}</td>
+        ${concentrationCell(o.name, o.contributions)}
       </tr>`;
   }).join('');
   hide('orgs-loading'); show('orgs-table-wrap');
@@ -1902,6 +1942,38 @@ function contributorsForOrg(orgName) {
   });
 }
 
+function calcOrgConcentration(contribs, orgTotal) {
+  if (!contribs.length) return { status: 'limited' };
+  const cacheTotal = contribs.reduce((s, c) => s + c.contributions, 0);
+  if (orgTotal > 0 && cacheTotal / orgTotal < 0.3) return { status: 'limited' };
+  const hhi = contribs.reduce((s, c) => {
+    const share = c.contributions / cacheTotal * 100;
+    return s + share * share;
+  }, 0);
+  const top1Pct = contribs[0].contributions / cacheTotal * 100;
+  const label = hhi < 1500 ? 'Distributed' : hhi < 3000 ? 'Moderate' : 'Concentrated';
+  const color = hhi < 1500 ? 'green' : hhi < 3000 ? 'yellow' : 'red';
+  return { status: 'ok', hhi: Math.round(hhi), top1Pct, label, color };
+}
+
+function renderOrgConcentration(contribs, orgTotal) {
+  const r = calcOrgConcentration(contribs, orgTotal);
+  const target = el('org-modal-concentration');
+  if (r.status === 'limited') {
+    target.innerHTML = `<span class="text-xs text-gray-500 italic">Not enough GitHub data to assess</span>`;
+    return;
+  }
+  const dot   = r.color === 'green' ? 'bg-green-500'  : r.color === 'yellow' ? 'bg-yellow-500'  : 'bg-red-500';
+  const label = r.color === 'green' ? 'text-green-400' : r.color === 'yellow' ? 'text-yellow-400' : 'text-red-400';
+  target.innerHTML = `
+    <div class="flex items-center gap-2">
+      <span class="w-2 h-2 rounded-full ${dot} shrink-0"></span>
+      <span class="text-sm font-semibold ${label}">${r.label}</span>
+      <span class="text-xs text-gray-600 font-mono ml-auto">HHI ${num(r.hhi)}</span>
+    </div>
+    <div class="text-xs text-gray-500 mt-1">Top contributor: ${pct(r.top1Pct)} of GitHub activity</div>`;
+}
+
 function openOrgModal(org) {
   const panel = el('org-modal-panel');
 
@@ -1919,12 +1991,18 @@ function openOrgModal(org) {
   // Find contributors from cache
   const contribs = contributorsForOrg(org.name);
   el('org-modal-contributor-count').textContent = contribs.length || '—';
+  renderOrgConcentration(contribs, org.contributions);
+
+  // Maintainer / approver counts
+  el('org-modal-maintainer-count').textContent = contribs.filter(c => roleFor(c.githubHandleArray) === 'maintainer').length || '0';
+  el('org-modal-approver-count').textContent   = contribs.filter(c => roleFor(c.githubHandleArray) === 'approver').length || '0';
 
   // Repo count spinner
   el('org-modal-repo-count').innerHTML =
     '<span id="org-repo-count-spinner" class="spinner" style="width:14px;height:14px;border-width:1.5px"></span>';
 
   // Render full contributor list (scrollable)
+  const contribsCacheTotal = contribs.reduce((s, c) => s + c.contributions, 0);
   el('org-modal-contrib-list').innerHTML = contribs.map((c, i) => {
     const handle = (c.githubHandleArray || [])[0];
     return `
@@ -1934,7 +2012,7 @@ function openOrgModal(org) {
         <span class="text-xs flex-1 truncate">${c.name}</span>
         ${handle ? `<a href="https://github.com/${handle}" target="_blank" class="text-blue-500 text-xs shrink-0 hover:text-blue-300" onclick="event.stopPropagation()">@${handle}</a>` : ''}
         <span class="text-xs text-gray-500 font-mono shrink-0">${num(c.contributions)}</span>
-        <span class="text-xs text-gray-600 shrink-0">${pct(c.contributions / org.contributions * 100)}</span>
+        <span class="text-xs text-gray-600 shrink-0">${pct(c.contributions / contribsCacheTotal * 100)}</span>
       </div>`;
   }).join('');
 

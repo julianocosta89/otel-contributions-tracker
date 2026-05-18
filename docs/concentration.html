@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Contribution Concentration — OTel Contributions Tracker</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body { font-family: ui-sans-serif, system-ui, sans-serif; }
+    .prose h2 { font-size: 1.1rem; font-weight: 600; margin: 1.75rem 0 0.5rem; }
+    .prose h3 { font-size: 0.95rem; font-weight: 600; margin: 1.25rem 0 0.35rem; color: #94a3b8; }
+    .prose p  { margin: 0.5rem 0; line-height: 1.65; }
+    .prose ul { margin: 0.5rem 0 0.5rem 1.25rem; list-style: disc; }
+    .prose li { margin: 0.25rem 0; line-height: 1.6; }
+    code { background: #1e293b; border-radius: 4px; padding: 1px 5px; font-size: 0.85em; color: #e2e8f0; }
+  </style>
+</head>
+<body class="bg-gray-950 text-gray-300 min-h-screen">
+  <div class="max-w-2xl mx-auto px-6 py-12">
+
+    <a href="../index.html"
+      class="inline-flex items-center gap-1.5 text-xs text-gray-500 hover:text-gray-300 transition-colors mb-8">
+      ← Back to tracker
+    </a>
+
+    <h1 class="text-xl font-bold text-white mb-1">Contribution Concentration</h1>
+    <p class="text-sm text-gray-500 mb-8">How the metric is calculated and what its limitations are</p>
+
+    <div class="prose text-sm text-gray-300">
+
+      <h2 class="text-white">What it measures</h2>
+      <p>
+        The concentration tile answers the question: <em>are a company's OpenTelemetry contributions coming
+        from many people, or are they relying heavily on one or two individuals?</em>
+      </p>
+      <p>
+        A company with high concentration is more exposed to contributor churn — if the top one or two people
+        leave or reduce their involvement, the company's overall activity drops sharply. A distributed company
+        is more resilient.
+      </p>
+
+      <h2 class="text-white">The metric: Herfindahl-Hirschman Index (HHI)</h2>
+      <p>
+        The tile uses the
+        <a href="https://en.wikipedia.org/wiki/Herfindahl%E2%80%93Hirschman_index"
+          target="_blank" class="text-blue-400 hover:text-blue-300">Herfindahl-Hirschman Index</a>,
+        a standard measure of market concentration adapted here to contribution share.
+      </p>
+      <p>For a company with contributors <em>1…n</em>, each holding a share <em>sᵢ</em> of
+        the company's total GitHub contributions (expressed as a percentage 0–100):</p>
+      <div class="bg-gray-900 border border-gray-800 rounded-lg px-4 py-3 my-3 font-mono text-sm text-center">
+        HHI = Σ sᵢ²
+      </div>
+      <p>
+        HHI ranges from near <strong>0</strong> (contributions spread perfectly evenly across many people)
+        to <strong>10,000</strong> (a single contributor holds 100%). The key property is that it penalises
+        large shares more than small ones — a company where one person holds 60% scores much higher
+        than one where ten people each hold 10%, even if both have the same total.
+      </p>
+
+      <h3>Classification thresholds</h3>
+      <p>
+        Thresholds were calibrated against the actual distribution of the top 10 OTel contributing companies
+        (1-year period, as of May 2026), looking for natural breaks:
+      </p>
+
+      <div class="bg-gray-900 border border-gray-800 rounded-lg overflow-hidden my-3">
+        <table class="w-full text-xs">
+          <thead>
+            <tr class="border-b border-gray-800 text-gray-500">
+              <th class="text-left px-4 py-2.5">Label</th>
+              <th class="text-left px-4 py-2.5">HHI range</th>
+              <th class="text-left px-4 py-2.5">What it means</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr class="border-b border-gray-800/50">
+              <td class="px-4 py-2.5">
+                <span class="inline-flex items-center gap-1.5">
+                  <span class="w-2 h-2 rounded-full bg-green-500"></span>
+                  <span class="text-green-400 font-semibold">Distributed</span>
+                </span>
+              </td>
+              <td class="px-4 py-2.5 font-mono text-gray-400">HHI &lt; 1,500</td>
+              <td class="px-4 py-2.5 text-gray-400">No single contributor dominates; activity is spread across a broad group</td>
+            </tr>
+            <tr class="border-b border-gray-800/50">
+              <td class="px-4 py-2.5">
+                <span class="inline-flex items-center gap-1.5">
+                  <span class="w-2 h-2 rounded-full bg-yellow-500"></span>
+                  <span class="text-yellow-400 font-semibold">Moderate</span>
+                </span>
+              </td>
+              <td class="px-4 py-2.5 font-mono text-gray-400">1,500 – 3,000</td>
+              <td class="px-4 py-2.5 text-gray-400">A few key contributors stand out, but a meaningful supporting group exists</td>
+            </tr>
+            <tr>
+              <td class="px-4 py-2.5">
+                <span class="inline-flex items-center gap-1.5">
+                  <span class="w-2 h-2 rounded-full bg-red-500"></span>
+                  <span class="text-red-400 font-semibold">Concentrated</span>
+                </span>
+              </td>
+              <td class="px-4 py-2.5 font-mono text-gray-400">HHI &gt; 3,000</td>
+              <td class="px-4 py-2.5 text-gray-400">One or two contributors account for most activity; high dependency risk</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <p class="text-gray-500 text-xs">
+        These thresholds mirror the boundaries used in US antitrust analysis (unconcentrated / moderately
+        concentrated / highly concentrated), but applied to contributor share instead of market share.
+        The natural gap in OTel data falls between 2,406 (Google) and 3,529 (Kong), so the 3,000 cutoff
+        is data-driven, not arbitrary.
+      </p>
+
+      <h2 class="text-white">Limitations</h2>
+
+      <h3>GitHub activity only</h3>
+      <p>
+        The contributor leaderboard in the local cache is built from GitHub handles matched against
+        affiliation files (<code>affiliations.json</code> from CNCF gitdm and
+        <code>github-companies.json</code> from GitHub profile data). It captures GitHub-mediated
+        activity only: commits, pull requests, code reviews, and GitHub issues.
+      </p>
+      <p>
+        The LF Insights API also counts contributions on <strong>Jira, Confluence, Gerrit, GitLab,
+        and plain Git</strong>. These are included in each company's total contribution count shown
+        at the top of the panel, but they cannot be broken down per contributor in the current
+        data pipeline. Companies that are heavy users of non-GitHub platforms will therefore have
+        a gap between the two numbers.
+      </p>
+
+      <h3>Coverage check and the "not enough data" fallback</h3>
+      <p>
+        Before computing HHI, the tile checks <em>coverage</em>: the ratio of the sum of all
+        cached contributor contributions to the company's API-reported total.
+      </p>
+      <div class="bg-gray-900 border border-gray-800 rounded-lg px-4 py-3 my-3 font-mono text-sm text-center">
+        coverage = Σ contributor_contributions (cache) / org_total (API)
+      </div>
+      <p>
+        If coverage is below <strong>30%</strong>, the tile shows
+        <em>"Not enough GitHub data to assess"</em> instead of a label. This protects against
+        misleading classifications for companies whose OTel activity is dominated by Jira,
+        Confluence, or other non-GitHub platforms — where the few GitHub contributors we do
+        see may look artificially concentrated simply because most contributors are invisible
+        to the cache.
+      </p>
+      <p>
+        In the top-10 analysis, CNCF (~0.6% coverage), Dynatrace (~6%), and Kong (~1.5%)
+        fall below this threshold and show the fallback.
+      </p>
+
+      <h3>Affiliation accuracy</h3>
+      <p>
+        Company-to-contributor mapping follows this priority:
+      </p>
+      <ul>
+        <li><strong>CNCF gitdm</strong> (<code>affiliations.json</code>) — highest confidence, manually curated</li>
+        <li><strong>GitHub profile company field</strong> (<code>github-companies.json</code>) — self-reported, may be stale or informal</li>
+        <li><strong>LF Insights API organization field</strong> — used for org totals but not contributor-level data</li>
+      </ul>
+      <p>
+        A contributor whose GitHub profile lists an informal company name (e.g. "@Elastic" vs
+        "Elastic") may be missed or double-counted across the two affiliation files.
+      </p>
+
+      <h3>Snapshot in time</h3>
+      <p>
+        The cache is refreshed daily for short periods (30d–1y) and weekly for longer ones. The
+        concentration label reflects the state at the last cache refresh, not real time. Contributor
+        affiliations in CNCF gitdm and GitHub profiles are also updated on a schedule, so recent
+        job changes may not be reflected immediately.
+      </p>
+
+    </div>
+
+    <div class="mt-12 pt-6 border-t border-gray-800 text-xs text-gray-600">
+      OTel Contributions Tracker ·
+      <a href="https://github.com/open-telemetry" target="_blank" class="hover:text-gray-400">OpenTelemetry</a>
+    </div>
+
+  </div>
+</body>
+</html>

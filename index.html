@@ -30,6 +30,26 @@
     #contrib-modal-panel { will-change: transform; }
     #contrib-modal-panel.open { transform: translateX(0); }
 
+    /* ── Role badge tooltip ──────────────────────────────────────────── */
+    .role-badge-wrap { display: inline-block; }
+    .role-tooltip {
+      position: fixed;
+      visibility: hidden;
+      z-index: 9999;
+      pointer-events: none;
+    }
+    .role-tooltip.visible { visibility: visible; pointer-events: auto; }
+    .role-tooltip-inner {
+      background: #111827;
+      border: 1px solid #374151;
+      border-radius: 6px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+      padding: 6px 8px;
+      font-size: 11px;
+      white-space: nowrap;
+      min-width: max-content;
+    }
+
     /* ── Light mode ───────────────────────────────────────────────── */
     html.light body                          { background-color: #f1f5f9; color: #0f172a; }
     html.light .bg-gray-950                  { background-color: #f1f5f9 !important; }
@@ -902,10 +922,45 @@ const ROLE_RANK = { maintainer: 4, approver: 3, 'code-owner': 2, triager: 1 };
 function roleFor(githubHandleArray) {
   let best = null;
   for (const h of (githubHandleArray || [])) {
-    const r = ROLES[h.toLowerCase()];
+    const entry = ROLES[h.toLowerCase()];
+    if (!entry) continue;
+    const r = entry.role ?? entry; // support old string format during transition
     if (r && (!best || ROLE_RANK[r] > ROLE_RANK[best])) best = r;
   }
   return best;
+}
+
+function teamsFor(githubHandleArray) {
+  const role = roleFor(githubHandleArray);
+  if (!role) return [];
+  const teams = new Set();
+  for (const h of (githubHandleArray || [])) {
+    const entry = ROLES[h.toLowerCase()];
+    if (!entry || (entry.role ?? entry) !== role) continue;
+    for (const t of (entry.teams || [])) teams.add(t);
+  }
+  return [...teams];
+}
+
+function roleBadge(githubHandleArray, small = false) {
+  const role = roleFor(githubHandleArray);
+  if (!role) return '';
+  const teams = teamsFor(githubHandleArray);
+  const px = small ? 'px-1.5 py-0.5' : 'px-2 py-0.5';
+  const teamLinks = teams.map(t =>
+    `<div><a href="https://github.com/orgs/open-telemetry/teams/${t}" target="_blank" onclick="event.stopPropagation()" class="text-blue-400 hover:text-blue-300">${t}</a></div>`
+  ).join('');
+  const tooltip = teams.length ? `
+    <div class="role-tooltip">
+      <div class="role-tooltip-inner">
+        <div class="text-gray-500 mb-1">Teams:</div>
+        ${teamLinks}
+      </div>
+    </div>` : '';
+  return `<span class="role-badge-wrap">
+    <span class="${px} rounded text-xs ${ROLE_STYLE[role]} cursor-default">${role}</span>
+    ${tooltip}
+  </span>`;
 }
 
 const ROLE_STYLE = {
@@ -924,11 +979,14 @@ async function loadSigsCache() {
   }
 }
 
-// Returns { company, source } where source is 'gitdm' or 'github', or null.
+// Returns { company, source, file?, line? } where source is 'gitdm' or 'github', or null.
 function affiliationFor(githubHandleArray) {
   for (const h of (githubHandleArray || [])) {
-    const company = AFFILIATIONS[h.toLowerCase()];
-    if (company) return { company, source: 'gitdm' };
+    const entry = AFFILIATIONS[h.toLowerCase()];
+    if (!entry) continue;
+    // support old string format during transition
+    if (typeof entry === 'string') return { company: entry, source: 'gitdm' };
+    return { company: entry.company, source: 'gitdm', file: entry.file, line: entry.line };
   }
   for (const h of (githubHandleArray || [])) {
     const company = GH_COMPANIES[h.toLowerCase()];
@@ -1343,14 +1401,14 @@ function renderContribTable(rows, baseOffset, ranks) {
     const handles = (c.githubHandleArray || []).slice(0, 2)
       .map(h => `<a href="https://github.com/${h}" target="_blank" class="text-blue-400 hover:text-blue-300" onclick="event.stopPropagation()">@${h}</a>`)
       .join(', ');
-    const role  = roleFor(c.githubHandleArray);
-    const roles = role
-      ? `<span class="px-1.5 py-0.5 rounded text-xs ${ROLE_STYLE[role]}">${role}</span>`
-      : '';
+    const roles = roleBadge(c.githubHandleArray, true);
     const affiliation = affiliationFor(c.githubHandleArray);
+    const gitdmUrl = affiliation?.file
+      ? `https://github.com/cncf/gitdm/blob/master/developers_affiliations${affiliation.file}.txt#L${affiliation.line}`
+      : 'https://github.com/cncf/gitdm';
     const company = affiliation
       ? `${affiliation.company} <a href="${affiliation.source === 'gitdm'
-          ? 'https://github.com/cncf/gitdm'
+          ? gitdmUrl
           : `https://github.com/${(c.githubHandleArray||[])[0]}`
         }" target="_blank" onclick="event.stopPropagation()" class="inline-block px-1 py-0.5 rounded text-gray-500 hover:text-gray-300 border border-gray-700 hover:border-gray-500 text-[10px] leading-none transition-colors ml-1">${affiliation.source}</a>`
       : null;
@@ -2053,7 +2111,7 @@ function openContribModal(contributor) {
   const role = roleFor(contributor.githubHandleArray);
   if (role) {
     rolesWrap.classList.remove('hidden');
-    rolesWrap.innerHTML = `<span class="px-2 py-0.5 rounded text-xs ${ROLE_STYLE[role]}">${role}</span>`;
+    rolesWrap.innerHTML = roleBadge(contributor.githubHandleArray, false);
   } else {
     rolesWrap.classList.add('hidden');
   }
@@ -2259,6 +2317,35 @@ async function navigateToHash() {
 }
 
 window.addEventListener('hashchange', () => navigateToHash());
+
+// Role badge tooltips — fixed positioning escapes overflow-x:auto containers
+let _tooltipTimer, _activeTooltip = null;
+
+function hideActiveTooltip() {
+  if (_activeTooltip) { _activeTooltip.classList.remove('visible'); _activeTooltip = null; }
+}
+
+document.addEventListener('mouseover', e => {
+  const wrap = e.target.closest('.role-badge-wrap');
+  const tooltip = wrap?.querySelector('.role-tooltip');
+  clearTimeout(_tooltipTimer);
+  if (_activeTooltip && _activeTooltip !== tooltip) hideActiveTooltip();
+  if (!tooltip) return;
+  const rect = wrap.getBoundingClientRect();
+  const inner = tooltip.querySelector('.role-tooltip-inner');
+  tooltip.style.left = rect.left + 'px';
+  tooltip.style.top  = (rect.top - inner.offsetHeight - 4) + 'px';
+  tooltip.classList.add('visible');
+  _activeTooltip = tooltip;
+});
+document.addEventListener('mouseout', e => {
+  const wrap = e.target.closest('.role-badge-wrap');
+  const tooltip = wrap?.querySelector('.role-tooltip');
+  if (!tooltip) return;
+  if (e.relatedTarget && wrap.contains(e.relatedTarget)) return;
+  clearTimeout(_tooltipTimer);
+  _tooltipTimer = setTimeout(hideActiveTooltip, 50);
+});
 
 async function init() {
   initTheme();

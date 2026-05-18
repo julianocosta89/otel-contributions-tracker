@@ -40,6 +40,20 @@ const PERIODS = [
   { key: 'all', startDate: '2019-01-01',  alwaysRefresh: false },
 ];
 
+// ── Concurrency helpers ──────────────────────────────────────────────
+async function withConcurrency(items, concurrency, fn) {
+  const results = new Array(items.length);
+  let idx = 0;
+  async function worker() {
+    while (idx < items.length) {
+      const i = idx++;
+      results[i] = await fn(items[i], i);
+    }
+  }
+  await Promise.all(Array.from({ length: Math.min(concurrency, items.length) }, worker));
+  return results;
+}
+
 // ── Load existing cache ──────────────────────────────────────────────
 function loadExistingCache() {
   try { return JSON.parse(readFileSync(CACHE_PATH, 'utf8')); } catch { return null; }
@@ -138,24 +152,20 @@ async function main() {
 
     let succeeded = 0, skipped = 0;
 
-    for (let i = 0; i < repos.length; i++) {
-      const repo = repos[i];
-      process.stdout.write(`\r  [${(i + 1).toString().padStart(2)}/${repos.length}] ${repo.padEnd(55)}`);
-
+    await withConcurrency(repos, 3, async (repo, i) => {
       try {
         periods[key][repo] = await fetchSigData(repo, startDate);
         succeeded++;
-        await sleep(150);
+        process.stdout.write(`\r  [${(succeeded + skipped).toString().padStart(2)}/${repos.length}] ${repo.padEnd(55)}`);
       } catch (e) {
         // Repos with no LFX data return empty; network errors are logged
         if (!e.message.includes('HTTP 4')) {
-          process.stdout.write(` ✗ ${e.message}\n`);
+          console.log(`  ✗ ${repo}: ${e.message}`);
         }
         periods[key][repo] = { contributors: { total: 0, data: [] }, organizations: { total: 0, data: [] } };
         skipped++;
-        await sleep(300);
       }
-    }
+    });
 
     process.stdout.write('\n');
     console.log(`  ✓ ${succeeded} fetched, ${skipped} empty/errored`);

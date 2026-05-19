@@ -812,6 +812,76 @@ function renderReposList({ repos, unit, barColor, listElId, note }) {
   return true;
 }
 
+// ── Row helpers ──
+// opts: { showAffiliation, orgTotal, sigStyle }
+// sigStyle: use wider avatar, hover wrapper, affiliation div, and c.percentage instead of orgTotal ratio
+function renderPersonRow(c, i, opts = {}) {
+  const handle = (c.githubHandleArray || [])[0];
+  if (opts.sigStyle) {
+    const aff = affiliationFor(c.githubHandleArray);
+    return `
+          <div class="flex items-center gap-2 px-2 py-1.5 rounded hover:bg-gray-800/40 transition-colors">
+            <span class="text-gray-600 text-xs w-5 shrink-0 text-right">${i + 1}</span>
+            ${c.avatar
+              ? `<img src="${c.avatar}" class="w-6 h-6 rounded-full shrink-0" onerror="this.style.display='none'">`
+              : `<span class="w-6 h-6 shrink-0 inline-block">${SVG_PERSON}</span>`}
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center gap-1.5 min-w-0">
+                <span class="text-xs font-medium text-gray-200 truncate">${c.name}</span>
+                ${handle ? `<a href="https://github.com/${handle}" target="_blank" class="text-blue-400 hover:text-blue-300 text-xs shrink-0" onclick="event.stopPropagation()">@${handle}</a>` : ''}
+              </div>
+              ${aff ? `<div class="text-xs text-gray-500 truncate">${aff.company}</div>` : ''}
+            </div>
+            <div class="text-right shrink-0">
+              <div class="text-xs text-gray-300 font-mono">${num(c.contributions)}</div>
+              <div class="text-xs text-gray-500">${pct(c.percentage, 1)}</div>
+            </div>
+          </div>`;
+  }
+  const orgTotal = opts.orgTotal ?? 0;
+  const wrapperPy = opts.orgModal ? 'py-1' : 'py-0.5';
+  const linkOnClick = opts.orgModal ? ' onclick="event.stopPropagation()"' : '';
+  const avatarOnerror = opts.orgModal ? ' onerror="this.style.display=\'none\'"' : '';
+  return `
+        <div class="flex items-center gap-2 ${wrapperPy}">
+          <span class="text-gray-600 text-xs w-5 text-right shrink-0">${i + 1}</span>
+          ${c.avatar ? `<img src="${c.avatar}" class="w-5 h-5 rounded-full shrink-0"${avatarOnerror}>` : personPlaceholder('w-5 h-5')}
+          <span class="text-xs flex-1 truncate">${c.name}</span>
+          ${handle ? `<a href="https://github.com/${handle}" target="_blank" class="text-blue-500 text-xs shrink-0 hover:text-blue-300"${linkOnClick}>@${handle}</a>` : ''}
+          <span class="text-xs text-gray-500 font-mono shrink-0">${num(c.contributions)}</span>
+          ${opts.orgModal ? `<span class="text-xs text-gray-600 shrink-0">${orgTotal > 0 ? pct(c.contributions / orgTotal * 100) : ''}</span>` : ''}
+        </div>`;
+}
+
+// opts: { sigStyle }
+// sigStyle: use wider logo, hover wrapper, SVG_BUILDING, and show o.percentage
+function renderOrgRow(o, i, opts = {}) {
+  const logo = resolveOrgLogo(o);
+  if (opts.sigStyle) {
+    return `
+          <div class="flex items-center gap-2 px-2 py-1.5 rounded hover:bg-gray-800/40 transition-colors">
+            <span class="text-gray-600 text-xs w-5 shrink-0 text-right">${i + 1}</span>
+            ${logo
+              ? `<img src="${logo}" class="w-6 h-6 rounded object-contain shrink-0" onerror="this.style.display='none'">`
+              : `<span class="w-6 h-6 shrink-0 inline-block">${SVG_BUILDING}</span>`}
+            <div class="flex-1 min-w-0">
+              <div class="text-xs font-medium text-gray-200 truncate">${o.name}</div>
+            </div>
+            <div class="text-right shrink-0">
+              <div class="text-xs text-gray-300 font-mono">${num(o.contributions)}</div>
+              <div class="text-xs text-gray-500">${pct(o.percentage, 1)}</div>
+            </div>
+          </div>`;
+  }
+  return `
+      <div class="flex items-center gap-2 py-0.5">
+        <span class="text-gray-600 text-xs w-5 text-right shrink-0">${i + 1}</span>
+        ${logo ? `<img src="${logo}" class="w-5 h-5 rounded shrink-0" onerror="this.style.display='none'">` : orgPlaceholder('w-5 h-5')}
+        <span class="text-xs flex-1 truncate">${o.name}</span>
+        <span class="text-xs text-gray-500 font-mono shrink-0">${num(o.contributions)}</span>
+      </div>`;
+}
+
 // ── Company name normalizer (shared by logo lookup + org matching) ──
 const normCompany = s =>
   s.toLowerCase()
@@ -1735,17 +1805,7 @@ async function loadConcentration() {
     });
 
     hide('bc-list-loading'); show('bc-list');
-    el('bc-list').innerHTML = (conc.list || []).map((c, i) => {
-      const handle = (c.githubHandleArray || [])[0];
-      return `
-        <div class="flex items-center gap-2 py-0.5">
-          <span class="text-gray-600 text-xs w-5 text-right shrink-0">${i + 1}</span>
-          ${c.avatar ? `<img src="${c.avatar}" class="w-5 h-5 rounded-full shrink-0">` : personPlaceholder('w-5 h-5')}
-          <span class="text-xs flex-1 truncate">${c.name}</span>
-          ${handle ? `<a href="https://github.com/${handle}" target="_blank" class="text-blue-500 text-xs shrink-0 hover:text-blue-300">@${handle}</a>` : ''}
-          <span class="text-xs text-gray-500 font-mono shrink-0">${num(c.contributions)}</span>
-        </div>`;
-    }).join('');
+    el('bc-list').innerHTML = (conc.list || []).map((c, i) => renderPersonRow(c, i)).join('');
 
     // Org dependency
     const top   = orgDep.topOrganizations  || {};
@@ -1777,13 +1837,7 @@ async function loadConcentration() {
       },
     });
 
-    el('od-list').innerHTML = (orgDep.list || []).map((o, i) => `
-      <div class="flex items-center gap-2 py-0.5">
-        <span class="text-gray-600 text-xs w-5 text-right shrink-0">${i + 1}</span>
-        ${resolveOrgLogo(o) ? `<img src="${resolveOrgLogo(o)}" class="w-5 h-5 rounded shrink-0" onerror="this.style.display='none'">` : orgPlaceholder('w-5 h-5')}
-        <span class="text-xs flex-1 truncate">${o.name}</span>
-        <span class="text-xs text-gray-500 font-mono shrink-0">${num(o.contributions)}</span>
-      </div>`).join('');
+    el('od-list').innerHTML = (orgDep.list || []).map((o, i) => renderOrgRow(o, i)).join('');
 
   } catch (e) {
     showError(e.message);
@@ -1923,53 +1977,12 @@ function openSigModal(repoName) {
   el('sig-modal-organizations').textContent = num(period.organizations?.total ?? 0);
   el('sig-modal-period').textContent = `${S.filters.startDate} → ${S.filters.endDate}`;
 
-  const maxC = contribs[0]?.contributions ?? 1;
   el('sig-modal-contrib-list').innerHTML = contribs.length
-    ? contribs.map((c, i) => {
-        const handle = (c.githubHandleArray || [])[0];
-        const aff    = affiliationFor(c.githubHandleArray);
-        const barW   = Math.round((c.contributions / maxC) * 100);
-        return `
-          <div class="flex items-center gap-2 px-2 py-1.5 rounded hover:bg-gray-800/40 transition-colors">
-            <span class="text-gray-600 text-xs w-5 shrink-0 text-right">${i + 1}</span>
-            ${c.avatar
-              ? `<img src="${c.avatar}" class="w-6 h-6 rounded-full shrink-0" onerror="this.style.display='none'">`
-              : `<span class="w-6 h-6 shrink-0 inline-block">${SVG_PERSON}</span>`}
-            <div class="flex-1 min-w-0">
-              <div class="flex items-center gap-1.5 min-w-0">
-                <span class="text-xs font-medium text-gray-200 truncate">${c.name}</span>
-                ${handle ? `<a href="https://github.com/${handle}" target="_blank" class="text-blue-400 hover:text-blue-300 text-xs shrink-0" onclick="event.stopPropagation()">@${handle}</a>` : ''}
-              </div>
-              ${aff ? `<div class="text-xs text-gray-500 truncate">${aff.company}</div>` : ''}
-            </div>
-            <div class="text-right shrink-0">
-              <div class="text-xs text-gray-300 font-mono">${num(c.contributions)}</div>
-              <div class="text-xs text-gray-500">${pct(c.percentage, 1)}</div>
-            </div>
-          </div>`;
-      }).join('')
+    ? contribs.map((c, i) => renderPersonRow(c, i, { sigStyle: true })).join('')
     : '<p class="text-xs text-gray-600 text-center py-4">No contributors in this period</p>';
 
-  const maxO = orgs[0]?.contributions ?? 1;
   el('sig-modal-orgs-list').innerHTML = orgs.length
-    ? orgs.map((o, i) => {
-        const logo = resolveOrgLogo(o);
-        const barW = Math.round((o.contributions / maxO) * 100);
-        return `
-          <div class="flex items-center gap-2 px-2 py-1.5 rounded hover:bg-gray-800/40 transition-colors">
-            <span class="text-gray-600 text-xs w-5 shrink-0 text-right">${i + 1}</span>
-            ${logo
-              ? `<img src="${logo}" class="w-6 h-6 rounded object-contain shrink-0" onerror="this.style.display='none'">`
-              : `<span class="w-6 h-6 shrink-0 inline-block">${SVG_BUILDING}</span>`}
-            <div class="flex-1 min-w-0">
-              <div class="text-xs font-medium text-gray-200 truncate">${o.name}</div>
-            </div>
-            <div class="text-right shrink-0">
-              <div class="text-xs text-gray-300 font-mono">${num(o.contributions)}</div>
-              <div class="text-xs text-gray-500">${pct(o.percentage, 1)}</div>
-            </div>
-          </div>`;
-      }).join('')
+    ? orgs.map((o, i) => renderOrgRow(o, i, { sigStyle: true })).join('')
     : '<p class="text-xs text-gray-600 text-center py-4">No organizations in this period</p>';
 
   const modal = el('sig-modal');
@@ -2074,19 +2087,9 @@ function openOrgModal(org) {
     '<span id="org-repo-count-spinner" class="spinner" style="width:14px;height:14px;border-width:1.5px"></span>';
 
   // Render full contributor list (scrollable)
-  const contribsCacheTotal = contribs.reduce((s, c) => s + c.contributions, 0);
-  el('org-modal-contrib-list').innerHTML = contribs.map((c, i) => {
-    const handle = (c.githubHandleArray || [])[0];
-    return `
-      <div class="flex items-center gap-2 py-1">
-        <span class="text-gray-600 text-xs w-5 text-right shrink-0">${i + 1}</span>
-        ${c.avatar ? `<img src="${c.avatar}" class="w-5 h-5 rounded-full shrink-0" onerror="this.style.display='none'">` : personPlaceholder('w-5 h-5')}
-        <span class="text-xs flex-1 truncate">${c.name}</span>
-        ${handle ? `<a href="https://github.com/${handle}" target="_blank" class="text-blue-500 text-xs shrink-0 hover:text-blue-300" onclick="event.stopPropagation()">@${handle}</a>` : ''}
-        <span class="text-xs text-gray-500 font-mono shrink-0">${num(c.contributions)}</span>
-        <span class="text-xs text-gray-600 shrink-0">${org.contributions > 0 ? pct(c.contributions / org.contributions * 100) : ''}</span>
-      </div>`;
-  }).join('');
+  el('org-modal-contrib-list').innerHTML = contribs.map((c, i) =>
+    renderPersonRow(c, i, { orgModal: true, orgTotal: org.contributions })
+  ).join('');
 
   el('org-modal-contrib-more').classList.add('hidden');
 

@@ -1996,8 +1996,8 @@ function companyMatchesOrg(companyName, orgName) {
 }
 
 function contributorsForOrg(orgName) {
-  if (!CACHE?.periods) return [];
-  return (CACHE.periods[S.preset]?.contributors?.data || []).filter(c => {
+  if (!CACHE) return [];
+  return (cacheData().contributors?.data || []).filter(c => {
     const aff = affiliationFor(c.githubHandleArray);
     return aff && companyMatchesOrg(aff.company, orgName);
   });
@@ -2011,7 +2011,7 @@ function calcOrgConcentration(contribs, orgTotal) {
     const share = c.contributions / cacheTotal * 100;
     return s + share * share;
   }, 0);
-  const top1Pct = contribs[0].contributions / cacheTotal * 100;
+  const top1Pct = orgTotal > 0 ? contribs[0].contributions / orgTotal * 100 : contribs[0].contributions / cacheTotal * 100;
   const label = hhi < 1500 ? 'Distributed' : hhi < 3000 ? 'Moderate' : 'Concentrated';
   const color = hhi < 1500 ? 'green' : hhi < 3000 ? 'yellow' : 'red';
   return { status: 'ok', hhi: Math.round(hhi), top1Pct, label, color };
@@ -2032,7 +2032,7 @@ function renderOrgConcentration(contribs, orgTotal) {
       <span class="text-sm font-semibold ${label}">${r.label}</span>
       <span class="text-xs text-gray-600 font-mono ml-auto">HHI ${num(r.hhi)}</span>
     </div>
-    <div class="text-xs text-gray-500 mt-1">Top contributor: ${pct(r.top1Pct)} of all-platform activity</div>`;
+    <div class="text-xs text-gray-500 mt-1">Top contributor: ${pct(r.top1Pct)} of ${S.filters.platform === 'all' ? 'all-platform' : S.filters.platform} activity</div>`;
 }
 
 function openOrgModal(org) {
@@ -2073,7 +2073,7 @@ function openOrgModal(org) {
         <span class="text-xs flex-1 truncate">${c.name}</span>
         ${handle ? `<a href="https://github.com/${handle}" target="_blank" class="text-blue-500 text-xs shrink-0 hover:text-blue-300" onclick="event.stopPropagation()">@${handle}</a>` : ''}
         <span class="text-xs text-gray-500 font-mono shrink-0">${num(c.contributions)}</span>
-        <span class="text-xs text-gray-600 shrink-0">${pct(c.contributions / org.contributions * 100)}</span>
+        <span class="text-xs text-gray-600 shrink-0">${org.contributions > 0 ? pct(c.contributions / org.contributions * 100) : ''}</span>
       </div>`;
   }).join('');
 

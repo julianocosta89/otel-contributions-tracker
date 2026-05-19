@@ -74,7 +74,7 @@ Per-repository contributor and organization leaderboards. Used by the SIG/repo b
 }
 ```
 
-`repos` is the list of all non-archived repositories in the `open-telemetry` GitHub organization. Presets are a subset of those in `cache.json` (`30d`, `90d`, `6m`).
+`repos` is the list of all non-archived repositories in the `open-telemetry` GitHub organization. Presets match those in `cache.json`: `30d`, `90d`, `6m`, `1y`, `2y`, `3y`, `all`.
 
 ---
 
@@ -135,7 +135,8 @@ When the app resolves a contributor's employer it checks sources in this order, 
 
 1. `affiliations.json` — CNCF gitdm (highest confidence)
 2. `github-companies.json` — GitHub profile company field (fallback)
-3. Organization field returned by the LF Insights API response
+
+If neither source has the contributor, the app shows no company affiliation (the LF Insights API response does not include an organization field used by the app).
 
 ## How the app uses these files
 

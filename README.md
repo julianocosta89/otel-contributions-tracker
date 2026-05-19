@@ -34,7 +34,10 @@ data/
   roles.json                        # GitHub team role assignments
 .github/
   workflows/
-    refresh-data.yml                # GitHub Actions: daily + weekly data refresh, auto-commits results
+    refresh-data.yml                # daily: fetch-data.mjs + fetch-sigs.mjs
+    refresh-affiliations.yml        # weekly: fetch-affiliations.mjs
+    refresh-roles.yml               # weekly: fetch-roles.mjs
+    refresh-sigs.yml                # weekly: fetch-sigs.mjs (full refresh)
 ```
 
 ### `index.html`

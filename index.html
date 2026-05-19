@@ -1996,8 +1996,8 @@ function companyMatchesOrg(companyName, orgName) {
 }
 
 function contributorsForOrg(orgName) {
-  if (!CACHE) return [];
-  return (cacheData().contributors.data || []).filter(c => {
+  if (!CACHE?.periods) return [];
+  return (CACHE.periods[S.preset]?.contributors?.data || []).filter(c => {
     const aff = affiliationFor(c.githubHandleArray);
     return aff && companyMatchesOrg(aff.company, orgName);
   });
@@ -2032,7 +2032,7 @@ function renderOrgConcentration(contribs, orgTotal) {
       <span class="text-sm font-semibold ${label}">${r.label}</span>
       <span class="text-xs text-gray-600 font-mono ml-auto">HHI ${num(r.hhi)}</span>
     </div>
-    <div class="text-xs text-gray-500 mt-1">Top contributor: ${pct(r.top1Pct)} of GitHub activity</div>`;
+    <div class="text-xs text-gray-500 mt-1">Top contributor: ${pct(r.top1Pct)} of all-platform activity</div>`;
 }
 
 function openOrgModal(org) {

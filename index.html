@@ -1335,13 +1335,15 @@ async function renderChoropleth(canvasId, chartKey, geoRows) {
 // ══════════════════════════════════════════════════════════════════
 async function loadOverview() {
   try {
+    const cached = usingCache();
+    const data   = cached ? cacheData() : null;
     let contrib, orgs, conc, geo;
 
-    if (usingCache()) {
-      contrib = cacheData().activeContributors;
-      orgs    = cacheData().activeOrganizations;
-      conc    = cacheData().contributorDependency;
-      geo     = cacheData().geographicalDistribution;
+    if (cached) {
+      contrib = data.activeContributors;
+      orgs    = data.activeOrganizations;
+      conc    = data.contributorDependency;
+      geo     = data.geographicalDistribution;
     } else {
       [contrib, orgs, conc, geo] = await Promise.all([
         liveApi('contributors/active-contributors'),
@@ -1387,8 +1389,8 @@ async function loadOverview() {
 
     // Top orgs list
     let topOrgs;
-    if (usingCache()) {
-      topOrgs = { data: cacheData().organizations.data.slice(0, 15) };
+    if (cached) {
+      topOrgs = { data: data.organizations.data.slice(0, 15) };
     } else {
       topOrgs = await liveApi('contributors/organization-leaderboard', { offset: 0, limit: 15 });
     }
@@ -1425,9 +1427,11 @@ async function loadContributors() {
   show('contrib-loading'); hide('contrib-table-wrap');
 
   try {
-    if (usingCache()) {
-      const all = cacheData().contributors.data;
-      S.contrib.total = cacheData().contributors.total;
+    const cached = usingCache();
+    const data   = cached ? cacheData() : null;
+    if (cached) {
+      const all = data.contributors.data;
+      S.contrib.total = data.contributors.total;
       const q = el('contributor-search').value.toLowerCase().trim();
       S.contrib.filtered = q
         ? all.filter(c =>
@@ -1534,17 +1538,19 @@ function clearSearch(inputId, onSearch) {
 const clearContribSearch = () => clearSearch('contributor-search', onContribSearch);
 
 function onContribSearch() {
+  const cached = usingCache();
+  const data   = cached ? cacheData() : null;
   const q = el('contributor-search').value.toLowerCase().trim();
   el('contrib-search-clear').classList.toggle('hidden', !q);
   S.pages.contributors = 0;
 
-  if (usingCache()) {
+  if (cached) {
     // Search across ALL cached contributors instantly
     S.contrib.filtered = q
-      ? cacheData().contributors.data.filter(c =>
+      ? data.contributors.data.filter(c =>
           c.name?.toLowerCase().includes(q) ||
           (c.githubHandleArray || []).some(h => h.toLowerCase().includes(q)))
-      : cacheData().contributors.data;
+      : data.contributors.data;
     el('contrib-total-label').textContent = q
       ? `${S.contrib.filtered.length} matches`
       : `${num(S.contrib.total)} total`;
@@ -1568,9 +1574,11 @@ async function loadOrganizations() {
   show('orgs-loading'); hide('orgs-table-wrap');
 
   try {
-    if (usingCache()) {
-      const all = cacheData().organizations.data;
-      S.orgs.total = cacheData().organizations.total;
+    const cached = usingCache();
+    const data   = cached ? cacheData() : null;
+    if (cached) {
+      const all = data.organizations.data;
+      S.orgs.total = data.organizations.total;
       const q = el('org-search').value.toLowerCase().trim();
       S.orgs.filtered = q
         ? all.filter(o => orgMatchesSearch(o.name, q))
@@ -1613,7 +1621,8 @@ function renderOrgsPage() {
 }
 
 function concentrationCell(orgName, orgTotal) {
-  if (!usingCache()) return `<td class="px-4 py-2.5 text-right text-xs text-gray-600">—</td>`;
+  const cached = usingCache();
+  if (!cached) return `<td class="px-4 py-2.5 text-right text-xs text-gray-600">—</td>`;
   const r = calcOrgConcentration(contributorsForOrg(orgName), orgTotal);
   if (r.status === 'limited') return `<td class="px-4 py-2.5 text-right text-xs text-gray-600">—</td>`;
   const dot   = r.color === 'green' ? 'bg-green-500'  : r.color === 'yellow' ? 'bg-yellow-500'  : 'bg-red-500';
@@ -1660,11 +1669,13 @@ document.addEventListener('click', e => {
 });
 
 function onOrgSearch() {
+  const cached = usingCache();
+  const data   = cached ? cacheData() : null;
   const q = el('org-search').value.toLowerCase().trim();
   el('org-search-clear').classList.toggle('hidden', !q);
   S.pages.organizations = 0;
-  if (usingCache()) {
-    const all = cacheData().organizations.data;
+  if (cached) {
+    const all = data.organizations.data;
     S.orgs.filtered = q ? all.filter(o => orgMatchesSearch(o.name, q)) : all;
     el('orgs-total-label').textContent = q ? `${S.orgs.filtered.length} matches` : `${num(S.orgs.total)} total`;
     renderOrgsPage();
@@ -1682,10 +1693,12 @@ async function loadConcentration() {
   show('od-loading');  hide('od-content');
 
   try {
+    const cached = usingCache();
+    const data   = cached ? cacheData() : null;
     let conc, orgDep;
-    if (usingCache()) {
-      conc   = cacheData().contributorDependency;
-      orgDep = cacheData().organizationDependency;
+    if (cached) {
+      conc   = data.contributorDependency;
+      orgDep = data.organizationDependency;
     } else {
       [conc, orgDep] = await Promise.all([
         liveApi('contributors/contributor-dependency'),
@@ -1786,8 +1799,10 @@ async function loadGeography() {
   show('geo-table-loading'); hide('geo-table-wrap');
 
   try {
-    const geo  = usingCache()
-      ? cacheData().geographicalDistribution
+    const cached = usingCache();
+    const data   = cached ? cacheData() : null;
+    const geo  = cached
+      ? data.geographicalDistribution
       : await liveApi('contributors/geographical-distribution');
 
     const all = (geo.data || []).sort((a, b) => b.count - a.count);

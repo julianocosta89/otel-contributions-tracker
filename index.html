@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>OpenTelemetry Contributions Tracker</title>
+  <script>tailwind.config = { darkMode: 'class' }</script>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chartjs-chart-geo@4.3.3/build/index.umd.min.js"></script>
@@ -11,20 +12,25 @@
     body { font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
     .spinner {
       display: inline-block;
-      border: 2px solid rgba(255,255,255,0.1);
+      border: 2px solid rgba(0,0,0,0.08);
       border-top-color: #3b82f6;
       border-radius: 50%;
       width: 20px; height: 20px;
       animation: spin 0.7s linear infinite;
     }
+    html.dark .spinner { border-color: rgba(255,255,255,0.1); border-top-color: #3b82f6; }
     @keyframes spin { to { transform: rotate(360deg); } }
     ::-webkit-scrollbar { width: 5px; height: 5px; }
     ::-webkit-scrollbar-track { background: transparent; }
-    ::-webkit-scrollbar-thumb { background: #374151; border-radius: 3px; }
+    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+    html.dark ::-webkit-scrollbar-thumb { background: #374151; }
     .tab-btn { transition: color 0.15s, border-color 0.15s; }
-    .tab-btn.active { color: #60a5fa; border-bottom: 2px solid #60a5fa; }
-    .tab-btn:not(.active) { color: #9ca3af; border-bottom: 2px solid transparent; }
-    .tab-btn:not(.active):hover { color: #e5e7eb; }
+    .tab-btn.active { color: #2563eb; border-bottom: 2px solid #2563eb; }
+    .tab-btn:not(.active) { color: #64748b; border-bottom: 2px solid transparent; }
+    .tab-btn:not(.active):hover { color: #0f172a; }
+    html.dark .tab-btn.active { color: #60a5fa; border-bottom: 2px solid #60a5fa; }
+    html.dark .tab-btn:not(.active) { color: #9ca3af; }
+    html.dark .tab-btn:not(.active):hover { color: #e5e7eb; }
     tr:last-child td { border-bottom: none; }
     .contrib-row { cursor: pointer; }
     #contrib-modal-panel { will-change: transform; }
@@ -40,90 +46,40 @@
     }
     .role-tooltip.visible { visibility: visible; pointer-events: auto; }
     .role-tooltip-inner {
-      background: #111827;
-      border: 1px solid #374151;
+      background: #f8fafc;
+      border: 1px solid #cbd5e1;
       border-radius: 6px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
       padding: 6px 8px;
       font-size: 11px;
       white-space: nowrap;
       min-width: max-content;
     }
+    html.dark .role-tooltip-inner {
+      background: #111827;
+      border-color: #374151;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+    }
 
-    /* ── Light mode ───────────────────────────────────────────────── */
-    html.light body                          { background-color: #f1f5f9; color: #0f172a; }
-    html.light .bg-gray-950                  { background-color: #f1f5f9 !important; }
-    html.light .bg-gray-900                  { background-color: #ffffff !important; }
-    html.light .bg-gray-800                  { background-color: #e2e8f0 !important; }
-    html.light .border-gray-800             { border-color: #e2e8f0 !important; }
-    html.light .border-gray-700             { border-color: #cbd5e1 !important; }
-    html.light .text-gray-100               { color: #0f172a !important; }
-    html.light .text-gray-300               { color: #334155 !important; }
-    html.light .text-gray-400               { color: #475569 !important; }
-    html.light .text-gray-500               { color: #64748b !important; }
-    html.light .text-gray-600               { color: #94a3b8 !important; }
-    html.light .text-white                  { color: #0f172a !important; }
-    html.light .bg-blue-600.text-white      { color: #ffffff !important; }
-    html.light .hover\:text-white:hover     { color: #0f172a !important; }
-    html.light .hover\:bg-gray-700:hover    { background-color: #cbd5e1 !important; }
-    html.light .hover\:bg-gray-800\/20:hover { background-color: rgba(226,232,240,0.5) !important; }
-    html.light .bg-gray-800\/20             { background-color: rgba(226,232,240,0.3) !important; }
-    html.light .bg-gray-800\/30             { background-color: rgba(226,232,240,0.5) !important; }
-    html.light .bg-blue-900\/60             { background-color: #dbeafe !important; }
-    html.light .text-blue-300               { color: #1d4ed8 !important; }
-    html.light .text-blue-400               { color: #2563eb !important; }
-    html.light .border-blue-400             { border-color: #2563eb !important; }
-    html.light .text-blue-500               { color: #2563eb !important; }
-    html.light ::-webkit-scrollbar-thumb    { background: #cbd5e1 !important; }
-    html.light input[type="date"],
-    html.light select                       { background-color: #ffffff; border-color: #cbd5e1; color: #0f172a; }
-    html.light option                       { background-color: #ffffff; color: #0f172a; }
-    html.light .spinner                     { border-color: rgba(0,0,0,0.08); border-top-color: #3b82f6; }
-    html.light #error-toast                 { background-color: #ffffff; }
-    html.light .tab-btn.active              { color: #2563eb; border-color: #2563eb; }
-    html.light .tab-btn:not(.active)        { color: #64748b; }
-    html.light .tab-btn:not(.active):hover  { color: #0f172a; }
-    html.light .text-green-400              { color: #16a34a !important; }
-    html.light .text-red-400                { color: #dc2626 !important; }
+    input[type="date"], select { background-color: #ffffff; border-color: #cbd5e1; color: #0f172a; }
+    option { background-color: #ffffff; color: #0f172a; }
+    html.dark input[type="date"], html.dark select { background-color: #1f2937; border-color: #374151; color: #d1d5db; }
+    html.dark option { background-color: #1f2937; color: #d1d5db; }
+    #error-toast { background-color: #ffffff; }
+    html.dark #error-toast { background-color: #111827; }
+
     .org-row { cursor: pointer; }
     #org-modal-panel { will-change: transform; }
     #org-modal-panel.open { transform: translateX(0); }
     .sig-row { cursor: pointer; }
     #sig-modal-panel { will-change: transform; }
     #sig-modal-panel.open { transform: translateX(0); }
-    html.light #org-modal-panel         { background-color: #ffffff !important; border-color: #e2e8f0 !important; }
-    html.light #org-modal-panel .bg-gray-900\/95 { background-color: rgba(255,255,255,0.95) !important; }
-    html.light #org-modal-panel .bg-gray-800\/50 { background-color: rgba(226,232,240,0.6) !important; }
-    html.light #org-modal-panel .border-gray-800 { border-color: #e2e8f0 !important; }
-    html.light #org-modal-panel .text-gray-500   { color: #64748b !important; }
-    html.light #org-modal-panel .text-gray-600   { color: #94a3b8 !important; }
-    html.light #org-modal-panel .bg-gray-800     { background-color: #e2e8f0 !important; }
-    html.light #org-modal-panel .hover\:bg-gray-800:hover { background-color: #e2e8f0 !important; }
-    html.light #org-modal-panel .bg-gray-800\/30 { background-color: rgba(226,232,240,0.4) !important; }
-    html.light #org-modal-panel .hover\:bg-gray-800\/60:hover { background-color: rgba(226,232,240,0.8) !important; }
-    html.light #contrib-modal-panel         { background-color: #ffffff !important; border-color: #e2e8f0 !important; }
-    html.light #contrib-modal-panel .bg-gray-900\/95 { background-color: rgba(255,255,255,0.95) !important; }
-    html.light #contrib-modal-panel .bg-gray-800\/50 { background-color: rgba(226,232,240,0.6) !important; }
-    html.light #contrib-modal-panel .border-gray-800 { border-color: #e2e8f0 !important; }
-    html.light #contrib-modal-panel .text-gray-500   { color: #64748b !important; }
-    html.light #contrib-modal-panel .text-gray-600   { color: #94a3b8 !important; }
-    html.light #contrib-modal-panel .bg-gray-800     { background-color: #e2e8f0 !important; }
-    html.light #contrib-modal-panel .hover\:bg-gray-800:hover { background-color: #e2e8f0 !important; }
-    html.light #sig-modal-panel         { background-color: #ffffff !important; border-color: #e2e8f0 !important; }
-    html.light #sig-modal-panel .bg-gray-900\/95 { background-color: rgba(255,255,255,0.95) !important; }
-    html.light #sig-modal-panel .bg-gray-800\/50 { background-color: rgba(226,232,240,0.6) !important; }
-    html.light #sig-modal-panel .border-gray-800 { border-color: #e2e8f0 !important; }
-    html.light #sig-modal-panel .text-gray-500   { color: #64748b !important; }
-    html.light #sig-modal-panel .text-gray-200   { color: #1e293b !important; }
-    html.light #sig-modal-panel .bg-gray-800\/40 { background-color: rgba(226,232,240,0.6) !important; }
-    html.light #sig-modal-panel .bg-gray-800     { background-color: #e2e8f0 !important; }
-    html.light #sig-modal-panel .text-gray-600   { color: #94a3b8 !important; }
   </style>
 </head>
-<body class="bg-gray-950 text-gray-100 min-h-screen">
+<body class="bg-slate-100 dark:bg-gray-950 text-slate-900 dark:text-gray-100 min-h-screen">
 
 <!-- ================================================================ HEADER -->
-<header class="bg-gray-900 border-b border-gray-800 sticky top-0 z-40 shadow-xl">
+<header class="bg-white dark:bg-gray-900 border-b border-slate-200 dark:border-gray-800 sticky top-0 z-40 shadow-xl">
   <div class="max-w-7xl mx-auto px-4 sm:px-6">
 
     <!-- Row 1: Brand -->
@@ -142,26 +98,26 @@
     <!-- Row 2: Filters + theme toggle (wraps freely on small screens) -->
     <div class="flex items-center gap-2 flex-wrap pb-2.5">
       <!-- Date presets -->
-      <div class="flex bg-gray-800 rounded-lg p-0.5 gap-0.5 text-xs">
-        <button data-preset="30d"  onclick="setPreset('30d')"  class="preset-btn px-2.5 py-1 rounded-md text-gray-400 hover:text-white transition-colors">30d</button>
-        <button data-preset="90d"  onclick="setPreset('90d')"  class="preset-btn px-2.5 py-1 rounded-md text-gray-400 hover:text-white transition-colors">90d</button>
-        <button data-preset="6m"   onclick="setPreset('6m')"   class="preset-btn px-2.5 py-1 rounded-md text-gray-400 hover:text-white transition-colors">6m</button>
+      <div class="flex bg-slate-200 dark:bg-gray-800 rounded-lg p-0.5 gap-0.5 text-xs">
+        <button data-preset="30d"  onclick="setPreset('30d')"  class="preset-btn px-2.5 py-1 rounded-md text-slate-500 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white transition-colors">30d</button>
+        <button data-preset="90d"  onclick="setPreset('90d')"  class="preset-btn px-2.5 py-1 rounded-md text-slate-500 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white transition-colors">90d</button>
+        <button data-preset="6m"   onclick="setPreset('6m')"   class="preset-btn px-2.5 py-1 rounded-md text-slate-500 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white transition-colors">6m</button>
         <button data-preset="1y"   onclick="setPreset('1y')"   class="preset-btn px-2.5 py-1 rounded-md bg-blue-600 text-white">1y</button>
-        <button data-preset="2y"   onclick="setPreset('2y')"   class="preset-btn px-2.5 py-1 rounded-md text-gray-400 hover:text-white transition-colors">2y</button>
-        <button data-preset="3y"   onclick="setPreset('3y')"   class="preset-btn px-2.5 py-1 rounded-md text-gray-400 hover:text-white transition-colors">3y</button>
-        <button data-preset="all"  onclick="setPreset('all')"  class="preset-btn px-2.5 py-1 rounded-md text-gray-400 hover:text-white transition-colors">all</button>
+        <button data-preset="2y"   onclick="setPreset('2y')"   class="preset-btn px-2.5 py-1 rounded-md text-slate-500 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white transition-colors">2y</button>
+        <button data-preset="3y"   onclick="setPreset('3y')"   class="preset-btn px-2.5 py-1 rounded-md text-slate-500 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white transition-colors">3y</button>
+        <button data-preset="all"  onclick="setPreset('all')"  class="preset-btn px-2.5 py-1 rounded-md text-slate-500 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white transition-colors">all</button>
       </div>
 
       <!-- Custom dates -->
       <input type="date" id="startDate" onchange="onDateChange()"
-        class="bg-gray-800 border border-gray-700 rounded px-2 py-1 text-xs text-gray-300 focus:outline-none focus:border-blue-500">
-      <span class="text-gray-600 text-xs">→</span>
+        class="bg-slate-200 dark:bg-gray-800 border border-slate-300 dark:border-gray-700 rounded px-2 py-1 text-xs text-slate-700 dark:text-gray-300 focus:outline-none focus:border-blue-500">
+      <span class="text-slate-300 dark:text-gray-600 text-xs">→</span>
       <input type="date" id="endDate" onchange="onDateChange()"
-        class="bg-gray-800 border border-gray-700 rounded px-2 py-1 text-xs text-gray-300 focus:outline-none focus:border-blue-500">
+        class="bg-slate-200 dark:bg-gray-800 border border-slate-300 dark:border-gray-700 rounded px-2 py-1 text-xs text-slate-700 dark:text-gray-300 focus:outline-none focus:border-blue-500">
 
       <!-- Platform -->
       <select id="platform" onchange="onFilterChange()"
-        class="bg-gray-800 border border-gray-700 rounded px-2 py-1 text-xs text-gray-300 focus:outline-none focus:border-blue-500">
+        class="bg-slate-200 dark:bg-gray-800 border border-slate-300 dark:border-gray-700 rounded px-2 py-1 text-xs text-slate-700 dark:text-gray-300 focus:outline-none focus:border-blue-500">
         <option value="all">All platforms</option>
         <option value="github">GitHub</option>
         <option value="git">Git</option>
@@ -173,7 +129,7 @@
 
       <!-- Theme toggle -->
       <button onclick="toggleTheme()" title="Toggle light/dark mode"
-        class="ml-auto p-1.5 rounded-lg bg-gray-800 border border-gray-700 text-gray-400 hover:text-white transition-colors shrink-0">
+        class="ml-auto p-1.5 rounded-lg bg-slate-200 dark:bg-gray-800 border border-slate-300 dark:border-gray-700 text-slate-500 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white transition-colors shrink-0">
         <svg id="icon-moon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
         </svg>
@@ -190,7 +146,7 @@
 </header>
 
 <!-- ================================================================ TABS -->
-<nav class="bg-gray-900 border-b border-gray-800">
+<nav class="bg-white dark:bg-gray-900 border-b border-slate-200 dark:border-gray-800">
   <div class="max-w-7xl mx-auto px-4 sm:px-6 flex overflow-x-auto">
     <button class="tab-btn active px-4 py-3 text-sm font-medium whitespace-nowrap" onclick="setTab('overview')">Overview</button>
     <button class="tab-btn         px-4 py-3 text-sm font-medium whitespace-nowrap" onclick="setTab('contributors')">Contributors</button>
@@ -207,49 +163,49 @@
   <!-- ── OVERVIEW TAB ─────────────────────────────────────────────── -->
   <div id="tab-overview" class="tab-panel space-y-4">
     <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
-      <div class="bg-gray-900 rounded-xl p-4 border border-gray-800">
-        <p class="text-gray-400 text-xs mb-1">Total Contributors</p>
+      <div class="bg-white dark:bg-gray-900 rounded-xl p-4 border border-slate-200 dark:border-gray-800">
+        <p class="text-slate-500 dark:text-gray-400 text-xs mb-1">Total Contributors</p>
         <p class="text-2xl font-bold" id="stat-contributors"><span class="spinner"></span></p>
         <p class="text-xs mt-1" id="stat-contributors-change"></p>
       </div>
-      <div class="bg-gray-900 rounded-xl p-4 border border-gray-800">
-        <p class="text-gray-400 text-xs mb-1">Organizations</p>
+      <div class="bg-white dark:bg-gray-900 rounded-xl p-4 border border-slate-200 dark:border-gray-800">
+        <p class="text-slate-500 dark:text-gray-400 text-xs mb-1">Organizations</p>
         <p class="text-2xl font-bold" id="stat-orgs"><span class="spinner"></span></p>
         <p class="text-xs mt-1" id="stat-orgs-change"></p>
       </div>
-      <div class="bg-gray-900 rounded-xl p-4 border border-gray-800">
-        <p class="text-gray-400 text-xs mb-1">Maintainers</p>
+      <div class="bg-white dark:bg-gray-900 rounded-xl p-4 border border-slate-200 dark:border-gray-800">
+        <p class="text-slate-500 dark:text-gray-400 text-xs mb-1">Maintainers</p>
         <p class="text-2xl font-bold" id="stat-maintainers">—</p>
-        <p class="text-xs mt-1 text-gray-600">Active project maintainers</p>
+        <p class="text-xs mt-1 text-slate-300 dark:text-gray-600">Active project maintainers</p>
       </div>
-      <div class="bg-gray-900 rounded-xl p-4 border border-gray-800">
-        <p class="text-gray-400 text-xs mb-1">Reviewers</p>
+      <div class="bg-white dark:bg-gray-900 rounded-xl p-4 border border-slate-200 dark:border-gray-800">
+        <p class="text-slate-500 dark:text-gray-400 text-xs mb-1">Reviewers</p>
         <p class="text-2xl font-bold" id="stat-reviewers">—</p>
-        <p class="text-xs mt-1 text-gray-600">Pull request reviewers</p>
+        <p class="text-xs mt-1 text-slate-300 dark:text-gray-600">Pull request reviewers</p>
       </div>
     </div>
 
     <div class="grid md:grid-cols-2 gap-4">
-      <div class="bg-gray-900 rounded-xl p-4 border border-gray-800">
+      <div class="bg-white dark:bg-gray-900 rounded-xl p-4 border border-slate-200 dark:border-gray-800">
         <h2 class="text-sm font-semibold mb-0.5">Contribution Concentration</h2>
-        <p class="text-xs text-gray-500 mb-3">Share of work across top vs. other contributors</p>
+        <p class="text-xs text-slate-400 dark:text-gray-500 mb-3">Share of work across top vs. other contributors</p>
         <div id="ov-conc-loading" class="flex justify-center py-10"><span class="spinner"></span></div>
         <div id="ov-conc-wrap" class="hidden">
           <canvas id="ovConcChart"></canvas>
-          <p id="ov-conc-summary" class="text-xs text-gray-400 mt-3 text-center leading-relaxed"></p>
+          <p id="ov-conc-summary" class="text-xs text-slate-500 dark:text-gray-400 mt-3 text-center leading-relaxed"></p>
         </div>
       </div>
-      <div class="bg-gray-900 rounded-xl p-4 border border-gray-800">
+      <div class="bg-white dark:bg-gray-900 rounded-xl p-4 border border-slate-200 dark:border-gray-800">
         <h2 class="text-sm font-semibold mb-0.5">Top Organizations</h2>
-        <p class="text-xs text-gray-500 mb-3">Most active contributing companies</p>
+        <p class="text-xs text-slate-400 dark:text-gray-500 mb-3">Most active contributing companies</p>
         <div id="ov-orgs-loading" class="flex justify-center py-10"><span class="spinner"></span></div>
         <div id="ov-orgs-list" class="hidden space-y-1.5"></div>
       </div>
     </div>
 
-    <div class="bg-gray-900 rounded-xl p-4 border border-gray-800">
+    <div class="bg-white dark:bg-gray-900 rounded-xl p-4 border border-slate-200 dark:border-gray-800">
       <h2 class="text-sm font-semibold mb-0.5">Geographic Reach
-        <span class="text-gray-500 font-normal text-xs ml-1">— top 10 known countries</span>
+        <span class="text-slate-400 dark:text-gray-500 font-normal text-xs ml-1">— top 10 known countries</span>
       </h2>
       <div id="ov-geo-loading" class="flex justify-center py-8"><span class="spinner"></span></div>
       <div id="ov-geo-wrap" class="hidden" style="position:relative; height:220px;">
@@ -260,25 +216,25 @@
 
   <!-- ── CONTRIBUTORS TAB ──────────────────────────────────────────── -->
   <div id="tab-contributors" class="tab-panel hidden">
-    <div class="bg-gray-900 rounded-xl border border-gray-800">
-      <div class="flex items-center justify-between p-4 border-b border-gray-800 flex-wrap gap-2">
+    <div class="bg-white dark:bg-gray-900 rounded-xl border border-slate-200 dark:border-gray-800">
+      <div class="flex items-center justify-between p-4 border-b border-slate-200 dark:border-gray-800 flex-wrap gap-2">
         <h2 class="text-sm font-semibold">Contributor Leaderboard</h2>
         <div class="flex items-center gap-2">
           <div class="relative">
             <input type="text" id="contributor-search" placeholder="Search name or @handle…"
-              class="bg-gray-800 border border-gray-700 rounded px-3 py-1.5 text-xs text-gray-300 focus:outline-none focus:border-blue-500 w-52 pr-7"
+              class="bg-slate-200 dark:bg-gray-800 border border-slate-300 dark:border-gray-700 rounded px-3 py-1.5 text-xs text-slate-700 dark:text-gray-300 focus:outline-none focus:border-blue-500 w-52 pr-7"
               oninput="onContribSearch()">
             <button id="contrib-search-clear" onclick="clearContribSearch()"
-              class="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-300 hidden text-sm leading-none">✕</button>
+              class="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 dark:text-gray-500 hover:text-slate-700 dark:text-gray-300 hidden text-sm leading-none">✕</button>
           </div>
-          <span id="contrib-total-label" class="text-xs text-gray-500 whitespace-nowrap"></span>
+          <span id="contrib-total-label" class="text-xs text-slate-400 dark:text-gray-500 whitespace-nowrap"></span>
         </div>
       </div>
       <div id="contrib-loading" class="flex justify-center py-14"><span class="spinner"></span></div>
       <div id="contrib-table-wrap" class="hidden overflow-x-auto">
         <table class="w-full">
           <thead>
-            <tr class="border-b border-gray-800 text-xs text-gray-500 uppercase tracking-wide">
+            <tr class="border-b border-slate-200 dark:border-gray-800 text-xs text-slate-400 dark:text-gray-500 uppercase tracking-wide">
               <th class="text-left px-4 py-3 w-8">#</th>
               <th class="text-left px-4 py-3">Contributor</th>
               <th class="text-right px-4 py-3">Contributions</th>
@@ -291,12 +247,12 @@
           <tbody id="contrib-tbody"></tbody>
         </table>
       </div>
-      <div class="flex items-center justify-between px-4 py-3 border-t border-gray-800">
+      <div class="flex items-center justify-between px-4 py-3 border-t border-slate-200 dark:border-gray-800">
         <button id="contrib-prev" onclick="changePage('contributors',-1)"
-          class="px-3 py-1.5 text-xs bg-gray-800 rounded hover:bg-gray-700 disabled:opacity-30 disabled:cursor-not-allowed transition-colors">← Prev</button>
-        <span id="contrib-page-info" class="text-xs text-gray-500"></span>
+          class="px-3 py-1.5 text-xs bg-slate-200 dark:bg-gray-800 rounded hover:bg-slate-300 dark:hover:bg-gray-700 disabled:opacity-30 disabled:cursor-not-allowed transition-colors">← Prev</button>
+        <span id="contrib-page-info" class="text-xs text-slate-400 dark:text-gray-500"></span>
         <button id="contrib-next" onclick="changePage('contributors', 1)"
-          class="px-3 py-1.5 text-xs bg-gray-800 rounded hover:bg-gray-700 disabled:opacity-30 disabled:cursor-not-allowed transition-colors">Next →</button>
+          class="px-3 py-1.5 text-xs bg-slate-200 dark:bg-gray-800 rounded hover:bg-slate-300 dark:hover:bg-gray-700 disabled:opacity-30 disabled:cursor-not-allowed transition-colors">Next →</button>
       </div>
     </div>
   </div>
@@ -306,25 +262,25 @@
     <div>
       <div id="org-chart-loading" class="hidden"></div>
       <div id="org-chart-wrap" class="hidden"><canvas id="orgChart"></canvas></div>
-      <div class="bg-gray-900 rounded-xl border border-gray-800 flex flex-col">
-        <div class="flex items-center justify-between p-4 border-b border-gray-800 flex-wrap gap-2">
+      <div class="bg-white dark:bg-gray-900 rounded-xl border border-slate-200 dark:border-gray-800 flex flex-col">
+        <div class="flex items-center justify-between p-4 border-b border-slate-200 dark:border-gray-800 flex-wrap gap-2">
           <h2 class="text-sm font-semibold">Organization Leaderboard</h2>
           <div class="flex items-center gap-2">
             <div class="relative">
               <input type="text" id="org-search" placeholder="Search organization…"
-                class="bg-gray-800 border border-gray-700 rounded px-3 py-1.5 text-xs text-gray-300 focus:outline-none focus:border-blue-500 w-52 pr-7"
+                class="bg-slate-200 dark:bg-gray-800 border border-slate-300 dark:border-gray-700 rounded px-3 py-1.5 text-xs text-slate-700 dark:text-gray-300 focus:outline-none focus:border-blue-500 w-52 pr-7"
                 oninput="onOrgSearch()">
               <button id="org-search-clear" onclick="clearOrgSearch()"
-                class="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-300 hidden text-sm leading-none">✕</button>
+                class="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 dark:text-gray-500 hover:text-slate-700 dark:text-gray-300 hidden text-sm leading-none">✕</button>
             </div>
-            <span id="orgs-total-label" class="text-xs text-gray-500 whitespace-nowrap"></span>
+            <span id="orgs-total-label" class="text-xs text-slate-400 dark:text-gray-500 whitespace-nowrap"></span>
           </div>
         </div>
         <div id="orgs-loading" class="flex justify-center py-14"><span class="spinner"></span></div>
         <div id="orgs-table-wrap" class="hidden overflow-x-auto flex-1">
           <table class="w-full">
             <thead>
-              <tr class="border-b border-gray-800 text-xs text-gray-500 uppercase tracking-wide">
+              <tr class="border-b border-slate-200 dark:border-gray-800 text-xs text-slate-400 dark:text-gray-500 uppercase tracking-wide">
                 <th class="text-left px-4 py-3 w-8">#</th>
                 <th class="text-left px-4 py-3">Organization</th>
                 <th class="text-right px-4 py-3">Contributions</th>
@@ -336,12 +292,12 @@
             <tbody id="orgs-tbody"></tbody>
           </table>
         </div>
-        <div class="flex items-center justify-between px-4 py-3 border-t border-gray-800 mt-auto">
+        <div class="flex items-center justify-between px-4 py-3 border-t border-slate-200 dark:border-gray-800 mt-auto">
           <button id="orgs-prev" onclick="changePage('organizations',-1)"
-            class="px-3 py-1.5 text-xs bg-gray-800 rounded hover:bg-gray-700 disabled:opacity-30 disabled:cursor-not-allowed transition-colors">← Prev</button>
-          <span id="orgs-page-info" class="text-xs text-gray-500"></span>
+            class="px-3 py-1.5 text-xs bg-slate-200 dark:bg-gray-800 rounded hover:bg-slate-300 dark:hover:bg-gray-700 disabled:opacity-30 disabled:cursor-not-allowed transition-colors">← Prev</button>
+          <span id="orgs-page-info" class="text-xs text-slate-400 dark:text-gray-500"></span>
           <button id="orgs-next" onclick="changePage('organizations', 1)"
-            class="px-3 py-1.5 text-xs bg-gray-800 rounded hover:bg-gray-700 disabled:opacity-30 disabled:cursor-not-allowed transition-colors">Next →</button>
+            class="px-3 py-1.5 text-xs bg-slate-200 dark:bg-gray-800 rounded hover:bg-slate-300 dark:hover:bg-gray-700 disabled:opacity-30 disabled:cursor-not-allowed transition-colors">Next →</button>
         </div>
       </div>
     </div>
@@ -350,52 +306,52 @@
   <!-- ── CONCENTRATION TAB ─────────────────────────────────────────── -->
   <div id="tab-concentration" class="tab-panel hidden space-y-4">
     <div class="grid md:grid-cols-2 gap-4">
-      <div class="bg-gray-900 rounded-xl border border-gray-800 p-4">
+      <div class="bg-white dark:bg-gray-900 rounded-xl border border-slate-200 dark:border-gray-800 p-4">
         <h2 class="text-sm font-semibold">Contributor Bus Factor</h2>
-        <p class="text-xs text-gray-500 mt-0.5 mb-4">How much of the project depends on a small group? High concentration in few contributors is a project health risk.</p>
+        <p class="text-xs text-slate-400 dark:text-gray-500 mt-0.5 mb-4">How much of the project depends on a small group? High concentration in few contributors is a project health risk.</p>
         <div id="bc-loading" class="flex justify-center py-10"><span class="spinner"></span></div>
         <div id="bc-content" class="hidden">
           <div class="flex items-start gap-6 mb-5">
             <div class="text-center">
-              <div class="text-3xl font-bold text-blue-400" id="bc-top-n">—</div>
-              <div class="text-xs text-gray-500 mt-1">core contributors</div>
+              <div class="text-3xl font-bold text-blue-600 dark:text-blue-400" id="bc-top-n">—</div>
+              <div class="text-xs text-slate-400 dark:text-gray-500 mt-1">core contributors</div>
             </div>
             <div class="text-center">
               <div class="text-3xl font-bold text-orange-400" id="bc-top-pct">—</div>
-              <div class="text-xs text-gray-500 mt-1">of all activity</div>
+              <div class="text-xs text-slate-400 dark:text-gray-500 mt-1">of all activity</div>
             </div>
             <div class="text-center">
-              <div class="text-3xl font-bold text-gray-400" id="bc-other-n">—</div>
-              <div class="text-xs text-gray-500 mt-1">other contributors</div>
+              <div class="text-3xl font-bold text-slate-500 dark:text-gray-400" id="bc-other-n">—</div>
+              <div class="text-xs text-slate-400 dark:text-gray-500 mt-1">other contributors</div>
             </div>
           </div>
           <canvas id="bcChart" height="200"></canvas>
         </div>
       </div>
-      <div class="bg-gray-900 rounded-xl border border-gray-800 p-4">
+      <div class="bg-white dark:bg-gray-900 rounded-xl border border-slate-200 dark:border-gray-800 p-4">
         <h2 class="text-sm font-semibold">Core Contributor List</h2>
-        <p class="text-xs text-gray-500 mt-0.5 mb-4">The small group driving most of the project's activity</p>
+        <p class="text-xs text-slate-400 dark:text-gray-500 mt-0.5 mb-4">The small group driving most of the project's activity</p>
         <div id="bc-list-loading" class="flex justify-center py-10"><span class="spinner"></span></div>
         <div id="bc-list" class="hidden space-y-1 overflow-y-auto max-h-72 pr-1"></div>
       </div>
     </div>
-    <div class="bg-gray-900 rounded-xl border border-gray-800 p-4">
+    <div class="bg-white dark:bg-gray-900 rounded-xl border border-slate-200 dark:border-gray-800 p-4">
       <h2 class="text-sm font-semibold">Organization Dependency</h2>
-      <p class="text-xs text-gray-500 mt-0.5 mb-4">How much of the project is controlled by a few companies? Healthy projects spread contributions across many independent organizations.</p>
+      <p class="text-xs text-slate-400 dark:text-gray-500 mt-0.5 mb-4">How much of the project is controlled by a few companies? Healthy projects spread contributions across many independent organizations.</p>
       <div id="od-loading" class="flex justify-center py-10"><span class="spinner"></span></div>
       <div id="od-content" class="hidden">
         <div class="flex items-start gap-6 mb-5">
           <div class="text-center">
             <div class="text-3xl font-bold text-purple-400" id="od-top-n">—</div>
-            <div class="text-xs text-gray-500 mt-1">top organizations</div>
+            <div class="text-xs text-slate-400 dark:text-gray-500 mt-1">top organizations</div>
           </div>
           <div class="text-center">
             <div class="text-3xl font-bold text-pink-400" id="od-top-pct">—</div>
-            <div class="text-xs text-gray-500 mt-1">of all activity</div>
+            <div class="text-xs text-slate-400 dark:text-gray-500 mt-1">of all activity</div>
           </div>
           <div class="text-center">
-            <div class="text-3xl font-bold text-gray-400" id="od-other-n">—</div>
-            <div class="text-xs text-gray-500 mt-1">other organizations</div>
+            <div class="text-3xl font-bold text-slate-500 dark:text-gray-400" id="od-other-n">—</div>
+            <div class="text-xs text-slate-400 dark:text-gray-500 mt-1">other organizations</div>
           </div>
         </div>
         <div class="grid md:grid-cols-2 gap-4">
@@ -409,24 +365,24 @@
   <!-- ── GEOGRAPHY TAB ─────────────────────────────────────────────── -->
   <div id="tab-geography" class="tab-panel hidden">
     <div class="grid md:grid-cols-2 gap-4">
-      <div class="bg-gray-900 rounded-xl border border-gray-800 p-4">
+      <div class="bg-white dark:bg-gray-900 rounded-xl border border-slate-200 dark:border-gray-800 p-4">
         <h2 class="text-sm font-semibold mb-0.5">World Map</h2>
-        <p class="text-xs text-gray-500 mb-3">Contributor distribution by country</p>
+        <p class="text-xs text-slate-400 dark:text-gray-500 mb-3">Contributor distribution by country</p>
         <div id="geo-chart-loading" class="flex justify-center py-10"><span class="spinner"></span></div>
         <div id="geo-chart-wrap" class="hidden" style="position:relative; height:420px;">
           <canvas id="geoChart"></canvas>
         </div>
       </div>
-      <div class="bg-gray-900 rounded-xl border border-gray-800 flex flex-col">
-        <div class="p-4 border-b border-gray-800">
+      <div class="bg-white dark:bg-gray-900 rounded-xl border border-slate-200 dark:border-gray-800 flex flex-col">
+        <div class="p-4 border-b border-slate-200 dark:border-gray-800">
           <h2 class="text-sm font-semibold">All Countries</h2>
-          <p class="text-xs text-gray-500 mt-0.5" id="geo-country-count"></p>
+          <p class="text-xs text-slate-400 dark:text-gray-500 mt-0.5" id="geo-country-count"></p>
         </div>
         <div id="geo-table-loading" class="flex justify-center py-14"><span class="spinner"></span></div>
         <div id="geo-table-wrap" class="hidden overflow-y-auto" style="max-height:430px;">
           <table class="w-full">
-            <thead class="sticky top-0 bg-gray-900 z-10">
-              <tr class="border-b border-gray-800 text-xs text-gray-500 uppercase tracking-wide">
+            <thead class="sticky top-0 bg-white dark:bg-gray-900 z-10">
+              <tr class="border-b border-slate-200 dark:border-gray-800 text-xs text-slate-400 dark:text-gray-500 uppercase tracking-wide">
                 <th class="text-left px-4 py-3">Country</th>
                 <th class="text-right px-4 py-3">Count</th>
                 <th class="text-right px-4 py-3">Share</th>
@@ -441,32 +397,32 @@
 
   <!-- ── SIGS TAB ──────────────────────────────────────────────────── -->
   <div id="tab-sigs" class="tab-panel hidden">
-    <div class="bg-gray-900 rounded-xl border border-gray-800">
-      <div class="flex items-center justify-between p-4 border-b border-gray-800 flex-wrap gap-2">
+    <div class="bg-white dark:bg-gray-900 rounded-xl border border-slate-200 dark:border-gray-800">
+      <div class="flex items-center justify-between p-4 border-b border-slate-200 dark:border-gray-800 flex-wrap gap-2">
         <div>
           <h2 class="text-sm font-semibold">Repositories / SIGs</h2>
-          <p class="text-xs text-gray-500 mt-0.5">Sorted by contributor count for the selected period</p>
+          <p class="text-xs text-slate-400 dark:text-gray-500 mt-0.5">Sorted by contributor count for the selected period</p>
         </div>
         <div class="flex items-center gap-2">
           <div class="relative">
             <input type="text" id="sigs-search" placeholder="Search repository…"
-              class="bg-gray-800 border border-gray-700 rounded px-3 py-1.5 text-xs text-gray-300 focus:outline-none focus:border-blue-500 w-52 pr-7"
+              class="bg-slate-200 dark:bg-gray-800 border border-slate-300 dark:border-gray-700 rounded px-3 py-1.5 text-xs text-slate-700 dark:text-gray-300 focus:outline-none focus:border-blue-500 w-52 pr-7"
               oninput="onSigsSearch()">
             <button id="sigs-search-clear" onclick="clearSigsSearch()"
-              class="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-300 hidden text-sm leading-none">✕</button>
+              class="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 dark:text-gray-500 hover:text-slate-700 dark:text-gray-300 hidden text-sm leading-none">✕</button>
           </div>
-          <span id="sigs-total-label" class="text-xs text-gray-500 whitespace-nowrap"></span>
+          <span id="sigs-total-label" class="text-xs text-slate-400 dark:text-gray-500 whitespace-nowrap"></span>
         </div>
       </div>
       <div id="sigs-loading" class="hidden flex justify-center py-14"><span class="spinner"></span></div>
-      <div id="sigs-empty" class="hidden text-center py-14 text-gray-500 text-sm leading-relaxed">
+      <div id="sigs-empty" class="hidden text-center py-14 text-slate-400 dark:text-gray-500 text-sm leading-relaxed">
         SIG data not available.<br>
-        <span class="text-xs text-gray-600">Run <code class="bg-gray-800 px-1.5 py-0.5 rounded text-gray-400">node scripts/fetch-sigs.mjs</code> to build it.</span>
+        <span class="text-xs text-slate-300 dark:text-gray-600">Run <code class="bg-slate-200 dark:bg-gray-800 px-1.5 py-0.5 rounded text-slate-500 dark:text-gray-400">node scripts/fetch-sigs.mjs</code> to build it.</span>
       </div>
       <div id="sigs-table-wrap" class="hidden overflow-x-auto">
         <table class="w-full">
           <thead>
-            <tr class="border-b border-gray-800 text-xs text-gray-500 uppercase tracking-wide">
+            <tr class="border-b border-slate-200 dark:border-gray-800 text-xs text-slate-400 dark:text-gray-500 uppercase tracking-wide">
               <th class="text-left px-4 py-3 w-8">#</th>
               <th class="text-left px-4 py-3">Repository</th>
               <th class="text-right px-4 py-3">Contributors</th>
@@ -485,82 +441,82 @@
 <div id="org-modal" class="hidden fixed inset-0 z-50 flex items-start justify-end">
   <div id="org-modal-backdrop" class="absolute inset-0 bg-black/60 backdrop-blur-sm" onclick="closeOrgModal()"></div>
   <div id="org-modal-panel"
-    class="relative w-full max-w-md h-full bg-gray-900 border-l border-gray-800 shadow-2xl overflow-y-auto
+    class="relative w-full max-w-md h-full bg-white dark:bg-gray-900 border-l border-slate-200 dark:border-gray-800 shadow-2xl overflow-y-auto
            translate-x-full transition-transform duration-200 ease-out">
 
     <!-- Header -->
-    <div class="sticky top-0 bg-gray-900/95 backdrop-blur border-b border-gray-800 px-4 py-3 flex items-center gap-3">
+    <div class="sticky top-0 bg-white dark:bg-white/95 dark:bg-gray-900/95 backdrop-blur border-b border-slate-200 dark:border-gray-800 px-4 py-3 flex items-center gap-3">
       <img id="org-modal-logo" src="" alt="" class="w-8 h-8 rounded object-contain shrink-0" onerror="this.style.display='none'">
       <span id="org-modal-logo-ph" class="w-8 h-8 shrink-0 hidden inline-block"><svg viewBox="0 0 24 24" fill="none" class="w-full h-full"><rect width="24" height="24" rx="4" fill="#D1D5DB"/><rect x="7" y="3" width="10" height="16" fill="#4B5563"/><rect x="8.5" y="5.5" width="2.5" height="2" rx=".4" fill="#9CA3AF"/><rect x="13" y="5.5" width="2.5" height="2" rx=".4" fill="#9CA3AF"/><rect x="8.5" y="9" width="2.5" height="2" rx=".4" fill="#9CA3AF"/><rect x="13" y="9" width="2.5" height="2" rx=".4" fill="#9CA3AF"/><rect x="8.5" y="12.5" width="2.5" height="2" rx=".4" fill="#9CA3AF"/><rect x="13" y="12.5" width="2.5" height="2" rx=".4" fill="#9CA3AF"/><rect x="11" y="15.5" width="2" height="3.5" rx=".4" fill="#9CA3AF"/></svg></span>
       <div class="flex-1 min-w-0">
         <div id="org-modal-name" class="font-semibold text-sm leading-tight truncate"></div>
-        <div class="text-xs text-gray-500 mt-0.5">OpenTelemetry contributors</div>
+        <div class="text-xs text-slate-400 dark:text-gray-500 mt-0.5">OpenTelemetry contributors</div>
       </div>
       <button onclick="closeOrgModal()" title="Close"
-        class="shrink-0 w-7 h-7 flex items-center justify-center rounded-lg text-gray-500 hover:text-white hover:bg-gray-800 transition-colors text-lg leading-none">×</button>
+        class="shrink-0 w-7 h-7 flex items-center justify-center rounded-lg text-slate-400 dark:text-gray-500 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-gray-800 transition-colors text-lg leading-none">×</button>
     </div>
 
     <!-- Stats row -->
-    <div class="px-4 pt-3 pb-2 border-b border-gray-800 space-y-2">
+    <div class="px-4 pt-3 pb-2 border-b border-slate-200 dark:border-gray-800 space-y-2">
       <div class="grid grid-cols-3 gap-2">
-        <div class="bg-gray-800/50 rounded-lg p-2.5">
-          <div class="text-xs text-gray-500 mb-1">Contributions</div>
+        <div class="bg-slate-100/60 dark:bg-gray-800/50 rounded-lg p-2.5">
+          <div class="text-xs text-slate-400 dark:text-gray-500 mb-1">Contributions</div>
           <div id="org-modal-contributions" class="text-lg font-bold font-mono leading-none"></div>
         </div>
-        <div class="bg-gray-800/50 rounded-lg p-2.5">
-          <div class="text-xs text-gray-500 mb-1">Contributors</div>
+        <div class="bg-slate-100/60 dark:bg-gray-800/50 rounded-lg p-2.5">
+          <div class="text-xs text-slate-400 dark:text-gray-500 mb-1">Contributors</div>
           <div id="org-modal-contributor-count" class="text-lg font-bold leading-none"></div>
         </div>
-        <div class="bg-gray-800/50 rounded-lg p-2.5">
-          <div class="text-xs text-gray-500 mb-1">Repositories</div>
+        <div class="bg-slate-100/60 dark:bg-gray-800/50 rounded-lg p-2.5">
+          <div class="text-xs text-slate-400 dark:text-gray-500 mb-1">Repositories</div>
           <div id="org-modal-repo-count" class="text-lg font-bold leading-none flex items-center gap-1.5">
             <span id="org-repo-count-spinner" class="spinner" style="width:14px;height:14px;border-width:1.5px"></span>
           </div>
         </div>
       </div>
       <div class="grid grid-cols-2 gap-2">
-        <div class="bg-gray-800/50 rounded-lg p-2.5">
-          <div class="text-xs text-gray-500 mb-1">Maintainers</div>
+        <div class="bg-slate-100/60 dark:bg-gray-800/50 rounded-lg p-2.5">
+          <div class="text-xs text-slate-400 dark:text-gray-500 mb-1">Maintainers</div>
           <div id="org-modal-maintainer-count" class="text-lg font-bold leading-none"></div>
         </div>
-        <div class="bg-gray-800/50 rounded-lg p-2.5">
-          <div class="text-xs text-gray-500 mb-1">Approvers</div>
+        <div class="bg-slate-100/60 dark:bg-gray-800/50 rounded-lg p-2.5">
+          <div class="text-xs text-slate-400 dark:text-gray-500 mb-1">Approvers</div>
           <div id="org-modal-approver-count" class="text-lg font-bold leading-none"></div>
         </div>
       </div>
     </div>
 
     <!-- Concentration tile -->
-    <div class="px-4 py-3 border-b border-gray-800">
-      <div class="bg-gray-800/50 rounded-lg px-3 py-2.5">
+    <div class="px-4 py-3 border-b border-slate-200 dark:border-gray-800">
+      <div class="bg-slate-100/60 dark:bg-gray-800/50 rounded-lg px-3 py-2.5">
         <div class="flex items-center justify-between mb-1.5">
-          <div class="text-xs text-gray-500">Contribution concentration</div>
+          <div class="text-xs text-slate-400 dark:text-gray-500">Contribution concentration</div>
           <a href="docs/concentration.html" target="_blank"
-            class="w-4 h-4 rounded-full border border-gray-600 hover:border-gray-400 hover:text-gray-400 flex items-center justify-center text-xs text-gray-600 transition-colors shrink-0" title="How is this calculated?">?</a>
+            class="w-4 h-4 rounded-full border border-gray-600 hover:border-gray-400 hover:text-slate-500 dark:text-gray-400 flex items-center justify-center text-xs text-slate-300 dark:text-gray-600 transition-colors shrink-0" title="How is this calculated?">?</a>
         </div>
         <div id="org-modal-concentration"></div>
       </div>
     </div>
 
     <!-- Contributors list -->
-    <div class="px-4 pt-4 pb-4 border-b border-gray-800">
+    <div class="px-4 pt-4 pb-4 border-b border-slate-200 dark:border-gray-800">
       <h3 class="text-sm font-semibold mb-3">Contributors</h3>
       <div id="org-modal-contrib-list" class="space-y-1 max-h-60 overflow-y-auto pr-1"></div>
-      <p id="org-modal-contrib-more" class="hidden text-xs text-gray-600 pt-2 text-center"></p>
+      <p id="org-modal-contrib-more" class="hidden text-xs text-slate-300 dark:text-gray-600 pt-2 text-center"></p>
     </div>
 
     <!-- Repos section -->
     <div class="px-4 pt-4 pb-6">
       <div class="flex items-center justify-between mb-3">
         <h3 class="text-sm font-semibold">Repositories in period</h3>
-        <span id="org-modal-period-label" class="text-xs text-gray-600"></span>
+        <span id="org-modal-period-label" class="text-xs text-slate-300 dark:text-gray-600"></span>
       </div>
       <div id="org-modal-repos-loading" class="flex flex-col items-center justify-center py-8 gap-2">
         <span class="spinner"></span>
-        <span class="text-xs text-gray-600">Querying GitHub…</span>
+        <span class="text-xs text-slate-300 dark:text-gray-600">Querying GitHub…</span>
       </div>
       <div id="org-modal-repos-list" class="hidden space-y-1.5"></div>
-      <div id="org-modal-repos-error" class="hidden text-xs text-gray-500 text-center py-6 leading-relaxed"></div>
+      <div id="org-modal-repos-error" class="hidden text-xs text-slate-400 dark:text-gray-500 text-center py-6 leading-relaxed"></div>
     </div>
   </div>
 </div>
@@ -569,34 +525,34 @@
 <div id="contrib-modal" class="hidden fixed inset-0 z-50 flex items-start justify-end">
   <div id="contrib-modal-backdrop" class="absolute inset-0 bg-black/60 backdrop-blur-sm" onclick="closeContribModal()"></div>
   <div id="contrib-modal-panel"
-    class="relative w-full max-w-md h-full bg-gray-900 border-l border-gray-800 shadow-2xl overflow-y-auto
+    class="relative w-full max-w-md h-full bg-white dark:bg-gray-900 border-l border-slate-200 dark:border-gray-800 shadow-2xl overflow-y-auto
            translate-x-full transition-transform duration-200 ease-out">
 
     <!-- Header -->
-    <div class="sticky top-0 bg-gray-900/95 backdrop-blur border-b border-gray-800 px-4 py-3 flex items-center gap-3">
+    <div class="sticky top-0 bg-white dark:bg-white/95 dark:bg-gray-900/95 backdrop-blur border-b border-slate-200 dark:border-gray-800 px-4 py-3 flex items-center gap-3">
       <img id="modal-avatar" src="" alt="" class="w-10 h-10 rounded-full shrink-0" onerror="this.style.display='none'">
       <span id="modal-avatar-ph" class="w-10 h-10 shrink-0 hidden inline-block"><svg viewBox="0 0 24 24" fill="none" class="w-full h-full"><rect width="24" height="24" rx="12" fill="#374151"/><circle cx="12" cy="9" r="3.5" fill="#9CA3AF"/><path fill-rule="evenodd" clip-rule="evenodd" d="M5 20c0-3.866 3.134-7 7-7s7 3.134 7 7H5z" fill="#9CA3AF"/></svg></span>
       <div class="flex-1 min-w-0">
         <div id="modal-name" class="font-semibold text-sm leading-tight truncate"></div>
-        <div id="modal-handles" class="text-xs text-gray-500 mt-0.5"></div>
+        <div id="modal-handles" class="text-xs text-slate-400 dark:text-gray-500 mt-0.5"></div>
       </div>
       <div id="modal-roles-wrap" class="hidden flex gap-1.5 flex-wrap justify-end shrink-0"></div>
       <button onclick="closeContribModal()" title="Close"
-        class="shrink-0 w-7 h-7 flex items-center justify-center rounded-lg text-gray-500 hover:text-white hover:bg-gray-800 transition-colors text-lg leading-none">×</button>
+        class="shrink-0 w-7 h-7 flex items-center justify-center rounded-lg text-slate-400 dark:text-gray-500 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-gray-800 transition-colors text-lg leading-none">×</button>
     </div>
 
     <!-- Stats row -->
-    <div class="grid grid-cols-3 gap-2 px-4 py-3 border-b border-gray-800">
-      <div class="bg-gray-800/50 rounded-lg p-2.5">
-        <div class="text-xs text-gray-500 mb-1">Contributions</div>
+    <div class="grid grid-cols-3 gap-2 px-4 py-3 border-b border-slate-200 dark:border-gray-800">
+      <div class="bg-slate-100/60 dark:bg-gray-800/50 rounded-lg p-2.5">
+        <div class="text-xs text-slate-400 dark:text-gray-500 mb-1">Contributions</div>
         <div id="modal-contributions" class="text-lg font-bold font-mono leading-none"></div>
       </div>
-      <div class="bg-gray-800/50 rounded-lg p-2.5">
-        <div class="text-xs text-gray-500 mb-1">Share</div>
+      <div class="bg-slate-100/60 dark:bg-gray-800/50 rounded-lg p-2.5">
+        <div class="text-xs text-slate-400 dark:text-gray-500 mb-1">Share</div>
         <div id="modal-share" class="text-lg font-bold leading-none"></div>
       </div>
-      <div class="bg-gray-800/50 rounded-lg p-2.5 flex flex-col">
-        <div class="text-xs text-gray-500 mb-1">Company</div>
+      <div class="bg-slate-100/60 dark:bg-gray-800/50 rounded-lg p-2.5 flex flex-col">
+        <div class="text-xs text-slate-400 dark:text-gray-500 mb-1">Company</div>
         <div id="modal-company" class="flex items-center min-h-[2rem]"></div>
       </div>
     </div>
@@ -605,14 +561,14 @@
     <div class="px-4 pt-4 pb-6">
       <div class="flex items-center justify-between mb-3">
         <h3 class="text-sm font-semibold">Repositories in period</h3>
-        <span id="modal-period-label" class="text-xs text-gray-600"></span>
+        <span id="modal-period-label" class="text-xs text-slate-300 dark:text-gray-600"></span>
       </div>
       <div id="modal-repos-loading" class="flex flex-col items-center justify-center py-10 gap-2">
         <span class="spinner"></span>
-        <span class="text-xs text-gray-600">Querying GitHub…</span>
+        <span class="text-xs text-slate-300 dark:text-gray-600">Querying GitHub…</span>
       </div>
       <div id="modal-repos-list" class="hidden space-y-1.5"></div>
-      <div id="modal-repos-error" class="hidden text-xs text-gray-500 text-center py-8 leading-relaxed"></div>
+      <div id="modal-repos-error" class="hidden text-xs text-slate-400 dark:text-gray-500 text-center py-8 leading-relaxed"></div>
     </div>
   </div>
 </div>
@@ -621,41 +577,41 @@
 <div id="sig-modal" class="hidden fixed inset-0 z-50 flex items-start justify-end">
   <div id="sig-modal-backdrop" class="absolute inset-0 bg-black/60 backdrop-blur-sm" onclick="closeSigModal()"></div>
   <div id="sig-modal-panel"
-    class="relative w-full max-w-lg h-full bg-gray-900 border-l border-gray-800 shadow-2xl overflow-y-auto
+    class="relative w-full max-w-lg h-full bg-white dark:bg-gray-900 border-l border-slate-200 dark:border-gray-800 shadow-2xl overflow-y-auto
            translate-x-full transition-transform duration-200 ease-out">
 
     <!-- Header -->
-    <div class="sticky top-0 bg-gray-900/95 backdrop-blur border-b border-gray-800 px-4 py-3 flex items-center gap-3">
-      <svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor" class="text-gray-500 shrink-0">
+    <div class="sticky top-0 bg-white dark:bg-white/95 dark:bg-gray-900/95 backdrop-blur border-b border-slate-200 dark:border-gray-800 px-4 py-3 flex items-center gap-3">
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor" class="text-slate-400 dark:text-gray-500 shrink-0">
         <path d="M12 2C6.477 2 2 6.477 2 12c0 4.42 2.865 8.17 6.839 9.49.5.092.682-.217.682-.482 0-.237-.008-.866-.013-1.7-2.782.604-3.369-1.34-3.369-1.34-.454-1.156-1.11-1.464-1.11-1.464-.908-.62.069-.608.069-.608 1.003.07 1.531 1.03 1.531 1.03.892 1.529 2.341 1.087 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.11-4.555-4.943 0-1.091.39-1.984 1.029-2.683-.103-.253-.446-1.27.098-2.647 0 0 .84-.269 2.75 1.025A9.578 9.578 0 0 1 12 6.836c.85.004 1.705.114 2.504.336 1.909-1.294 2.747-1.025 2.747-1.025.546 1.377.202 2.394.1 2.647.64.699 1.028 1.592 1.028 2.683 0 3.842-2.339 4.687-4.566 4.935.359.309.678.919.678 1.852 0 1.336-.012 2.415-.012 2.741 0 .267.18.578.688.48C19.138 20.167 22 16.418 22 12c0-5.523-4.477-10-10-10z"/>
       </svg>
       <div class="flex-1 min-w-0">
         <a id="sig-modal-name" href="#" target="_blank"
-          class="font-semibold text-sm leading-tight truncate block hover:text-blue-400 transition-colors"></a>
-        <div class="text-xs text-gray-500 mt-0.5">OpenTelemetry SIG</div>
+          class="font-semibold text-sm leading-tight truncate block hover:text-blue-600 dark:text-blue-400 transition-colors"></a>
+        <div class="text-xs text-slate-400 dark:text-gray-500 mt-0.5">OpenTelemetry SIG</div>
       </div>
       <button onclick="closeSigModal()" title="Close"
-        class="shrink-0 w-7 h-7 flex items-center justify-center rounded-lg text-gray-500 hover:text-white hover:bg-gray-800 transition-colors text-lg leading-none">×</button>
+        class="shrink-0 w-7 h-7 flex items-center justify-center rounded-lg text-slate-400 dark:text-gray-500 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-gray-800 transition-colors text-lg leading-none">×</button>
     </div>
 
     <!-- Stats row -->
-    <div class="grid grid-cols-3 gap-2 px-4 py-3 border-b border-gray-800">
-      <div class="bg-gray-800/50 rounded-lg p-2.5">
-        <div class="text-xs text-gray-500 mb-1">Contributors</div>
+    <div class="grid grid-cols-3 gap-2 px-4 py-3 border-b border-slate-200 dark:border-gray-800">
+      <div class="bg-slate-100/60 dark:bg-gray-800/50 rounded-lg p-2.5">
+        <div class="text-xs text-slate-400 dark:text-gray-500 mb-1">Contributors</div>
         <div id="sig-modal-contributors" class="text-lg font-bold leading-none"></div>
       </div>
-      <div class="bg-gray-800/50 rounded-lg p-2.5">
-        <div class="text-xs text-gray-500 mb-1">Organizations</div>
+      <div class="bg-slate-100/60 dark:bg-gray-800/50 rounded-lg p-2.5">
+        <div class="text-xs text-slate-400 dark:text-gray-500 mb-1">Organizations</div>
         <div id="sig-modal-organizations" class="text-lg font-bold leading-none"></div>
       </div>
-      <div class="bg-gray-800/50 rounded-lg p-2.5">
-        <div class="text-xs text-gray-500 mb-1">Period</div>
-        <div id="sig-modal-period" class="text-xs font-medium leading-snug mt-0.5 text-gray-300"></div>
+      <div class="bg-slate-100/60 dark:bg-gray-800/50 rounded-lg p-2.5">
+        <div class="text-xs text-slate-400 dark:text-gray-500 mb-1">Period</div>
+        <div id="sig-modal-period" class="text-xs font-medium leading-snug mt-0.5 text-slate-700 dark:text-gray-300"></div>
       </div>
     </div>
 
     <!-- Contributors section -->
-    <div class="px-4 pt-4 pb-4 border-b border-gray-800">
+    <div class="px-4 pt-4 pb-4 border-b border-slate-200 dark:border-gray-800">
       <h3 class="text-sm font-semibold mb-3">Contributors</h3>
       <div id="sig-modal-contrib-list" class="space-y-0.5 max-h-80 overflow-y-auto pr-1"></div>
     </div>
@@ -670,19 +626,19 @@
 
 <!-- ================================================================ TOAST -->
 <div id="error-toast"
-  class="hidden fixed bottom-5 right-5 z-50 bg-gray-900 border border-red-800 text-sm rounded-xl shadow-2xl p-4 max-w-sm">
+  class="hidden fixed bottom-5 right-5 z-50 bg-white dark:bg-gray-900 border border-red-800 text-sm rounded-xl shadow-2xl p-4 max-w-sm">
   <div class="flex items-start gap-3">
-    <div class="text-red-400 mt-0.5 shrink-0">⚠</div>
+    <div class="text-red-600 dark:text-red-400 mt-0.5 shrink-0">⚠</div>
     <div class="flex-1">
       <p class="text-red-300 font-medium text-xs">Request failed</p>
-      <p id="error-msg" class="text-gray-400 text-xs mt-1"></p>
-      <p class="text-gray-600 text-xs mt-2">
+      <p id="error-msg" class="text-slate-500 dark:text-gray-400 text-xs mt-1"></p>
+      <p class="text-slate-300 dark:text-gray-600 text-xs mt-2">
         Live API may require a session at
-        <a href="https://insights.linuxfoundation.org" target="_blank" class="text-blue-400 underline">insights.linuxfoundation.org</a>
+        <a href="https://insights.linuxfoundation.org" target="_blank" class="text-blue-600 dark:text-blue-400 underline">insights.linuxfoundation.org</a>
         due to CORS. Cached data is used as fallback.
       </p>
     </div>
-    <button onclick="hideError()" class="text-gray-600 hover:text-white text-lg leading-none shrink-0">×</button>
+    <button onclick="hideError()" class="text-slate-300 dark:text-gray-600 hover:text-slate-900 dark:hover:text-white text-lg leading-none shrink-0">×</button>
   </div>
 </div>
 
@@ -700,7 +656,7 @@ const COLORS    = [
 ];
 
 // ── Theme ──────────────────────────────────────────────────────────
-const isDark   = () => !document.documentElement.classList.contains('light');
+const isDark   = () => document.documentElement.classList.contains('dark');
 const C = {
   tick:    () => isDark() ? '#6b7280' : '#64748b',
   grid:    () => isDark() ? '#1f2937' : '#e2e8f0',
@@ -710,12 +666,12 @@ const C = {
 
 function initTheme() {
   const saved = localStorage.getItem('otel-theme');
-  if (saved === 'light') applyTheme('light');
+  applyTheme(saved === 'light' ? 'light' : 'dark');
 }
 
 function applyTheme(mode) {
   const html = document.documentElement;
-  html.classList.toggle('light', mode === 'light');
+  html.classList.toggle('dark', mode === 'dark');
   el('icon-moon').classList.toggle('hidden', mode === 'light');
   el('icon-sun').classList.toggle('hidden',  mode === 'dark');
   localStorage.setItem('otel-theme', mode);
@@ -796,18 +752,18 @@ function renderReposList({ repos, unit, barColor, listElId, note }) {
       : repo.htmlUrl;
     return `
       <a href="${href}" target="_blank"
-        class="flex items-center gap-3 px-3 py-2 rounded-lg bg-gray-800/30 hover:bg-gray-800/60 transition-colors group">
+        class="flex items-center gap-3 px-3 py-2 rounded-lg bg-slate-200/50 dark:bg-gray-800/30 hover:bg-slate-200/80 dark:hover:bg-gray-800/60 transition-colors group">
         <div class="flex-1 min-w-0">
-          <div class="text-xs font-medium text-gray-300 group-hover:text-gray-100 truncate transition-colors">${repo.name}</div>
+          <div class="text-xs font-medium text-slate-700 dark:text-gray-300 group-hover:text-slate-900 dark:text-gray-100 truncate transition-colors">${repo.name}</div>
         </div>
-        <span class="text-xs text-gray-500 font-mono shrink-0">${label}</span>
-        <svg class="w-3 h-3 text-gray-600 group-hover:text-gray-400 shrink-0 transition-colors" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <span class="text-xs text-slate-400 dark:text-gray-500 font-mono shrink-0">${label}</span>
+        <svg class="w-3 h-3 text-slate-300 dark:text-gray-600 group-hover:text-slate-500 dark:text-gray-400 shrink-0 transition-colors" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15,3 21,3 21,9"/><line x1="10" y1="14" x2="21" y2="3"/>
         </svg>
       </a>`;
   }).join('');
   if (note) {
-    listEl.innerHTML += `<p class="text-xs text-gray-600 text-center pt-1">${note}</p>`;
+    listEl.innerHTML += `<p class="text-xs text-slate-300 dark:text-gray-600 text-center pt-1">${note}</p>`;
   }
   return true;
 }
@@ -820,21 +776,21 @@ function renderPersonRow(c, i, opts = {}) {
   if (opts.sigStyle) {
     const aff = affiliationFor(c.githubHandleArray);
     return `
-          <div class="flex items-center gap-2 px-2 py-1.5 rounded hover:bg-gray-800/40 transition-colors">
-            <span class="text-gray-600 text-xs w-5 shrink-0 text-right">${i + 1}</span>
+          <div class="flex items-center gap-2 px-2 py-1.5 rounded hover:bg-slate-200/50 dark:hover:bg-gray-800/40 transition-colors">
+            <span class="text-slate-300 dark:text-gray-600 text-xs w-5 shrink-0 text-right">${i + 1}</span>
             ${c.avatar
               ? `<img src="${c.avatar}" class="w-6 h-6 rounded-full shrink-0" onerror="this.style.display='none'">`
               : `<span class="w-6 h-6 shrink-0 inline-block">${SVG_PERSON}</span>`}
             <div class="flex-1 min-w-0">
               <div class="flex items-center gap-1.5 min-w-0">
-                <span class="text-xs font-medium text-gray-200 truncate">${c.name}</span>
-                ${handle ? `<a href="https://github.com/${handle}" target="_blank" class="text-blue-400 hover:text-blue-300 text-xs shrink-0" onclick="event.stopPropagation()">@${handle}</a>` : ''}
+                <span class="text-xs font-medium text-slate-800 dark:text-gray-200 truncate">${c.name}</span>
+                ${handle ? `<a href="https://github.com/${handle}" target="_blank" class="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:text-blue-300 text-xs shrink-0" onclick="event.stopPropagation()">@${handle}</a>` : ''}
               </div>
-              ${aff ? `<div class="text-xs text-gray-500 truncate">${aff.company}</div>` : ''}
+              ${aff ? `<div class="text-xs text-slate-400 dark:text-gray-500 truncate">${aff.company}</div>` : ''}
             </div>
             <div class="text-right shrink-0">
-              <div class="text-xs text-gray-300 font-mono">${num(c.contributions)}</div>
-              <div class="text-xs text-gray-500">${pct(c.percentage, 1)}</div>
+              <div class="text-xs text-slate-700 dark:text-gray-300 font-mono">${num(c.contributions)}</div>
+              <div class="text-xs text-slate-400 dark:text-gray-500">${pct(c.percentage, 1)}</div>
             </div>
           </div>`;
   }
@@ -844,12 +800,12 @@ function renderPersonRow(c, i, opts = {}) {
   const avatarOnerror = opts.orgModal ? ' onerror="this.style.display=\'none\'"' : '';
   return `
         <div class="flex items-center gap-2 ${wrapperPy}">
-          <span class="text-gray-600 text-xs w-5 text-right shrink-0">${i + 1}</span>
+          <span class="text-slate-300 dark:text-gray-600 text-xs w-5 text-right shrink-0">${i + 1}</span>
           ${c.avatar ? `<img src="${c.avatar}" class="w-5 h-5 rounded-full shrink-0"${avatarOnerror}>` : personPlaceholder('w-5 h-5')}
           <span class="text-xs flex-1 truncate">${c.name}</span>
-          ${handle ? `<a href="https://github.com/${handle}" target="_blank" class="text-blue-500 text-xs shrink-0 hover:text-blue-300"${linkOnClick}>@${handle}</a>` : ''}
-          <span class="text-xs text-gray-500 font-mono shrink-0">${num(c.contributions)}</span>
-          ${opts.orgModal ? `<span class="text-xs text-gray-600 shrink-0">${orgTotal > 0 ? pct(c.contributions / orgTotal * 100) : ''}</span>` : ''}
+          ${handle ? `<a href="https://github.com/${handle}" target="_blank" class="text-blue-600 dark:text-blue-500 text-xs shrink-0 hover:text-blue-700 dark:text-blue-300"${linkOnClick}>@${handle}</a>` : ''}
+          <span class="text-xs text-slate-400 dark:text-gray-500 font-mono shrink-0">${num(c.contributions)}</span>
+          ${opts.orgModal ? `<span class="text-xs text-slate-300 dark:text-gray-600 shrink-0">${orgTotal > 0 ? pct(c.contributions / orgTotal * 100) : ''}</span>` : ''}
         </div>`;
 }
 
@@ -859,26 +815,26 @@ function renderOrgRow(o, i, opts = {}) {
   const logo = resolveOrgLogo(o);
   if (opts.sigStyle) {
     return `
-          <div class="flex items-center gap-2 px-2 py-1.5 rounded hover:bg-gray-800/40 transition-colors">
-            <span class="text-gray-600 text-xs w-5 shrink-0 text-right">${i + 1}</span>
+          <div class="flex items-center gap-2 px-2 py-1.5 rounded hover:bg-slate-200/50 dark:hover:bg-gray-800/40 transition-colors">
+            <span class="text-slate-300 dark:text-gray-600 text-xs w-5 shrink-0 text-right">${i + 1}</span>
             ${logo
               ? `<img src="${logo}" class="w-6 h-6 rounded object-contain shrink-0" onerror="this.style.display='none'">`
               : `<span class="w-6 h-6 shrink-0 inline-block">${SVG_BUILDING}</span>`}
             <div class="flex-1 min-w-0">
-              <div class="text-xs font-medium text-gray-200 truncate">${o.name}</div>
+              <div class="text-xs font-medium text-slate-800 dark:text-gray-200 truncate">${o.name}</div>
             </div>
             <div class="text-right shrink-0">
-              <div class="text-xs text-gray-300 font-mono">${num(o.contributions)}</div>
-              <div class="text-xs text-gray-500">${pct(o.percentage, 1)}</div>
+              <div class="text-xs text-slate-700 dark:text-gray-300 font-mono">${num(o.contributions)}</div>
+              <div class="text-xs text-slate-400 dark:text-gray-500">${pct(o.percentage, 1)}</div>
             </div>
           </div>`;
   }
   return `
       <div class="flex items-center gap-2 py-0.5">
-        <span class="text-gray-600 text-xs w-5 text-right shrink-0">${i + 1}</span>
+        <span class="text-slate-300 dark:text-gray-600 text-xs w-5 text-right shrink-0">${i + 1}</span>
         ${logo ? `<img src="${logo}" class="w-5 h-5 rounded shrink-0" onerror="this.style.display='none'">` : orgPlaceholder('w-5 h-5')}
         <span class="text-xs flex-1 truncate">${o.name}</span>
-        <span class="text-xs text-gray-500 font-mono shrink-0">${num(o.contributions)}</span>
+        <span class="text-xs text-slate-400 dark:text-gray-500 font-mono shrink-0">${num(o.contributions)}</span>
       </div>`;
 }
 
@@ -1006,16 +962,16 @@ const el      = id => document.getElementById(id);
 const changeBadge = p => {
   if (p == null) return '';
   const sign = p > 0 ? '+' : '';
-  const cls  = p > 0 ? 'text-green-400' : p < 0 ? 'text-red-400' : 'text-gray-400';
-  return `<span class="${cls}">${sign}${(+p).toFixed(1)}%</span> <span class="text-gray-600">vs prior period</span>`;
+  const cls  = p > 0 ? 'text-green-600 dark:text-green-400' : p < 0 ? 'text-red-600 dark:text-red-400' : 'text-slate-500 dark:text-gray-400';
+  return `<span class="${cls}">${sign}${(+p).toFixed(1)}%</span> <span class="text-slate-300 dark:text-gray-600">vs prior period</span>`;
 };
 
 function deltaCell(current, previous) {
   if (previous == null) return '<td class="px-4 py-2.5"></td>';
-  if (previous === 0)   return '<td class="px-4 py-2.5 text-right"><span class="text-xs font-mono text-blue-400">new</span></td>';
+  if (previous === 0)   return '<td class="px-4 py-2.5 text-right"><span class="text-xs font-mono text-blue-600 dark:text-blue-400">new</span></td>';
   const change = (current - previous) / previous * 100;
   const sign   = change > 0 ? '+' : '';
-  const cls    = change > 0 ? 'text-green-400' : change < 0 ? 'text-red-400' : 'text-gray-500';
+  const cls    = change > 0 ? 'text-green-600 dark:text-green-400' : change < 0 ? 'text-red-600 dark:text-red-400' : 'text-slate-400 dark:text-gray-500';
   const val    = Math.abs(change) < 1
     ? `${sign}${change.toFixed(1)}%`
     : `${sign}${Math.round(change)}%`;
@@ -1097,12 +1053,12 @@ function roleBadge(githubHandleArray, small = false) {
   const teams = teamsFor(githubHandleArray);
   const px = small ? 'px-1.5 py-0.5' : 'px-2 py-0.5';
   const teamLinks = teams.map(t =>
-    `<div><a href="https://github.com/orgs/open-telemetry/teams/${t}" target="_blank" onclick="event.stopPropagation()" class="text-blue-400 hover:text-blue-300">${t}</a></div>`
+    `<div><a href="https://github.com/orgs/open-telemetry/teams/${t}" target="_blank" onclick="event.stopPropagation()" class="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:text-blue-300">${t}</a></div>`
   ).join('');
   const tooltip = teams.length ? `
     <div class="role-tooltip">
       <div class="role-tooltip-inner">
-        <div class="text-gray-500 mb-1">Teams:</div>
+        <div class="text-slate-400 dark:text-gray-500 mb-1">Teams:</div>
         ${teamLinks}
       </div>
     </div>` : '';
@@ -1113,10 +1069,10 @@ function roleBadge(githubHandleArray, small = false) {
 }
 
 const ROLE_STYLE = {
-  maintainer:   'bg-blue-900/60 text-blue-300 border border-blue-800',
-  approver:     'bg-violet-900/60 text-violet-300 border border-violet-800',
-  'code-owner': 'bg-teal-900/60 text-teal-300 border border-teal-800',
-  triager:      'bg-gray-800 text-gray-400 border border-gray-700',
+  maintainer:   'bg-blue-100 dark:bg-blue-900/60 text-blue-700 dark:text-blue-300 border border-blue-300 dark:border-blue-800',
+  approver:     'bg-violet-900/60 text-violet-700 dark:text-violet-300 border border-violet-300 dark:border-violet-800',
+  'code-owner': 'bg-teal-900/60 text-teal-700 dark:text-teal-300 border border-teal-300 dark:border-teal-800',
+  triager:      'bg-slate-200 dark:bg-gray-800 text-slate-500 dark:text-gray-400 border border-slate-300 dark:border-gray-700',
 };
 
 async function loadSigsCache() {
@@ -1149,10 +1105,10 @@ function showSourceBadge(source, isoDate) {
   badge.classList.remove('hidden');
   if (source === 'cache') {
     const d = isoDate ? new Date(isoDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '';
-    badge.className = 'text-xs px-2 py-0.5 rounded-full border font-medium border-gray-700 text-gray-400';
+    badge.className = 'text-xs px-2 py-0.5 rounded-full border font-medium border-slate-300 dark:border-gray-700 text-slate-500 dark:text-gray-400';
     badge.textContent = `cached ${d}`;
   } else {
-    badge.className = 'text-xs px-2 py-0.5 rounded-full border font-medium border-green-800 text-green-400';
+    badge.className = 'text-xs px-2 py-0.5 rounded-full border font-medium border-green-800 text-green-600 dark:text-green-400';
     badge.textContent = 'live';
   }
 }
@@ -1168,7 +1124,7 @@ function setPreset(preset) {
 
   document.querySelectorAll('.preset-btn').forEach(b => {
     const on = b.dataset.preset === preset;
-    b.className = `preset-btn px-2.5 py-1 rounded-md transition-colors ${on ? 'bg-blue-600 text-white' : 'text-gray-400 hover:text-white'}`;
+    b.className = `preset-btn px-2.5 py-1 rounded-md transition-colors ${on ? 'bg-blue-600 text-white' : 'text-slate-500 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white'}`;
   });
 
   if (usingCache()) showSourceBadge('cache', CACHE?.fetchedAt);
@@ -1182,7 +1138,7 @@ function onDateChange() {
   S.filters.startDate = el('startDate').value;
   S.filters.endDate   = el('endDate').value;
   document.querySelectorAll('.preset-btn').forEach(b => {
-    b.className = 'preset-btn px-2.5 py-1 rounded-md text-gray-400 hover:text-white transition-colors';
+    b.className = 'preset-btn px-2.5 py-1 rounded-md text-slate-500 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white transition-colors';
   });
   showSourceBadge('live');
   if (S.filters.startDate && S.filters.endDate) reload();
@@ -1468,13 +1424,13 @@ async function loadOverview() {
     hide('ov-orgs-loading'); show('ov-orgs-list');
     el('ov-orgs-list').innerHTML = topOrgs.data.map((o, i) => `
       <div class="flex items-center gap-2">
-        <span class="text-gray-600 text-xs w-4 shrink-0">${i + 1}</span>
+        <span class="text-slate-300 dark:text-gray-600 text-xs w-4 shrink-0">${i + 1}</span>
         ${resolveOrgLogo(o) ? `<img src="${resolveOrgLogo(o)}" class="w-5 h-5 rounded object-contain shrink-0" onerror="this.style.display='none'">` : orgPlaceholder('w-5 h-5')}
         <span class="text-sm flex-1 truncate">${o.name}</span>
-        <span class="text-xs text-gray-400 font-mono shrink-0">${num(o.contributions)}</span>
+        <span class="text-xs text-slate-500 dark:text-gray-400 font-mono shrink-0">${num(o.contributions)}</span>
       </div>`).join('') +
       `<div class="pt-1 text-right">
-        <button onclick="setTab('organizations')" class="text-xs text-blue-400 hover:text-blue-300 transition-colors">more →</button>
+        <button onclick="setTab('organizations')" class="text-xs text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:text-blue-300 transition-colors">more →</button>
       </div>`;
 
     // Geo world map
@@ -1552,7 +1508,7 @@ function renderContribTable(rows, baseOffset, ranks) {
   el('contrib-tbody').innerHTML = rows.map((c, i) => {
     const rank    = ranks ? ranks[i] : baseOffset + i + 1;
     const handles = (c.githubHandleArray || []).slice(0, 2)
-      .map(h => `<a href="https://github.com/${h}" target="_blank" class="text-blue-400 hover:text-blue-300" onclick="event.stopPropagation()">@${h}</a>`)
+      .map(h => `<a href="https://github.com/${h}" target="_blank" class="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:text-blue-300" onclick="event.stopPropagation()">@${h}</a>`)
       .join(', ');
     const roles = roleBadge(c.githubHandleArray, true);
     const affiliation = affiliationFor(c.githubHandleArray);
@@ -1563,18 +1519,18 @@ function renderContribTable(rows, baseOffset, ranks) {
       ? `${affiliation.company} <a href="${affiliation.source === 'gitdm'
           ? gitdmUrl
           : `https://github.com/${(c.githubHandleArray||[])[0]}`
-        }" target="_blank" onclick="event.stopPropagation()" class="inline-block px-1 py-0.5 rounded text-gray-500 hover:text-gray-300 border border-gray-700 hover:border-gray-500 text-[10px] leading-none transition-colors ml-1">${affiliation.source}</a>`
+        }" target="_blank" onclick="event.stopPropagation()" class="inline-block px-1 py-0.5 rounded text-slate-400 dark:text-gray-500 hover:text-slate-700 dark:text-gray-300 border border-slate-300 dark:border-gray-700 hover:border-gray-500 text-[10px] leading-none transition-colors ml-1">${affiliation.source}</a>`
       : null;
     const barW = Math.min(100, (c.percentage || 0) * 6).toFixed(0);
     return `
-      <tr class="contrib-row border-b border-gray-800/40 hover:bg-gray-800/20 transition-colors" data-idx="${i}" title="Click to see repositories">
-        <td class="px-4 py-2.5 text-gray-600 text-xs">${rank}</td>
+      <tr class="contrib-row border-b border-slate-200 dark:border-gray-800/40 hover:bg-slate-200/50 dark:hover:bg-gray-800/20 transition-colors" data-idx="${i}" title="Click to see repositories">
+        <td class="px-4 py-2.5 text-slate-300 dark:text-gray-600 text-xs">${rank}</td>
         <td class="px-4 py-2.5">
           <div class="flex items-center gap-2.5">
             ${c.avatar ? `<img src="${c.avatar}" class="w-7 h-7 rounded-full shrink-0" onerror="this.style.display='none'">` : personPlaceholder('w-7 h-7')}
             <div>
               <div class="text-sm font-medium leading-tight">${c.name}</div>
-              <div class="text-xs text-gray-500">${handles}</div>
+              <div class="text-xs text-slate-400 dark:text-gray-500">${handles}</div>
             </div>
           </div>
         </td>
@@ -1582,8 +1538,8 @@ function renderContribTable(rows, baseOffset, ranks) {
           <div class="text-sm font-mono">${num(c.contributions)}</div>
         </td>
         ${deltaCell(c.contributions, c.previousContributions)}
-        <td class="px-4 py-2.5 text-right text-xs text-gray-400">${pct(c.percentage, 2)}</td>
-        <td class="px-4 py-2.5 text-xs text-gray-300">${company ?? '<span class="text-gray-600">—</span>'}</td>
+        <td class="px-4 py-2.5 text-right text-xs text-slate-500 dark:text-gray-400">${pct(c.percentage, 2)}</td>
+        <td class="px-4 py-2.5 text-xs text-slate-700 dark:text-gray-300">${company ?? '<span class="text-slate-300 dark:text-gray-600">—</span>'}</td>
         <td class="px-4 py-2.5 text-xs">${roles}</td>
       </tr>`;
   }).join('');
@@ -1692,11 +1648,11 @@ function renderOrgsPage() {
 
 function concentrationCell(orgName, orgTotal) {
   const cached = usingCache();
-  if (!cached) return `<td class="px-4 py-2.5 text-right text-xs text-gray-600">—</td>`;
+  if (!cached) return `<td class="px-4 py-2.5 text-right text-xs text-slate-300 dark:text-gray-600">—</td>`;
   const r = calcOrgConcentration(contributorsForOrg(orgName), orgTotal);
-  if (r.status === 'limited') return `<td class="px-4 py-2.5 text-right text-xs text-gray-600">—</td>`;
+  if (r.status === 'limited') return `<td class="px-4 py-2.5 text-right text-xs text-slate-300 dark:text-gray-600">—</td>`;
   const dot   = r.color === 'green' ? 'bg-green-500'  : r.color === 'yellow' ? 'bg-yellow-500'  : 'bg-red-500';
-  const label = r.color === 'green' ? 'text-green-400' : r.color === 'yellow' ? 'text-yellow-400' : 'text-red-400';
+  const label = r.color === 'green' ? 'text-green-600 dark:text-green-400' : r.color === 'yellow' ? 'text-yellow-400' : 'text-red-600 dark:text-red-400';
   return `<td class="px-4 py-2.5 text-right">
     <span class="inline-flex items-center gap-1.5 justify-end">
       <span class="w-1.5 h-1.5 rounded-full ${dot} shrink-0"></span>
@@ -1710,8 +1666,8 @@ function renderOrgsTable(rows, baseOffset, ranks) {
   el('orgs-tbody').innerHTML = rows.map((o, i) => {
     const rank = ranks ? ranks[i] : baseOffset + i + 1;
     return `
-      <tr class="org-row border-b border-gray-800/40 hover:bg-gray-800/20 transition-colors" data-idx="${i}" title="Click to see contributors & repositories">
-        <td class="px-4 py-2.5 text-gray-600 text-xs">${rank}</td>
+      <tr class="org-row border-b border-slate-200 dark:border-gray-800/40 hover:bg-slate-200/50 dark:hover:bg-gray-800/20 transition-colors" data-idx="${i}" title="Click to see contributors & repositories">
+        <td class="px-4 py-2.5 text-slate-300 dark:text-gray-600 text-xs">${rank}</td>
         <td class="px-4 py-2.5">
           <div class="flex items-center gap-2">
             ${resolveOrgLogo(o) ? `<img src="${resolveOrgLogo(o)}" class="w-6 h-6 rounded object-contain shrink-0" onerror="this.style.display='none'">` : orgPlaceholder('w-6 h-6')}
@@ -1722,7 +1678,7 @@ function renderOrgsTable(rows, baseOffset, ranks) {
           <div class="text-sm font-mono">${num(o.contributions)}</div>
         </td>
         ${deltaCell(o.contributions, o.previousContributions)}
-        <td class="px-4 py-2.5 text-right text-xs text-gray-400">${pct(o.percentage, 2)}</td>
+        <td class="px-4 py-2.5 text-right text-xs text-slate-500 dark:text-gray-400">${pct(o.percentage, 2)}</td>
         ${concentrationCell(o.name, o.contributions)}
       </tr>`;
   }).join('');
@@ -1867,11 +1823,11 @@ async function loadGeography() {
     await renderChoropleth('geoChart', 'geoChart', all);
 
     el('geo-tbody').innerHTML = all.map(c => `
-      <tr class="border-b border-gray-800/40 hover:bg-gray-800/20 transition-colors">
+      <tr class="border-b border-slate-200 dark:border-gray-800/40 hover:bg-slate-200/50 dark:hover:bg-gray-800/20 transition-colors">
         <td class="px-4 py-2.5 text-sm"><span class="mr-1.5">${c.flag || ''}</span>${c.name}</td>
         <td class="px-4 py-2.5 text-right text-sm font-mono">${num(c.count)}</td>
         <td class="px-4 py-2.5 text-right">
-          <span class="text-xs text-gray-400">${c.percentage}%</span>
+          <span class="text-xs text-slate-500 dark:text-gray-400">${c.percentage}%</span>
         </td>
       </tr>`).join('');
     hide('geo-table-loading'); show('geo-table-wrap');
@@ -1932,18 +1888,18 @@ function renderSigsList() {
   el('sigs-tbody').innerHTML = entries.map((e) => {
     const barW = Math.round((e.contributors / maxC) * 100);
     return `
-      <tr class="sig-row border-b border-gray-800/40 hover:bg-gray-800/20 transition-colors"
+      <tr class="sig-row border-b border-slate-200 dark:border-gray-800/40 hover:bg-slate-200/50 dark:hover:bg-gray-800/20 transition-colors"
           data-repo="${e.repo}" title="Click to see contributors &amp; organizations">
-        <td class="px-4 py-2.5 text-gray-600 text-xs">${e.rank}</td>
+        <td class="px-4 py-2.5 text-slate-300 dark:text-gray-600 text-xs">${e.rank}</td>
         <td class="px-4 py-2.5">
           <div class="flex items-center gap-2">
-            <span class="text-sm font-medium text-gray-100">${e.repo}</span>
+            <span class="text-sm font-medium text-slate-900 dark:text-gray-100">${e.repo}</span>
           </div>
         </td>
         <td class="px-4 py-2.5 text-right">
           <div class="text-sm font-mono">${num(e.contributors)}</div>
         </td>
-        <td class="px-4 py-2.5 text-right text-sm text-gray-400">${num(e.organizations)}</td>
+        <td class="px-4 py-2.5 text-right text-sm text-slate-500 dark:text-gray-400">${num(e.organizations)}</td>
       </tr>`;
   }).join('');
 
@@ -1979,11 +1935,11 @@ function openSigModal(repoName) {
 
   el('sig-modal-contrib-list').innerHTML = contribs.length
     ? contribs.map((c, i) => renderPersonRow(c, i, { sigStyle: true })).join('')
-    : '<p class="text-xs text-gray-600 text-center py-4">No contributors in this period</p>';
+    : '<p class="text-xs text-slate-300 dark:text-gray-600 text-center py-4">No contributors in this period</p>';
 
   el('sig-modal-orgs-list').innerHTML = orgs.length
     ? orgs.map((o, i) => renderOrgRow(o, i, { sigStyle: true })).join('')
-    : '<p class="text-xs text-gray-600 text-center py-4">No organizations in this period</p>';
+    : '<p class="text-xs text-slate-300 dark:text-gray-600 text-center py-4">No organizations in this period</p>';
 
   const modal = el('sig-modal');
   const panel = el('sig-modal-panel');
@@ -2045,18 +2001,18 @@ function renderOrgConcentration(contribs, orgTotal) {
   const r = calcOrgConcentration(contribs, orgTotal);
   const target = el('org-modal-concentration');
   if (r.status === 'limited') {
-    target.innerHTML = `<span class="text-xs text-gray-500 italic">Not enough GitHub data to assess</span>`;
+    target.innerHTML = `<span class="text-xs text-slate-400 dark:text-gray-500 italic">Not enough GitHub data to assess</span>`;
     return;
   }
   const dot   = r.color === 'green' ? 'bg-green-500'  : r.color === 'yellow' ? 'bg-yellow-500'  : 'bg-red-500';
-  const label = r.color === 'green' ? 'text-green-400' : r.color === 'yellow' ? 'text-yellow-400' : 'text-red-400';
+  const label = r.color === 'green' ? 'text-green-600 dark:text-green-400' : r.color === 'yellow' ? 'text-yellow-400' : 'text-red-600 dark:text-red-400';
   target.innerHTML = `
     <div class="flex items-center gap-2">
       <span class="w-2 h-2 rounded-full ${dot} shrink-0"></span>
       <span class="text-sm font-semibold ${label}">${r.label}</span>
-      <span class="text-xs text-gray-600 font-mono ml-auto">HHI ${num(r.hhi)}</span>
+      <span class="text-xs text-slate-300 dark:text-gray-600 font-mono ml-auto">HHI ${num(r.hhi)}</span>
     </div>
-    <div class="text-xs text-gray-500 mt-1">Top contributor: ${pct(r.top1Pct)} of ${S.filters.platform === 'all' ? 'all-platform' : S.filters.platform} activity</div>`;
+    <div class="text-xs text-slate-400 dark:text-gray-500 mt-1">Top contributor: ${pct(r.top1Pct)} of ${S.filters.platform === 'all' ? 'all-platform' : S.filters.platform} activity</div>`;
 }
 
 function openOrgModal(org) {
@@ -2137,7 +2093,7 @@ function openOrgModal(org) {
         hide('org-modal-repos-loading');
         show('org-modal-repos-error');
         el('org-modal-repos-error').innerHTML =
-          `<p class="mb-2">Could not load repositories.</p><p class="text-gray-600">${err.message}</p>`;
+          `<p class="mb-2">Could not load repositories.</p><p class="text-slate-300 dark:text-gray-600">${err.message}</p>`;
         el('org-modal-repo-count').textContent = '—';
       });
   }
@@ -2221,7 +2177,7 @@ function openContribModal(contributor) {
   el('modal-avatar-ph').style.display = contributor.avatar ? 'none' : '';
   el('modal-name').textContent = contributor.name;
   el('modal-handles').innerHTML = handles
-    .map(h => `<a href="https://github.com/${h}" target="_blank" class="text-blue-400 hover:text-blue-300">@${h}</a>`)
+    .map(h => `<a href="https://github.com/${h}" target="_blank" class="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:text-blue-300">@${h}</a>`)
     .join(', ') || '—';
 
   // Stats
@@ -2288,10 +2244,10 @@ function openContribModal(contributor) {
         show('modal-repos-error');
         el('modal-repos-error').innerHTML =
           `<p class="mb-2">Could not load repositories.</p>` +
-          `<p class="text-gray-600">${err.message}</p>` +
+          `<p class="text-slate-300 dark:text-gray-600">${err.message}</p>` +
           (handles[0]
             ? `<a href="https://github.com/search?q=author%3A${handles[0]}+org%3Aopen-telemetry&type=pullrequests" target="_blank"
-                class="inline-block mt-3 px-3 py-1.5 rounded bg-gray-800 text-blue-400 hover:text-blue-300 text-xs transition-colors">
+                class="inline-block mt-3 px-3 py-1.5 rounded bg-slate-200 dark:bg-gray-800 text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:text-blue-300 text-xs transition-colors">
                 Search on GitHub →</a>`
             : '');
       });
@@ -2357,14 +2313,14 @@ function renderContribRepos(result, handles) {
     el('modal-repos-error').innerHTML =
       `No pull requests found in this period.<br>
        <a href="${result.searchUrl}" target="_blank"
-         class="inline-block mt-3 px-3 py-1.5 rounded bg-gray-800 text-blue-400 hover:text-blue-300 text-xs transition-colors">
+         class="inline-block mt-3 px-3 py-1.5 rounded bg-slate-200 dark:bg-gray-800 text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:text-blue-300 text-xs transition-colors">
          Search on GitHub →</a>`;
     return;
   }
 
   const note = result.truncated
-    ? `Showing repos from first 100 of ${num(result.totalPRs)} PRs · <a href="${result.searchUrl}" target="_blank" class="text-blue-500 hover:text-blue-400">see all →</a>`
-    : `${num(result.totalPRs)} pull request${result.totalPRs === 1 ? '' : 's'} in ${result.repos.length} repo${result.repos.length === 1 ? '' : 's'} · <a href="${result.searchUrl}" target="_blank" class="text-blue-500 hover:text-blue-400">view on GitHub →</a>`;
+    ? `Showing repos from first 100 of ${num(result.totalPRs)} PRs · <a href="${result.searchUrl}" target="_blank" class="text-blue-600 dark:text-blue-500 hover:text-blue-600 dark:text-blue-400">see all →</a>`
+    : `${num(result.totalPRs)} pull request${result.totalPRs === 1 ? '' : 's'} in ${result.repos.length} repo${result.repos.length === 1 ? '' : 's'} · <a href="${result.searchUrl}" target="_blank" class="text-blue-600 dark:text-blue-500 hover:text-blue-600 dark:text-blue-400">view on GitHub →</a>`;
 
   renderReposList({
     repos: result.repos,

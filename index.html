@@ -818,16 +818,32 @@ const normCompany = s =>
 
 // ── Acronym / alias map — keys and values are normCompany'd strings ──
 // Both directions must be present so matching works regardless of which side is the affiliation.
+// Maps normalized alternate spellings → canonical normalized name.
+// All variants in a group must resolve to the same canonical so that
+// resolveAlias(a) === resolveAlias(b) is true for any two spellings.
+// The canonical should match (or resolve to) the normCompany of the leaderboard org name.
 const COMPANY_ALIASES = {
   'cncf':                              'cloud native computing foundation',
-  'cloud native computing foundation': 'cncf',
   'mit':                               'massachusetts institute of technology',
   'm i t':                             'massachusetts institute of technology',
-  'massachusetts institute of technology': 'mit',
+  // "Elasticsearch Inc." affiliations should match the "Elastic" leaderboard org
+  'elasticsearch':                     'elastic',
 };
 
 function resolveAlias(normalized) {
   return COMPANY_ALIASES[normalized] ?? normalized;
+}
+
+// True when needle (>= 4 chars) appears as whole words inside haystack.
+// The length guard prevents short abbreviations like "ibm" or "ing" from
+// matching as standalone words inside unrelated longer names.
+// e.g. wordMatch("raintank grafana labs", "grafana labs") → true
+//      wordMatch("turbonomic an ibm company", "ibm")      → false  (< 4 chars)
+//      wordMatch("cloud native computing foundation","ing")→ false  (mid-word)
+function wordMatch(haystack, needle) {
+  if (!needle || needle.length < 4) return false;
+  const escaped = needle.replace(/[.*+?^${}()|[\]\\]/g, '\\$&').replace(/\s+/g, '\\s+');
+  return new RegExp('(?:^|\\s)' + escaped + '(?:\\s|$)').test(haystack);
 }
 
 function orgMatchesSearch(orgName, q) {
@@ -898,7 +914,7 @@ function logoForCompany(companyName) {
   const cn = normCompany(companyName);
   for (const [orgName, logo] of m) {
     const on = normCompany(orgName);
-    if (cn === on || cn.includes(on) || on.includes(cn)) return logo;
+    if (cn === on || wordMatch(on, cn) || wordMatch(cn, on)) return logo;
   }
   return null;
 }
@@ -1953,13 +1969,13 @@ function closeSigModal() {
 function companyMatchesOrg(companyName, orgName) {
   const cn = normCompany(companyName);
   const on = normCompany(orgName);
-  if (cn === on || cn.includes(on) || on.includes(cn)) return true;
-  // Space-stripped comparison (handles "MercadoLibre" vs "Mercado Libre")
-  const cns = cn.replace(/\s/g, '');
-  const ons = on.replace(/\s/g, '');
-  if (cns === ons || cns.includes(ons) || ons.includes(cns)) return true;
-  // Alias comparison (handles acronyms like "CNCF" vs "Cloud Native Computing Foundation")
-  // Compare resolved aliases so any two spellings in the same group match transitively.
+  if (cn === on) return true;
+  // Whole-word substring match, min 4 chars (e.g. "Grafana Labs" in "Raintank … Grafana Labs")
+  if (wordMatch(on, cn) || wordMatch(cn, on)) return true;
+  // Space-stripped equality (handles "MercadoLibre" vs "Mercado Libre")
+  if (cn.replace(/\s/g, '') === on.replace(/\s/g, '')) return true;
+  // Alias comparison (handles acronyms / rebrands, e.g. CNCF, Elasticsearch → Elastic)
+  // Resolved transitively so any two spellings in an alias group match each other.
   return resolveAlias(cn) === resolveAlias(on);
 }
 
@@ -2041,7 +2057,7 @@ function openOrgModal(org) {
         <span class="text-xs flex-1 truncate">${c.name}</span>
         ${handle ? `<a href="https://github.com/${handle}" target="_blank" class="text-blue-500 text-xs shrink-0 hover:text-blue-300" onclick="event.stopPropagation()">@${handle}</a>` : ''}
         <span class="text-xs text-gray-500 font-mono shrink-0">${num(c.contributions)}</span>
-        <span class="text-xs text-gray-600 shrink-0">${pct(c.contributions / contribsCacheTotal * 100)}</span>
+        <span class="text-xs text-gray-600 shrink-0">${pct(c.contributions / org.contributions * 100)}</span>
       </div>`;
   }).join('');
 

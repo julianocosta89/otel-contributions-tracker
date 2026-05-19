@@ -791,7 +791,9 @@ function renderReposList({ repos, unit, barColor, listElId, note }) {
   listEl.innerHTML = repos.map(repo => {
     const barW    = Math.round((repo.count / maxCount) * 100);
     const label   = `${num(repo.count)} ${repo.count === 1 ? unit : unit + 's'}`;
-    const href    = repo.url.startsWith('https://github.com') ? repo.url : `https://github.com/${repo.url}`;
+    const href    = repo.url
+      ? (repo.url.startsWith('https://') ? repo.url : `https://github.com/${repo.url}`)
+      : repo.htmlUrl;
     return `
       <a href="${href}" target="_blank"
         class="flex items-center gap-3 px-3 py-2 rounded-lg bg-gray-800/30 hover:bg-gray-800/60 transition-colors group">
@@ -2176,40 +2178,18 @@ function renderOrgRepos(repos, truncated, totalPRs, org, isPartial) {
   // Update repo count in stats
   el('org-modal-repo-count').textContent = repos.length || '—';
 
-  if (!repos.length) {
+  const note = `${num(totalPRs)} PRs across ${repos.length} repo${repos.length === 1 ? '' : 's'}${isPartial ? ` · <span class="italic">Based on top ${Math.min(8, repos.length)} contributors</span>` : ''}`;
+  const ok = renderReposList({
+    repos,
+    unit: 'PR',
+    listElId: 'org-modal-repos-list',
+    note,
+  });
+  if (!ok) {
     show('org-modal-repos-error');
     el('org-modal-repos-error').textContent = 'No pull requests found in this period.';
     return;
   }
-
-  const maxCount = repos[0].count;
-  const listEl   = el('org-modal-repos-list');
-
-  listEl.innerHTML = repos.map(repo => {
-    const barW    = Math.round((repo.count / maxCount) * 100);
-    const prLabel = repo.count === 1 ? '1 PR' : `${repo.count} PRs`;
-    return `
-      <a href="${repo.htmlUrl}" target="_blank"
-        class="flex items-center gap-3 px-3 py-2 rounded-lg bg-gray-800/30 hover:bg-gray-800/60 transition-colors group">
-        <div class="flex-1 min-w-0">
-          <div class="text-xs font-medium text-gray-300 group-hover:text-gray-100 truncate transition-colors">${repo.name}</div>
-        </div>
-        <span class="text-xs text-gray-500 font-mono shrink-0">${prLabel}</span>
-        <svg class="w-3 h-3 text-gray-600 group-hover:text-gray-400 shrink-0 transition-colors" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15,3 21,3 21,9"/><line x1="10" y1="14" x2="21" y2="3"/>
-        </svg>
-      </a>`;
-  }).join('');
-
-  const note = isPartial
-    ? `Based on top ${Math.min(8, repos.length)} contributors`
-    : null;
-
-  listEl.innerHTML += `
-    <p class="text-xs text-gray-600 text-center pt-1">
-      ${num(totalPRs)} PRs across ${repos.length} repo${repos.length === 1 ? '' : 's'}${note ? ` · <span class="italic">${note}</span>` : ''}
-    </p>`;
-
   show('org-modal-repos-list');
 }
 
@@ -2370,39 +2350,16 @@ function renderContribRepos(result, handles) {
     return;
   }
 
-  const maxCount = result.repos[0].count;
-  const listEl   = el('modal-repos-list');
+  const note = result.truncated
+    ? `Showing repos from first 100 of ${num(result.totalPRs)} PRs · <a href="${result.searchUrl}" target="_blank" class="text-blue-500 hover:text-blue-400">see all →</a>`
+    : `${num(result.totalPRs)} pull request${result.totalPRs === 1 ? '' : 's'} in ${result.repos.length} repo${result.repos.length === 1 ? '' : 's'} · <a href="${result.searchUrl}" target="_blank" class="text-blue-500 hover:text-blue-400">view on GitHub →</a>`;
 
-  listEl.innerHTML = result.repos.map(repo => {
-    const barW = Math.round((repo.count / maxCount) * 100);
-    const prLabel = repo.count === 1 ? '1 PR' : `${repo.count} PRs`;
-    return `
-      <a href="${repo.htmlUrl}" target="_blank"
-        class="flex items-center gap-3 px-3 py-2 rounded-lg bg-gray-800/30 hover:bg-gray-800/60 transition-colors group">
-        <div class="flex-1 min-w-0">
-          <div class="text-xs font-medium text-gray-300 group-hover:text-gray-100 truncate transition-colors">${repo.name}</div>
-        </div>
-        <span class="text-xs text-gray-500 font-mono shrink-0">${prLabel}</span>
-        <svg class="w-3 h-3 text-gray-600 group-hover:text-gray-400 shrink-0 transition-colors" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15,3 21,3 21,9"/><line x1="10" y1="14" x2="21" y2="3"/>
-        </svg>
-      </a>`;
-  }).join('');
-
-  if (result.truncated) {
-    listEl.innerHTML += `
-      <p class="text-xs text-gray-600 text-center pt-1">
-        Showing repos from first 100 of ${num(result.totalPRs)} PRs ·
-        <a href="${result.searchUrl}" target="_blank" class="text-blue-500 hover:text-blue-400">see all →</a>
-      </p>`;
-  } else {
-    listEl.innerHTML += `
-      <p class="text-xs text-gray-600 text-center pt-1">
-        ${num(result.totalPRs)} pull request${result.totalPRs === 1 ? '' : 's'} in ${result.repos.length} repo${result.repos.length === 1 ? '' : 's'} ·
-        <a href="${result.searchUrl}" target="_blank" class="text-blue-500 hover:text-blue-400">view on GitHub →</a>
-      </p>`;
-  }
-
+  renderReposList({
+    repos: result.repos,
+    unit: 'PR',
+    listElId: 'modal-repos-list',
+    note,
+  });
   show('modal-repos-list');
 }
 

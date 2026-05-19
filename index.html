@@ -282,6 +282,7 @@
               <th class="text-left px-4 py-3 w-8">#</th>
               <th class="text-left px-4 py-3">Contributor</th>
               <th class="text-right px-4 py-3">Contributions</th>
+              <th class="text-right px-4 py-3" title="Change vs same-length period immediately before">vs prev</th>
               <th class="text-right px-4 py-3">Share</th>
               <th class="text-left px-4 py-3">Company</th>
               <th class="text-left px-4 py-3">Roles</th>
@@ -327,6 +328,7 @@
                 <th class="text-left px-4 py-3 w-8">#</th>
                 <th class="text-left px-4 py-3">Organization</th>
                 <th class="text-right px-4 py-3">Contributions</th>
+                <th class="text-right px-4 py-3" title="Change vs same-length period immediately before">vs prev</th>
                 <th class="text-right px-4 py-3">Share</th>
                 <th class="text-right px-4 py-3">Concentration</th>
               </tr>
@@ -936,6 +938,18 @@ const changeBadge = p => {
   return `<span class="${cls}">${sign}${(+p).toFixed(1)}%</span> <span class="text-gray-600">vs prior period</span>`;
 };
 
+function deltaCell(current, previous) {
+  if (previous == null) return '<td class="px-4 py-2.5"></td>';
+  if (previous === 0)   return '<td class="px-4 py-2.5 text-right"><span class="text-xs font-mono text-blue-400">new</span></td>';
+  const change = (current - previous) / previous * 100;
+  const sign   = change > 0 ? '+' : '';
+  const cls    = change > 0 ? 'text-green-400' : change < 0 ? 'text-red-400' : 'text-gray-500';
+  const val    = Math.abs(change) < 1
+    ? `${sign}${change.toFixed(1)}%`
+    : `${sign}${Math.round(change)}%`;
+  return `<td class="px-4 py-2.5 text-right"><span class="text-xs font-mono ${cls}">${val}</span></td>`;
+}
+
 // ── Cache helpers ──────────────────────────────────────────────────
 function usingCache() {
   if (CACHE === null) return false;
@@ -1491,6 +1505,7 @@ function renderContribTable(rows, baseOffset, ranks) {
         <td class="px-4 py-2.5 text-right">
           <div class="text-sm font-mono">${num(c.contributions)}</div>
         </td>
+        ${deltaCell(c.contributions, c.previousContributions)}
         <td class="px-4 py-2.5 text-right text-xs text-gray-400">${pct(c.percentage, 2)}</td>
         <td class="px-4 py-2.5 text-xs text-gray-300">${company ?? '<span class="text-gray-600">—</span>'}</td>
         <td class="px-4 py-2.5 text-xs">${roles}</td>
@@ -1623,6 +1638,7 @@ function renderOrgsTable(rows, baseOffset, ranks) {
         <td class="px-4 py-2.5 text-right">
           <div class="text-sm font-mono">${num(o.contributions)}</div>
         </td>
+        ${deltaCell(o.contributions, o.previousContributions)}
         <td class="px-4 py-2.5 text-right text-xs text-gray-400">${pct(o.percentage, 2)}</td>
         ${concentrationCell(o.name, o.contributions)}
       </tr>`;

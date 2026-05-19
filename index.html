@@ -1523,11 +1523,13 @@ document.addEventListener('click', e => {
   if (rows && rows[idx]) openContribModal(rows[idx]);
 });
 
-function clearContribSearch() {
-  el('contributor-search').value = '';
-  onContribSearch();
-  el('contributor-search').focus();
+function clearSearch(inputId, onSearch) {
+  el(inputId).value = '';
+  onSearch();
+  el(inputId).focus();
 }
+
+const clearContribSearch = () => clearSearch('contributor-search', onContribSearch);
 
 function onContribSearch() {
   const q = el('contributor-search').value.toLowerCase().trim();
@@ -1667,11 +1669,7 @@ function onOrgSearch() {
   }
 }
 
-function clearOrgSearch() {
-  el('org-search').value = '';
-  onOrgSearch();
-  el('org-search').focus();
-}
+const clearOrgSearch     = () => clearSearch('org-search',         onOrgSearch);
 
 // ══════════════════════════════════════════════════════════════════
 // CONCENTRATION
@@ -1893,11 +1891,7 @@ function onSigsSearch() {
   renderSigsList();
 }
 
-function clearSigsSearch() {
-  el('sigs-search').value = '';
-  onSigsSearch();
-  el('sigs-search').focus();
-}
+const clearSigsSearch    = () => clearSearch('sigs-search',        onSigsSearch);
 
 function openSigModal(repoName) {
   const period = SIGS_CACHE?.periods?.[S.preset]?.[repoName];

@@ -180,16 +180,16 @@ async function main() {
     console.log(`  ✓ ${succeeded} fetched, ${skipped} empty, ${errored} errors`);
   }
 
+  if (totalHardFails > 0) {
+    console.error(`\n✗ ${totalHardFails} repo(s) failed with no cached fallback — leaving cache unchanged`);
+    process.exit(1);
+  }
+
   const cache  = { fetchedAt: new Date().toISOString(), repos, periods };
   const json   = JSON.stringify(cache);
   const sizeKB = (json.length / 1024).toFixed(0);
   writeFileSync(CACHE_PATH, json);
   console.log(`\n✓ Saved ${CACHE_PATH}  (${sizeKB} KB)\n`);
-
-  if (totalHardFails > 0) {
-    console.error(`✗ ${totalHardFails} repo(s) failed with no cached fallback — not committing`);
-    process.exit(1);
-  }
 }
 
 main().catch(e => { console.error('\nFetch failed:', e.message); process.exit(1); });

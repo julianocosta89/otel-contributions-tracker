@@ -246,17 +246,17 @@ async function main() {
   }
 
   // ── Write output ──────────────────────────────────────────────
+  if (hardFailures.length > 0) {
+    console.error(`\n✗ ${hardFailures.length} fetch(es) failed with no cached fallback — leaving cache unchanged:`);
+    hardFailures.forEach(f => console.error(`  • ${f}`));
+    process.exit(1);
+  }
+
   const cache  = { fetchedAt: new Date().toISOString(), periods, filterCombos };
   const json   = JSON.stringify(cache);
   const sizeKB = (json.length / 1024).toFixed(0);
   writeFileSync(CACHE_PATH, json);
   console.log(`\n✓ Saved ${CACHE_PATH}  (${sizeKB} KB)\n`);
-
-  if (hardFailures.length > 0) {
-    console.error(`✗ ${hardFailures.length} fetch(es) failed with no cached fallback — not committing:`);
-    hardFailures.forEach(f => console.error(`  • ${f}`));
-    process.exit(1);
-  }
 }
 
 main().catch(e => { console.error('\nFetch failed:', e.message); process.exit(1); });

@@ -2075,7 +2075,7 @@ async function openOrgModal(org) {
   }
 
   // Prefer LFX cache (all contributors); fall back to GitHub API (top 8)
-  if (SIGS_CACHE === null) await _sigsLoadPromise;
+  await loadSigsCache();
   const cachedOrgRepos = orgReposFromCache(contribs);
   if (cachedOrgRepos !== null) {
     hide('org-modal-repos-loading');
@@ -2230,7 +2230,7 @@ async function openContribModal(contributor) {
   setHash('contributors', primaryHandle);
 
   // Prefer LFX cache; fall back to GitHub PR search
-  if (SIGS_CACHE === null) await _sigsLoadPromise;
+  await loadSigsCache();
   const cachedRepos = reposFromCache(handles);
   if (cachedRepos !== null) {
     hide('modal-repos-loading');
@@ -2421,7 +2421,7 @@ document.addEventListener('mouseout', e => {
 async function init() {
   initTheme();
   await Promise.all([loadCache(), loadAffiliations()]);
-  loadSigsCache(); // non-blocking: starts fetching in background while init continues
+  loadSigsCache();
 
   const { tab, detail } = parseHash();
   if (VALID_TABS.includes(tab)) {

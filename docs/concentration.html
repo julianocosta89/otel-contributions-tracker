@@ -198,19 +198,17 @@
   </div>
 
   <script>
-    function toggleTheme() {
-      const isDark = document.documentElement.classList.contains('dark');
-      document.documentElement.classList.toggle('dark', !isDark);
+    function syncIcons(isDark) {
       document.getElementById('icon-moon').classList.toggle('hidden', !isDark);
       document.getElementById('icon-sun').classList.toggle('hidden', isDark);
-      localStorage.setItem('otel-theme', isDark ? 'light' : 'dark');
     }
-    // Sync icon state with current theme
-    (function () {
+    function toggleTheme() {
+      document.documentElement.classList.toggle('dark');
       const isDark = document.documentElement.classList.contains('dark');
-      document.getElementById('icon-moon').classList.toggle('hidden', !isDark);
-      document.getElementById('icon-sun').classList.toggle('hidden', isDark);
-    })();
+      syncIcons(isDark);
+      localStorage.setItem('otel-theme', isDark ? 'dark' : 'light');
+    }
+    syncIcons(document.documentElement.classList.contains('dark'));
   </script>
 </body>
 </html>

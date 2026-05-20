@@ -26,6 +26,8 @@ const GH_TOKEN   = process.env.GITHUB_TOKEN;
 
 const endDate = new Date().toISOString().split('T')[0];
 
+const EMPTY_REPO = { contributors: { total: 0, data: [] }, organizations: { total: 0, data: [] } };
+
 function daysAgo(n) {
   return new Date(Date.now() - n * 86_400_000).toISOString().split('T')[0];
 }
@@ -162,14 +164,14 @@ async function main() {
         const isNotFound = e.message.includes('HTTP 404');
         if (isNotFound) {
           // No LFX data for this repo — normal, store as empty
-          periods[key][repo] = { contributors: { total: 0, data: [] }, organizations: { total: 0, data: [] } };
+          periods[key][repo] = EMPTY_REPO;
           skipped++;
         } else {
           // Operational error (rate limit, auth, network) — log and preserve cached data
           process.stdout.write('\n');
           console.log(`  ✗ ${repo}: ${e.message}`);
           const cached = existing?.periods?.[key]?.[repo];
-          periods[key][repo] = cached ?? { contributors: { total: 0, data: [] }, organizations: { total: 0, data: [] } };
+          periods[key][repo] = cached ?? EMPTY_REPO;
           if (!cached) totalHardFails++;
           errored++;
         }

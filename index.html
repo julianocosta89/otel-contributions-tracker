@@ -2020,7 +2020,7 @@ function renderOrgConcentration(contribs, orgTotal) {
     <div class="text-xs text-slate-400 dark:text-gray-500 mt-1">Top contributor: ${pct(r.top1Pct)} of ${S.filters.platform === 'all' ? 'all-platform' : S.filters.platform} activity</div>`;
 }
 
-function openOrgModal(org) {
+async function openOrgModal(org) {
   const panel = el('org-modal-panel');
 
   // Header
@@ -2075,6 +2075,7 @@ function openOrgModal(org) {
   }
 
   // Prefer LFX cache (all contributors); fall back to GitHub API (top 8)
+  if (SIGS_CACHE === null) await _sigsLoadPromise;
   const cachedOrgRepos = orgReposFromCache(contribs);
   if (cachedOrgRepos !== null) {
     hide('org-modal-repos-loading');
@@ -2170,7 +2171,7 @@ function renderOrgRepos(repos, truncated, totalPRs, org, isPartial) {
 // CONTRIBUTOR MODAL — drill-down: repos contributed in period
 // ══════════════════════════════════════════════════════════════════
 
-function openContribModal(contributor) {
+async function openContribModal(contributor) {
   const modal   = el('contrib-modal');
   const panel   = el('contrib-modal-panel');
   const handles = contributor.githubHandleArray || [];
@@ -2229,6 +2230,7 @@ function openContribModal(contributor) {
   setHash('contributors', primaryHandle);
 
   // Prefer LFX cache; fall back to GitHub PR search
+  if (SIGS_CACHE === null) await _sigsLoadPromise;
   const cachedRepos = reposFromCache(handles);
   if (cachedRepos !== null) {
     hide('modal-repos-loading');

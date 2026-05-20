@@ -131,9 +131,10 @@ async function main() {
   console.log(`\nFetching OTel SIG data${FULL ? ' (full refresh)' : ''}\n`);
   mkdirSync('data', { recursive: true });
 
-  const existing = loadExistingCache();
-  const periods  = existing?.periods ? { ...existing.periods } : {};
-  const cacheAge = ageDays(existing?.fetchedAt);
+  const existing       = loadExistingCache();
+  const periods        = existing?.periods ? { ...existing.periods } : {};
+  const cacheAge       = ageDays(existing?.fetchedAt);
+  let   totalHardFails = 0; // non-404 errors with no cached fallback
 
   console.log('── Fetching non-archived repo list from GitHub…');
   const repos = await fetchNonArchivedRepos();
@@ -167,8 +168,9 @@ async function main() {
           // Operational error (rate limit, auth, network) — log and preserve cached data
           process.stdout.write('\n');
           console.log(`  ✗ ${repo}: ${e.message}`);
-          periods[key][repo] = existing?.periods?.[key]?.[repo]
-            ?? { contributors: { total: 0, data: [] }, organizations: { total: 0, data: [] } };
+          const cached = existing?.periods?.[key]?.[repo];
+          periods[key][repo] = cached ?? { contributors: { total: 0, data: [] }, organizations: { total: 0, data: [] } };
+          if (!cached) totalHardFails++;
           errored++;
         }
       }
@@ -183,6 +185,11 @@ async function main() {
   const sizeKB = (json.length / 1024).toFixed(0);
   writeFileSync(CACHE_PATH, json);
   console.log(`\n✓ Saved ${CACHE_PATH}  (${sizeKB} KB)\n`);
+
+  if (totalHardFails > 0) {
+    console.error(`✗ ${totalHardFails} repo(s) failed with no cached fallback — not committing`);
+    process.exit(1);
+  }
 }
 
 main().catch(e => { console.error('\nFetch failed:', e.message); process.exit(1); });

@@ -185,6 +185,7 @@ async function main() {
   const existing     = loadExistingCache();
   const periods      = existing?.periods      ? { ...existing.periods }      : {};
   const filterCombos = existing?.filterCombos ? { ...existing.filterCombos } : {};
+  const hardFailures = []; // fetch failed with no cached fallback to use
 
   // ── Full periods (all×all) ────────────────────────────────────
   for (const { key, startDate, prevStartDate, alwaysRefresh } of PERIODS) {
@@ -203,6 +204,8 @@ async function main() {
         if (existing?.periods?.[key]) {
           periods[key] = existing.periods[key];
           console.warn(`    ↳ kept cached data`);
+        } else {
+          hardFailures.push(`${key} period`);
         }
       }
       await sleep(300);
@@ -235,6 +238,8 @@ async function main() {
         if (existing?.filterCombos?.[key]?.[platform]) {
           filterCombos[key][platform] = existing.filterCombos[key][platform];
           console.warn(`    ↳ kept cached data`);
+        } else {
+          hardFailures.push(`${key}/${platform} combo`);
         }
       }
     });
@@ -246,6 +251,12 @@ async function main() {
   const sizeKB = (json.length / 1024).toFixed(0);
   writeFileSync(CACHE_PATH, json);
   console.log(`\n✓ Saved ${CACHE_PATH}  (${sizeKB} KB)\n`);
+
+  if (hardFailures.length > 0) {
+    console.error(`✗ ${hardFailures.length} fetch(es) failed with no cached fallback — not committing:`);
+    hardFailures.forEach(f => console.error(`  • ${f}`));
+    process.exit(1);
+  }
 }
 
 main().catch(e => { console.error('\nFetch failed:', e.message); process.exit(1); });

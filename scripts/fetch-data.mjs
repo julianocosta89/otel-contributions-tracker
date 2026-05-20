@@ -182,10 +182,25 @@ async function main() {
   console.log(`\nFetching OTel contributions${FULL ? ' (full refresh)' : ''}\n`);
   mkdirSync('data', { recursive: true });
 
+  const runStartedAt = new Date().toISOString();
   const existing     = loadExistingCache();
   const periods      = existing?.periods      ? { ...existing.periods }      : {};
   const filterCombos = existing?.filterCombos ? { ...existing.filterCombos } : {};
+  const sources      = existing?.sources
+    ? JSON.parse(JSON.stringify(existing.sources))
+    : { periods: {}, filterCombos: {} };
+  sources.periods ??= {};
+  sources.filterCombos ??= {};
   const hardFailures = []; // fetch failed with no cached fallback to use
+
+  const periodFetchedAt = (key, cached) =>
+    sources.periods[key]?.fetchedAt ?? cached?.period?.endDate ?? existing?.fetchedAt ?? null;
+  const ensureComboSources = key => { sources.filterCombos[key] ??= {}; };
+  const comboFetchedAt = (key, platform) =>
+    sources.filterCombos[key]?.[platform]?.fetchedAt ??
+    existing?.filterCombos?.[key]?.[platform]?.period?.endDate ??
+    existing?.fetchedAt ??
+    null;
 
   // ── Full periods (all×all) ────────────────────────────────────
   for (const { key, startDate, prevStartDate, alwaysRefresh } of PERIODS) {
@@ -195,14 +210,22 @@ async function main() {
 
     if (skip) {
       console.log(`── ${key}  periods skipped (cached ${old.toFixed(1)}d ago)`);
+      sources.periods[key] ??= { fetchedAt: periodFetchedAt(key, cached), status: 'cached' };
     } else {
       console.log(`\n── ${key}  (${startDate} → ${endDate})`);
       try {
         periods[key] = await fetchPeriod(startDate, prevStartDate);
+        sources.periods[key] = { fetchedAt: runStartedAt, status: 'fresh' };
       } catch (e) {
         console.error(`  ✗ ${key} period fetch failed: ${e.message}`);
         if (existing?.periods?.[key]) {
           periods[key] = existing.periods[key];
+          sources.periods[key] = {
+            fetchedAt: periodFetchedAt(key, existing.periods[key]),
+            status: 'cached-fallback',
+            fallbackAt: runStartedAt,
+            error: e.message,
+          };
           console.warn(`    ↳ kept cached data`);
         } else {
           hardFailures.push(`${key} period`);
@@ -223,20 +246,32 @@ async function main() {
 
     if (skipPeriod) {
       console.log(`  ${key}  combos skipped (cached ${old.toFixed(1)}d ago)`);
+      ensureComboSources(key);
+      for (const platform of Object.keys(combosCached ?? {})) {
+        sources.filterCombos[key][platform] ??= { fetchedAt: comboFetchedAt(key, platform), status: 'cached' };
+      }
       continue;
     }
 
     filterCombos[key] = { ...(existing?.filterCombos?.[key] ?? {}) };
+    ensureComboSources(key);
 
     await withConcurrency(PLATFORMS, 3, async platform => {
       try {
         const data = await fetchFilterCombo(startDate, platform, prevStartDate);
         filterCombos[key][platform] = data;
+        sources.filterCombos[key][platform] = { fetchedAt: runStartedAt, status: 'fresh' };
         console.log(`  ${key}  platform=${platform.padEnd(12)} ✓`);
       } catch (e) {
         console.error(`  ${key}  platform=${platform.padEnd(12)} ✗  ${e.message}`);
         if (existing?.filterCombos?.[key]?.[platform]) {
           filterCombos[key][platform] = existing.filterCombos[key][platform];
+          sources.filterCombos[key][platform] = {
+            fetchedAt: comboFetchedAt(key, platform),
+            status: 'cached-fallback',
+            fallbackAt: runStartedAt,
+            error: e.message,
+          };
           console.warn(`    ↳ kept cached data`);
         } else {
           hardFailures.push(`${key}/${platform} combo`);
@@ -252,7 +287,7 @@ async function main() {
     process.exit(1);
   }
 
-  const cache  = { fetchedAt: new Date().toISOString(), periods, filterCombos };
+  const cache  = { fetchedAt: runStartedAt, sources, periods, filterCombos };
   const json   = JSON.stringify(cache);
   const sizeKB = (json.length / 1024).toFixed(0);
   writeFileSync(CACHE_PATH, json);

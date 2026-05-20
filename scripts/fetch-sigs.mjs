@@ -133,17 +133,24 @@ async function main() {
   console.log(`\nFetching OTel SIG data${FULL ? ' (full refresh)' : ''}\n`);
   mkdirSync('data', { recursive: true });
 
+  const runStartedAt   = new Date().toISOString();
   const existing       = loadExistingCache();
   const periods        = existing?.periods ? { ...existing.periods } : {};
-  const cacheAge       = ageDays(existing?.fetchedAt);
+  const sources        = existing?.sources
+    ? JSON.parse(JSON.stringify(existing.sources))
+    : { repos: null, periods: {} };
+  sources.periods ??= {};
   let   totalHardFails = 0; // non-404 errors with no cached fallback
 
   console.log('── Fetching non-archived repo list from GitHub…');
   const repos = await fetchNonArchivedRepos();
+  sources.repos = { fetchedAt: runStartedAt, status: 'fresh' };
   console.log(`   ✓ ${repos.length} repos\n`);
 
   for (const { key, startDate, alwaysRefresh } of PERIODS) {
-    const skip = !FULL && !alwaysRefresh && cacheAge < 7;
+    const source = sources.periods[key];
+    const cacheAge = ageDays(source?.fetchedAt);
+    const skip = !FULL && !alwaysRefresh && source && cacheAge < 7;
 
     if (skip) {
       console.log(`── ${key}  skipped (cache is ${cacheAge.toFixed(1)}d old)`);
@@ -154,6 +161,8 @@ async function main() {
     periods[key] = {};
 
     let succeeded = 0, skipped = 0, errored = 0;
+    const fallbackRepos = [];
+    const errors = {};
 
     await withConcurrency(repos, 3, async (repo, i) => {
       try {
@@ -172,7 +181,12 @@ async function main() {
           console.log(`  ✗ ${repo}: ${e.message}`);
           const cached = existing?.periods?.[key]?.[repo];
           periods[key][repo] = cached ?? EMPTY_REPO;
-          if (!cached) totalHardFails++;
+          if (cached) {
+            fallbackRepos.push(repo);
+            errors[repo] = e.message;
+          } else {
+            totalHardFails++;
+          }
           errored++;
         }
       }
@@ -180,6 +194,15 @@ async function main() {
 
     process.stdout.write('\n');
     console.log(`  ✓ ${succeeded} fetched, ${skipped} empty, ${errored} errors`);
+    sources.periods[key] = fallbackRepos.length
+      ? {
+          fetchedAt: runStartedAt,
+          status: 'partial',
+          fallbackFrom: source?.fetchedAt ?? existing?.fetchedAt ?? null,
+          fallbackRepos,
+          errors,
+        }
+      : { fetchedAt: runStartedAt, status: 'fresh' };
   }
 
   if (totalHardFails > 0) {
@@ -187,7 +210,7 @@ async function main() {
     process.exit(1);
   }
 
-  const cache  = { fetchedAt: new Date().toISOString(), repos, periods };
+  const cache  = { fetchedAt: runStartedAt, sources, repos, periods };
   const json   = JSON.stringify(cache);
   const sizeKB = (json.length / 1024).toFixed(0);
   writeFileSync(CACHE_PATH, json);

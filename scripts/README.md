@@ -22,6 +22,7 @@ Calls the LF Insights API and writes `data/cache.json`. This is the primary data
 
 - `periods` — full paginated contributor and org leaderboards for all 7 time presets, using the all-platforms / all-activity-types filter
 - `filterCombos` — summary stats and full leaderboards for each preset × platform combination (platforms: `github`, `git`, `gerrit`, `gitlab`, `confluence`, `jira`)
+- `sources` — per-period and per-platform freshness metadata, including cached fallback status when a refresh slice failed but older data was preserved
 
 **Time presets:** `30d`, `90d`, `6m`, `1y`, `2y`, `3y`, `all`
 
@@ -44,7 +45,7 @@ Fetches per-repository (per-SIG) contributor and org leaderboards and writes `da
 
 Queries the GitHub API for all non-archived repos in the `open-telemetry` org, then for each repo fetches the full contributor and org leaderboard from LF Insights for all 7 time presets. Repos are processed 3 at a time.
 
-Applies the same smart-refresh logic as `fetch-data.mjs`: short presets always refresh, long presets are skipped if data is less than 7 days old.
+Applies the same smart-refresh logic as `fetch-data.mjs`: short presets always refresh, long presets are skipped if their per-period source metadata is less than 7 days old. If source metadata is missing, the period is refreshed so future runs can make the skip decision accurately.
 
 `GITHUB_TOKEN` is optional but recommended — without it, the GitHub API list-repos call is subject to the unauthenticated rate limit (60 req/hr). LF Insights calls do not require auth.
 
@@ -60,7 +61,7 @@ GITHUB_TOKEN=ghp_xxx node scripts/fetch-sigs.mjs  # with auth for higher GH rate
 
 Builds `data/affiliations.json` — a `githubHandle → company` map — from the [CNCF gitdm](https://github.com/cncf/gitdm) project.
 
-Fetches 10 `developers_affiliations{N}.txt` files in parallel from the gitdm repository. Parses the gitdm format: each record is a `handle: email` line followed by tab-indented affiliation entries that can carry `from` and `until` date qualifiers.
+Fetches `developers_affiliations{N}.txt` files sequentially from the gitdm repository, starting at 1 and stopping at the first 404 so newly-added files are picked up automatically. Parses the gitdm format: each record is a `handle: email` line followed by tab-indented affiliation entries that can carry `from` and `until` date qualifiers.
 
 Selection logic:
 - Only entries with no `until` date or an `until` date in the future are considered "current".
@@ -80,10 +81,10 @@ node scripts/fetch-affiliations.mjs
 Fills affiliation gaps by fetching the GitHub profile company field for contributors not covered by `data/affiliations.json`. Writes `data/github-companies.json`.
 
 **Inputs required (must exist before running):**
-- `data/cache.json` — contributor handles are sourced from the `1y` period
+- `data/cache.json` — contributor handles are sourced from all cached periods
 - `data/affiliations.json` — handles already covered by gitdm are skipped
 
-**Incremental / resumable:** Results are saved every 50 requests, so the script can be interrupted and restarted without losing progress. Handles already present in `github-companies.json` (including those with a `null` value, meaning the user has no company set) are not re-fetched.
+**Incremental / resumable:** Results are saved every 50 requests, so the script can be interrupted and restarted without losing progress. Handles already present in `github-companies.json` are not re-fetched unless their cached value is `null`; null entries are cleared each run so recently-updated GitHub profile companies can be picked up.
 
 **Rate limiting:** 100ms delay between requests. On `429` or `403` responses, reads the `x-ratelimit-reset` header and waits accordingly.
 

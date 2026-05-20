@@ -21,6 +21,22 @@ Main data cache. Used directly by the app when the user has not changed any filt
 ```
 {
   "fetchedAt": "<ISO timestamp>",
+  "sources": {
+    "periods": {
+      "<preset>": {
+        "fetchedAt": "<ISO timestamp or date>",
+        "status": "fresh | cached | cached-fallback"
+      }
+    },
+    "filterCombos": {
+      "<preset>": {
+        "<platform>": {
+          "fetchedAt": "<ISO timestamp or date>",
+          "status": "fresh | cached | cached-fallback"
+        }
+      }
+    }
+  },
   "periods": {
     "<preset>": { ... }   // presets: 30d, 90d, 6m, 1y, 2y, 3y, all
   },
@@ -53,6 +69,8 @@ Each organization record contains: `logo`, `name`, `contributions`, `percentage`
 
 **`filterCombos[preset][platform]`** — same shape as a `periods[preset]` entry, but scoped to a single platform. Populated for all preset × platform combinations so the UI can switch platforms without making live API calls.
 
+**`sources`** — per-period and per-platform freshness metadata. `fetchedAt` at the top of the file records the script run time; `sources` records the freshness of each cached slice. A `cached-fallback` status means a refresh failed for that slice and the script reused an older cached copy instead of silently replacing it with empty or partial data.
+
 ---
 
 ### sigs.json
@@ -62,6 +80,18 @@ Per-repository contributor and organization leaderboards. Used by the SIG/repo b
 ```
 {
   "fetchedAt": "<ISO timestamp>",
+  "sources": {
+    "repos": {
+      "fetchedAt": "<ISO timestamp>",
+      "status": "fresh"
+    },
+    "periods": {
+      "<preset>": {
+        "fetchedAt": "<ISO timestamp>",
+        "status": "fresh | partial"
+      }
+    }
+  },
   "repos": ["<repo-name>", ...],
   "periods": {
     "<preset>": {
@@ -75,6 +105,8 @@ Per-repository contributor and organization leaderboards. Used by the SIG/repo b
 ```
 
 `repos` is the list of all non-archived repositories in the `open-telemetry` GitHub organization. Presets match those in `cache.json`: `30d`, `90d`, `6m`, `1y`, `2y`, `3y`, `all`.
+
+When a SIG period has `status: "partial"`, the period was refreshed but one or more repositories reused cached fallback data. The source entry may include `fallbackRepos`, `fallbackFrom`, and `errors` for troubleshooting.
 
 ---
 

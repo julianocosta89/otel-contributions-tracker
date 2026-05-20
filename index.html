@@ -992,12 +992,28 @@ function cacheData() {
     : CACHE.filterCombos[S.preset][S.filters.platform];
 }
 
+function cacheSource() {
+  if (!CACHE?.sources) return null;
+  return S.filters.platform === 'all'
+    ? CACHE.sources.periods?.[S.preset]
+    : CACHE.sources.filterCombos?.[S.preset]?.[S.filters.platform];
+}
+
+function showCurrentSourceBadge() {
+  if (!usingCache()) {
+    showSourceBadge('live');
+    return;
+  }
+  const source = cacheSource();
+  showSourceBadge('cache', source?.fetchedAt ?? CACHE?.fetchedAt, source);
+}
+
 async function loadCache() {
   try {
     const res = await fetch('./data/cache.json');
     if (!res.ok) return;
     CACHE = await res.json();
-    showSourceBadge('cache', CACHE.fetchedAt);
+    showCurrentSourceBadge();
   } catch {
     // cache not available — use live API
   }
@@ -1071,8 +1087,8 @@ const ROLE_STYLE = {
   triager:      'bg-slate-200 dark:bg-gray-800 text-slate-500 dark:text-gray-400 border border-slate-300 dark:border-gray-700',
 };
 
-// Singleton promise — prevents double-fetching if the SIG tab is opened
-// while the background load (started in init()) is still in flight.
+// Singleton promise — prevents double-fetching if multiple user actions need
+// SIG data at the same time. The request is started on first actual use.
 let _sigsLoadPromise = null;
 
 async function loadSigsCache() {
@@ -1105,16 +1121,27 @@ function affiliationFor(githubHandleArray) {
   return null;
 }
 
-function showSourceBadge(source, isoDate) {
+function showSourceBadge(source, isoDate, details = null) {
   const badge = el('source-badge');
   badge.classList.remove('hidden');
   if (source === 'cache') {
     const d = isoDate ? new Date(isoDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '';
-    badge.className = 'text-xs px-2 py-0.5 rounded-full border font-medium border-slate-300 dark:border-gray-700 text-slate-500 dark:text-gray-400';
-    badge.textContent = `cached ${d}`;
+    const status = details?.status;
+    const isFallback = status === 'cached-fallback' || status === 'partial';
+    const label = status === 'cached-fallback' ? 'fallback' : status === 'partial' ? 'partial' : 'cached';
+    badge.className = isFallback
+      ? 'text-xs px-2 py-0.5 rounded-full border font-medium border-amber-300 dark:border-amber-800 text-amber-700 dark:text-amber-400'
+      : 'text-xs px-2 py-0.5 rounded-full border font-medium border-slate-300 dark:border-gray-700 text-slate-500 dark:text-gray-400';
+    badge.textContent = `${label} ${d}`;
+    badge.title = details?.error
+      ? `Using cached fallback from ${d}: ${details.error}`
+      : details?.fallbackRepos?.length
+        ? `Partial refresh; ${details.fallbackRepos.length} repo(s) reused cached data`
+        : '';
   } else {
     badge.className = 'text-xs px-2 py-0.5 rounded-full border font-medium border-green-800 text-green-600 dark:text-green-400';
     badge.textContent = 'live';
+    badge.title = '';
   }
 }
 
@@ -1132,8 +1159,7 @@ function setPreset(preset) {
     b.className = `preset-btn px-2.5 py-1 rounded-md transition-colors ${on ? 'bg-blue-600 text-white' : 'text-slate-500 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white'}`;
   });
 
-  if (usingCache()) showSourceBadge('cache', CACHE?.fetchedAt);
-  else              showSourceBadge('live');
+  showCurrentSourceBadge();
 
   reload();
 }
@@ -1151,8 +1177,7 @@ function onDateChange() {
 
 function onFilterChange() {
   S.filters.platform = el('platform').value;
-  if (usingCache()) showSourceBadge('cache', CACHE?.fetchedAt);
-  else              showSourceBadge('live');
+  showCurrentSourceBadge();
   reload();
 }
 
@@ -2421,7 +2446,6 @@ document.addEventListener('mouseout', e => {
 async function init() {
   initTheme();
   await Promise.all([loadCache(), loadAffiliations()]);
-  loadSigsCache();
 
   const { tab, detail } = parseHash();
   if (VALID_TABS.includes(tab)) {

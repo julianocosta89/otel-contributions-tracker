@@ -131,9 +131,10 @@ async function main() {
   console.log(`\nFetching OTel SIG data${FULL ? ' (full refresh)' : ''}\n`);
   mkdirSync('data', { recursive: true });
 
-  const existing = loadExistingCache();
-  const periods  = existing?.periods ? { ...existing.periods } : {};
-  const cacheAge = ageDays(existing?.fetchedAt);
+  const existing       = loadExistingCache();
+  const periods        = existing?.periods ? { ...existing.periods } : {};
+  const cacheAge       = ageDays(existing?.fetchedAt);
+  let   totalHardFails = 0; // non-404 errors with no cached fallback
 
   console.log('── Fetching non-archived repo list from GitHub…');
   const repos = await fetchNonArchivedRepos();
@@ -150,25 +151,38 @@ async function main() {
     console.log(`\n── ${key}  (${startDate} → ${endDate})`);
     periods[key] = {};
 
-    let succeeded = 0, skipped = 0;
+    let succeeded = 0, skipped = 0, errored = 0;
 
     await withConcurrency(repos, 3, async (repo, i) => {
       try {
         periods[key][repo] = await fetchSigData(repo, startDate);
         succeeded++;
-        process.stdout.write(`\r  [${(succeeded + skipped).toString().padStart(2)}/${repos.length}] ${repo.padEnd(55)}`);
+        process.stdout.write(`\r  [${(succeeded + skipped + errored).toString().padStart(2)}/${repos.length}] ${repo.padEnd(55)}`);
       } catch (e) {
-        // Repos with no LFX data return empty; network errors are logged
-        if (!e.message.includes('HTTP 4')) {
+        const isNotFound = e.message.includes('HTTP 404');
+        if (isNotFound) {
+          // No LFX data for this repo — normal, store as empty
+          periods[key][repo] = { contributors: { total: 0, data: [] }, organizations: { total: 0, data: [] } };
+          skipped++;
+        } else {
+          // Operational error (rate limit, auth, network) — log and preserve cached data
+          process.stdout.write('\n');
           console.log(`  ✗ ${repo}: ${e.message}`);
+          const cached = existing?.periods?.[key]?.[repo];
+          periods[key][repo] = cached ?? { contributors: { total: 0, data: [] }, organizations: { total: 0, data: [] } };
+          if (!cached) totalHardFails++;
+          errored++;
         }
-        periods[key][repo] = { contributors: { total: 0, data: [] }, organizations: { total: 0, data: [] } };
-        skipped++;
       }
     });
 
     process.stdout.write('\n');
-    console.log(`  ✓ ${succeeded} fetched, ${skipped} empty/errored`);
+    console.log(`  ✓ ${succeeded} fetched, ${skipped} empty, ${errored} errors`);
+  }
+
+  if (totalHardFails > 0) {
+    console.error(`\n✗ ${totalHardFails} repo(s) failed with no cached fallback — leaving cache unchanged`);
+    process.exit(1);
   }
 
   const cache  = { fetchedAt: new Date().toISOString(), repos, periods };

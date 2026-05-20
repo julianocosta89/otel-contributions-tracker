@@ -2,6 +2,11 @@
 // Fetches GitHub profile company for contributors not covered by gitdm.
 // Uses `gh auth token` for authentication (5000 req/hr).
 // Saves incrementally to data/github-companies.json — safe to resume.
+//
+// Covers contributors from ALL time periods (not just 1y) so that
+// contributors active only in 2y/3y/all views also get company data.
+// Null entries are cleared each run so recently-updated profiles are
+// picked up on the next weekly refresh.
 
 import { execSync } from 'child_process';
 import { writeFileSync, readFileSync, existsSync } from 'fs';
@@ -24,7 +29,7 @@ function getToken() {
   catch { throw new Error('No GitHub token found — set GITHUB_TOKEN or run: gh auth login'); }
 }
 
-async function fetchGitHubCompany(handle, token) {
+async function fetchGitHubCompany(handle, token, retries = 3) {
   const res = await fetch(`https://api.github.com/users/${encodeURIComponent(handle)}`, {
     headers: {
       Authorization: `Bearer ${token}`,
@@ -35,11 +40,12 @@ async function fetchGitHubCompany(handle, token) {
 
   if (res.status === 404) return null;
   if (res.status === 403 || res.status === 429) {
+    if (retries <= 0) throw new Error(`Rate limited — giving up on ${handle} after retries`);
     const reset = res.headers.get('x-ratelimit-reset');
     const wait  = reset ? (Number(reset) * 1000 - Date.now() + 2000) : 60_000;
     console.log(`  Rate limited — waiting ${Math.ceil(wait/1000)}s…`);
     await sleep(wait);
-    return fetchGitHubCompany(handle, token); // retry
+    return fetchGitHubCompany(handle, token, retries - 1);
   }
   if (!res.ok) return null;
 
@@ -54,11 +60,29 @@ async function main() {
   const gitdm     = JSON.parse(readFileSync(GITDM_PATH, 'utf8'));
   const existing  = existsSync(OUT_PATH) ? JSON.parse(readFileSync(OUT_PATH, 'utf8')) : {};
 
-  // Collect one handle per contributor not covered by gitdm
-  const contribs  = cache.periods['1y'].contributors.data;
-  const toFetch   = [];
+  // Clear previously-null entries so contributors who have since set a company
+  // on their GitHub profile are picked up on this run.
+  let clearedNulls = 0;
+  for (const handle of Object.keys(existing)) {
+    if (existing[handle] === null) {
+      delete existing[handle];
+      clearedNulls++;
+    }
+  }
+  if (clearedNulls > 0) console.log(`Cleared ${clearedNulls} stale null entries for re-fetch`);
 
-  for (const c of contribs) {
+  // Collect unique contributors across ALL periods so that contributors
+  // active only in 2y/3y/all views also get company data.
+  const contribMap = new Map(); // primary handle (lowercase) → contributor
+  for (const period of Object.values(cache.periods || {})) {
+    for (const c of period.contributors?.data ?? []) {
+      const primary = (c.githubHandleArray || [])[0]?.toLowerCase();
+      if (primary && !contribMap.has(primary)) contribMap.set(primary, c);
+    }
+  }
+
+  const toFetch = [];
+  for (const c of contribMap.values()) {
     const handles = c.githubHandleArray || [];
     const hasGitdm = handles.some(h => gitdm[h.toLowerCase()]);
     if (hasGitdm) continue;
@@ -68,7 +92,7 @@ async function main() {
     if (handle) toFetch.push(handle.toLowerCase());
   }
 
-  console.log(`${toFetch.length} handles to fetch (${Object.keys(existing).length} already cached)`);
+  console.log(`${toFetch.length} handles to fetch (${Object.keys(existing).length} already cached, from ${contribMap.size} unique contributors across all periods)`);
 
   let fetched = 0, found = 0;
   for (const handle of toFetch) {

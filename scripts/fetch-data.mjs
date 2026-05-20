@@ -185,6 +185,7 @@ async function main() {
   const existing     = loadExistingCache();
   const periods      = existing?.periods      ? { ...existing.periods }      : {};
   const filterCombos = existing?.filterCombos ? { ...existing.filterCombos } : {};
+  const hardFailures = []; // fetch failed with no cached fallback to use
 
   // ── Full periods (all×all) ────────────────────────────────────
   for (const { key, startDate, prevStartDate, alwaysRefresh } of PERIODS) {
@@ -196,7 +197,17 @@ async function main() {
       console.log(`── ${key}  periods skipped (cached ${old.toFixed(1)}d ago)`);
     } else {
       console.log(`\n── ${key}  (${startDate} → ${endDate})`);
-      periods[key] = await fetchPeriod(startDate, prevStartDate);
+      try {
+        periods[key] = await fetchPeriod(startDate, prevStartDate);
+      } catch (e) {
+        console.error(`  ✗ ${key} period fetch failed: ${e.message}`);
+        if (existing?.periods?.[key]) {
+          periods[key] = existing.periods[key];
+          console.warn(`    ↳ kept cached data`);
+        } else {
+          hardFailures.push(`${key} period`);
+        }
+      }
       await sleep(300);
     }
   }
@@ -215,16 +226,32 @@ async function main() {
       continue;
     }
 
-    filterCombos[key] = {};
+    filterCombos[key] = { ...(existing?.filterCombos?.[key] ?? {}) };
 
     await withConcurrency(PLATFORMS, 3, async platform => {
-      const data = await fetchFilterCombo(startDate, platform, prevStartDate);
-      filterCombos[key][platform] = data;
-      console.log(`  ${key}  platform=${platform.padEnd(12)} ✓`);
+      try {
+        const data = await fetchFilterCombo(startDate, platform, prevStartDate);
+        filterCombos[key][platform] = data;
+        console.log(`  ${key}  platform=${platform.padEnd(12)} ✓`);
+      } catch (e) {
+        console.error(`  ${key}  platform=${platform.padEnd(12)} ✗  ${e.message}`);
+        if (existing?.filterCombos?.[key]?.[platform]) {
+          filterCombos[key][platform] = existing.filterCombos[key][platform];
+          console.warn(`    ↳ kept cached data`);
+        } else {
+          hardFailures.push(`${key}/${platform} combo`);
+        }
+      }
     });
   }
 
   // ── Write output ──────────────────────────────────────────────
+  if (hardFailures.length > 0) {
+    console.error(`\n✗ ${hardFailures.length} fetch(es) failed with no cached fallback — leaving cache unchanged:`);
+    hardFailures.forEach(f => console.error(`  • ${f}`));
+    process.exit(1);
+  }
+
   const cache  = { fetchedAt: new Date().toISOString(), periods, filterCombos };
   const json   = JSON.stringify(cache);
   const sizeKB = (json.length / 1024).toFixed(0);

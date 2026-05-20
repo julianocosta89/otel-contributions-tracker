@@ -5,30 +5,54 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Contribution Concentration — OTel Contributions Tracker</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <script>tailwind.config = { darkMode: 'class' }</script>
+  <script>
+    // Sync theme with the main app (same localStorage key)
+    (function () {
+      const saved = localStorage.getItem('otel-theme');
+      if (saved !== 'light') document.documentElement.classList.add('dark');
+    })();
+  </script>
   <style>
     body { font-family: ui-sans-serif, system-ui, sans-serif; }
     .prose h2 { font-size: 1.1rem; font-weight: 600; margin: 1.75rem 0 0.5rem; }
-    .prose h3 { font-size: 0.95rem; font-weight: 600; margin: 1.25rem 0 0.35rem; color: #94a3b8; }
+    .prose h3 { font-size: 0.95rem; font-weight: 600; margin: 1.25rem 0 0.35rem; color: #64748b; }
+    html.dark .prose h3 { color: #94a3b8; }
     .prose p  { margin: 0.5rem 0; line-height: 1.65; }
     .prose ul { margin: 0.5rem 0 0.5rem 1.25rem; list-style: disc; }
     .prose li { margin: 0.25rem 0; line-height: 1.6; }
-    code { background: #1e293b; border-radius: 4px; padding: 1px 5px; font-size: 0.85em; color: #e2e8f0; }
+    code { background: #f1f5f9; border-radius: 4px; padding: 1px 5px; font-size: 0.85em; color: #334155; }
+    html.dark code { background: #1e293b; color: #e2e8f0; }
   </style>
 </head>
-<body class="bg-gray-950 text-gray-300 min-h-screen">
+<body class="bg-white dark:bg-gray-950 text-gray-700 dark:text-gray-300 min-h-screen">
   <div class="max-w-2xl mx-auto px-6 py-12">
 
-    <a href="../index.html"
-      class="inline-flex items-center gap-1.5 text-xs text-gray-500 hover:text-gray-300 transition-colors mb-8">
-      ← Back to tracker
-    </a>
+    <div class="flex items-center justify-between mb-8">
+      <a href="../index.html"
+        class="inline-flex items-center gap-1.5 text-xs text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 transition-colors">
+        ← Back to tracker
+      </a>
+      <button onclick="toggleTheme()" title="Toggle light/dark mode"
+        class="p-1.5 rounded-lg bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors">
+        <svg id="icon-moon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+        </svg>
+        <svg id="icon-sun" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="hidden">
+          <circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/>
+          <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+          <line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/>
+          <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+        </svg>
+      </button>
+    </div>
 
-    <h1 class="text-xl font-bold text-white mb-1">Contribution Concentration</h1>
+    <h1 class="text-xl font-bold text-gray-900 dark:text-white mb-1">Contribution Concentration</h1>
     <p class="text-sm text-gray-500 mb-8">How the metric is calculated and what its limitations are</p>
 
-    <div class="prose text-sm text-gray-300">
+    <div class="prose text-sm text-gray-700 dark:text-gray-300">
 
-      <h2 class="text-white">What it measures</h2>
+      <h2 class="text-gray-900 dark:text-white">What it measures</h2>
       <p>
         The concentration tile answers the question: <em>are a company's OpenTelemetry contributions coming
         from many people, or are they relying heavily on one or two individuals?</em>
@@ -39,16 +63,16 @@
         is more resilient.
       </p>
 
-      <h2 class="text-white">The metric: Herfindahl-Hirschman Index (HHI)</h2>
+      <h2 class="text-gray-900 dark:text-white">The metric: Herfindahl-Hirschman Index (HHI)</h2>
       <p>
         The tile uses the
         <a href="https://en.wikipedia.org/wiki/Herfindahl%E2%80%93Hirschman_index"
-          target="_blank" class="text-blue-400 hover:text-blue-300">Herfindahl-Hirschman Index</a>,
+          target="_blank" class="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300">Herfindahl-Hirschman Index</a>,
         a standard measure of market concentration adapted here to contribution share.
       </p>
       <p>For a company with contributors <em>1…n</em>, each holding a share <em>sᵢ</em> of
         the company's total GitHub contributions (expressed as a percentage 0–100):</p>
-      <div class="bg-gray-900 border border-gray-800 rounded-lg px-4 py-3 my-3 font-mono text-sm text-center">
+      <div class="bg-gray-100 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-lg px-4 py-3 my-3 font-mono text-sm text-center">
         HHI = Σ sᵢ²
       </div>
       <p>
@@ -60,62 +84,55 @@
 
       <h3>Classification thresholds</h3>
       <p>
-        Thresholds were calibrated against the actual distribution of the top 10 OTel contributing companies
-        (1-year period, as of May 2026), looking for natural breaks:
+        Thresholds mirror the boundaries used in US antitrust analysis, adapted for contributor share.
+        They align with natural breaks observed in the OTel top-10 company distribution:
       </p>
 
-      <div class="bg-gray-900 border border-gray-800 rounded-lg overflow-hidden my-3">
+      <div class="bg-gray-100 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-lg overflow-hidden my-3">
         <table class="w-full text-xs">
           <thead>
-            <tr class="border-b border-gray-800 text-gray-500">
+            <tr class="border-b border-gray-200 dark:border-gray-800 text-gray-500">
               <th class="text-left px-4 py-2.5">Label</th>
               <th class="text-left px-4 py-2.5">HHI range</th>
               <th class="text-left px-4 py-2.5">What it means</th>
             </tr>
           </thead>
           <tbody>
-            <tr class="border-b border-gray-800/50">
+            <tr class="border-b border-gray-200/50 dark:border-gray-800/50">
               <td class="px-4 py-2.5">
                 <span class="inline-flex items-center gap-1.5">
                   <span class="w-2 h-2 rounded-full bg-green-500"></span>
-                  <span class="text-green-400 font-semibold">Distributed</span>
+                  <span class="text-green-600 dark:text-green-400 font-semibold">Distributed</span>
                 </span>
               </td>
-              <td class="px-4 py-2.5 font-mono text-gray-400">HHI &lt; 1,500</td>
-              <td class="px-4 py-2.5 text-gray-400">No single contributor dominates; activity is spread across a broad group</td>
+              <td class="px-4 py-2.5 font-mono text-gray-500 dark:text-gray-400">HHI &lt; 1,500</td>
+              <td class="px-4 py-2.5 text-gray-600 dark:text-gray-400">No single contributor dominates; activity is spread across a broad group</td>
             </tr>
-            <tr class="border-b border-gray-800/50">
+            <tr class="border-b border-gray-200/50 dark:border-gray-800/50">
               <td class="px-4 py-2.5">
                 <span class="inline-flex items-center gap-1.5">
                   <span class="w-2 h-2 rounded-full bg-yellow-500"></span>
-                  <span class="text-yellow-400 font-semibold">Moderate</span>
+                  <span class="text-yellow-600 dark:text-yellow-400 font-semibold">Moderate</span>
                 </span>
               </td>
-              <td class="px-4 py-2.5 font-mono text-gray-400">1,500 – 3,000</td>
-              <td class="px-4 py-2.5 text-gray-400">A few key contributors stand out, but a meaningful supporting group exists</td>
+              <td class="px-4 py-2.5 font-mono text-gray-500 dark:text-gray-400">1,500 – 3,000</td>
+              <td class="px-4 py-2.5 text-gray-600 dark:text-gray-400">A few key contributors stand out, but a meaningful supporting group exists</td>
             </tr>
             <tr>
               <td class="px-4 py-2.5">
                 <span class="inline-flex items-center gap-1.5">
                   <span class="w-2 h-2 rounded-full bg-red-500"></span>
-                  <span class="text-red-400 font-semibold">Concentrated</span>
+                  <span class="text-red-600 dark:text-red-400 font-semibold">Concentrated</span>
                 </span>
               </td>
-              <td class="px-4 py-2.5 font-mono text-gray-400">HHI &gt; 3,000</td>
-              <td class="px-4 py-2.5 text-gray-400">One or two contributors account for most activity; high dependency risk</td>
+              <td class="px-4 py-2.5 font-mono text-gray-500 dark:text-gray-400">HHI &gt; 3,000</td>
+              <td class="px-4 py-2.5 text-gray-600 dark:text-gray-400">One or two contributors account for most activity; high dependency risk</td>
             </tr>
           </tbody>
         </table>
       </div>
 
-      <p class="text-gray-500 text-xs">
-        These thresholds mirror the boundaries used in US antitrust analysis (unconcentrated / moderately
-        concentrated / highly concentrated), but applied to contributor share instead of market share.
-        The natural gap in OTel data falls between 2,406 (Google) and 3,529 (Kong), so the 3,000 cutoff
-        is data-driven, not arbitrary.
-      </p>
-
-      <h2 class="text-white">Limitations</h2>
+      <h2 class="text-gray-900 dark:text-white">Limitations</h2>
 
       <h3>GitHub activity only</h3>
       <p>
@@ -137,7 +154,7 @@
         Before computing HHI, the tile checks <em>coverage</em>: the ratio of the sum of all
         cached contributor contributions to the company's API-reported total.
       </p>
-      <div class="bg-gray-900 border border-gray-800 rounded-lg px-4 py-3 my-3 font-mono text-sm text-center">
+      <div class="bg-gray-100 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-lg px-4 py-3 my-3 font-mono text-sm text-center">
         coverage = Σ contributor_contributions (cache) / org_total (API)
       </div>
       <p>
@@ -147,10 +164,6 @@
         Confluence, or other non-GitHub platforms — where the few GitHub contributors we do
         see may look artificially concentrated simply because most contributors are invisible
         to the cache.
-      </p>
-      <p>
-        In the top-10 analysis, CNCF (~0.6% coverage), Dynatrace (~6%), and Kong (~1.5%)
-        fall below this threshold and show the fallback.
       </p>
 
       <h3>Affiliation accuracy</h3>
@@ -177,11 +190,27 @@
 
     </div>
 
-    <div class="mt-12 pt-6 border-t border-gray-800 text-xs text-gray-600">
+    <div class="mt-12 pt-6 border-t border-gray-200 dark:border-gray-800 text-xs text-gray-400 dark:text-gray-600">
       OTel Contributions Tracker ·
-      <a href="https://github.com/open-telemetry" target="_blank" class="hover:text-gray-400">OpenTelemetry</a>
+      <a href="https://github.com/open-telemetry" target="_blank" class="hover:text-gray-600 dark:hover:text-gray-400">OpenTelemetry</a>
     </div>
 
   </div>
+
+  <script>
+    function toggleTheme() {
+      const isDark = document.documentElement.classList.contains('dark');
+      document.documentElement.classList.toggle('dark', !isDark);
+      document.getElementById('icon-moon').classList.toggle('hidden', !isDark);
+      document.getElementById('icon-sun').classList.toggle('hidden', isDark);
+      localStorage.setItem('otel-theme', isDark ? 'light' : 'dark');
+    }
+    // Sync icon state with current theme
+    (function () {
+      const isDark = document.documentElement.classList.contains('dark');
+      document.getElementById('icon-moon').classList.toggle('hidden', !isDark);
+      document.getElementById('icon-sun').classList.toggle('hidden', isDark);
+    })();
+  </script>
 </body>
 </html>

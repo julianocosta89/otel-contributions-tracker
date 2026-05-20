@@ -196,7 +196,15 @@ async function main() {
       console.log(`── ${key}  periods skipped (cached ${old.toFixed(1)}d ago)`);
     } else {
       console.log(`\n── ${key}  (${startDate} → ${endDate})`);
-      periods[key] = await fetchPeriod(startDate, prevStartDate);
+      try {
+        periods[key] = await fetchPeriod(startDate, prevStartDate);
+      } catch (e) {
+        console.error(`  ✗ ${key} period fetch failed: ${e.message}`);
+        if (existing?.periods?.[key]) {
+          periods[key] = existing.periods[key];
+          console.warn(`    ↳ kept cached data`);
+        }
+      }
       await sleep(300);
     }
   }
@@ -215,12 +223,20 @@ async function main() {
       continue;
     }
 
-    filterCombos[key] = {};
+    filterCombos[key] = { ...(existing?.filterCombos?.[key] ?? {}) };
 
     await withConcurrency(PLATFORMS, 3, async platform => {
-      const data = await fetchFilterCombo(startDate, platform, prevStartDate);
-      filterCombos[key][platform] = data;
-      console.log(`  ${key}  platform=${platform.padEnd(12)} ✓`);
+      try {
+        const data = await fetchFilterCombo(startDate, platform, prevStartDate);
+        filterCombos[key][platform] = data;
+        console.log(`  ${key}  platform=${platform.padEnd(12)} ✓`);
+      } catch (e) {
+        console.error(`  ${key}  platform=${platform.padEnd(12)} ✗  ${e.message}`);
+        if (existing?.filterCombos?.[key]?.[platform]) {
+          filterCombos[key][platform] = existing.filterCombos[key][platform];
+          console.warn(`    ↳ kept cached data`);
+        }
+      }
     });
   }
 

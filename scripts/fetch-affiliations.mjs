@@ -1,6 +1,8 @@
 #!/usr/bin/env node
 // Fetches CNCF gitdm developers_affiliations files and builds a
-// githubHandle -> currentCompany map, saved to data/affiliations.json
+// githubHandle -> currentCompany map, saved to data/affiliations.json.
+// Probes files starting at 1 and stops at the first 404, so new
+// files are picked up automatically without code changes.
 
 import { writeFileSync } from 'fs';
 import { join, dirname } from 'path';
@@ -10,7 +12,6 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const OUT_PATH = join(__dirname, '../data/affiliations.json');
 
 const BASE_URL = 'https://raw.githubusercontent.com/cncf/gitdm/master/developers_affiliations';
-const FILE_COUNT = 10;
 
 // Parse a single affiliation line's date info.
 // Returns { from: Date|null, until: Date|null }
@@ -54,12 +55,15 @@ function currentCompanyEntry(affiliationLines) {
   return { company: companyName(active[0].text), lineNum: active[0].lineNum };
 }
 
+// Returns the file text, or null if the file does not exist (404).
+// Retries on transient errors; does not retry on 404.
 async function fetchFile(n, retries = 3) {
   const url = `${BASE_URL}${n}.txt`;
   console.log(`Fetching ${url}…`);
   for (let attempt = 1; attempt <= retries; attempt++) {
     try {
       const res = await fetch(url);
+      if (res.status === 404) return null;
       if (!res.ok) throw new Error(`HTTP ${res.status} for ${url}`);
       return await res.text();
     } catch (e) {
@@ -105,19 +109,22 @@ function parseAffiliations(text, fileNumber) {
 async function main() {
   const combined = {};
 
-  const results = await Promise.all(
-    Array.from({ length: FILE_COUNT }, (_, i) => i + 1).map(async n => {
-      const text = await fetchFile(n);
-      return { n, partial: parseAffiliations(text, n) };
-    })
-  );
-
-  for (const { n, partial } of results.sort((a, b) => a.n - b.n)) {
+  // Probe files sequentially, stopping at the first 404.
+  // Later-numbered files take precedence when the same handle appears in multiple files.
+  let fileCount = 0;
+  for (let n = 1; ; n++) {
+    const text = await fetchFile(n);
+    if (text === null) {
+      console.log(`  → file ${n}: not found — done`);
+      break;
+    }
+    const partial = parseAffiliations(text, n);
     Object.assign(combined, partial);
     console.log(`  → file ${n}: ${Object.keys(partial).length} handles`);
+    fileCount++;
   }
 
-  console.log(`\nTotal: ${Object.keys(combined).length} handles with current company`);
+  console.log(`\nTotal: ${Object.keys(combined).length} handles with current company (from ${fileCount} files)`);
   writeFileSync(OUT_PATH, JSON.stringify(combined, null, 2));
   console.log(`Saved to ${OUT_PATH}`);
 }

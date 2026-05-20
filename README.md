@@ -34,10 +34,10 @@ data/
   roles.json                        # GitHub team role assignments
 .github/
   workflows/
-    refresh-data.yml                # daily: fetch-data.mjs + fetch-sigs.mjs
-    refresh-affiliations.yml        # weekly: fetch-affiliations.mjs
+    refresh-data.yml                # daily: fetch-data.mjs
+    refresh-affiliations.yml        # weekly: fetch-affiliations.mjs + fetch-github-companies.mjs
     refresh-roles.yml               # weekly: fetch-roles.mjs
-    refresh-sigs.yml                # weekly: fetch-sigs.mjs (full refresh)
+    refresh-sigs.yml                # daily: fetch-sigs.mjs (long presets cached 7 days)
 ```
 
 ### `index.html`

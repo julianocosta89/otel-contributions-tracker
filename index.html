@@ -981,16 +981,12 @@ function deltaCell(current, previous) {
 // ── Cache helpers ──────────────────────────────────────────────────
 function usingCache() {
   if (CACHE === null) return false;
-  if (CACHE.periods) {
-    if (S.filters.platform === 'all') return S.preset in CACHE.periods;
-    return !!(CACHE.filterCombos?.[S.preset]?.[S.filters.platform]);
-  }
-  return S.filters.platform === 'all' && S.preset === '1y'; // legacy
+  if (S.filters.platform === 'all') return S.preset in CACHE.periods;
+  return !!(CACHE.filterCombos?.[S.preset]?.[S.filters.platform]);
 }
 
 // Returns the cached data object for the active preset + filters.
 function cacheData() {
-  if (!CACHE.periods) return CACHE; // legacy
   return S.filters.platform === 'all'
     ? CACHE.periods[S.preset]
     : CACHE.filterCombos[S.preset][S.filters.platform];
@@ -1075,13 +1071,22 @@ const ROLE_STYLE = {
   triager:      'bg-slate-200 dark:bg-gray-800 text-slate-500 dark:text-gray-400 border border-slate-300 dark:border-gray-700',
 };
 
+// Singleton promise — prevents double-fetching if the SIG tab is opened
+// while the background load (started in init()) is still in flight.
+let _sigsLoadPromise = null;
+
 async function loadSigsCache() {
-  try {
-    const res = await fetch('./data/sigs.json');
-    SIGS_CACHE = res.ok ? await res.json() : false;
-  } catch {
-    SIGS_CACHE = false;
+  if (!_sigsLoadPromise) {
+    _sigsLoadPromise = (async () => {
+      try {
+        const res = await fetch('./data/sigs.json');
+        SIGS_CACHE = res.ok ? await res.json() : false;
+      } catch {
+        SIGS_CACHE = false;
+      }
+    })();
   }
+  return _sigsLoadPromise;
 }
 
 // Returns { company, source, file?, line? } where source is 'gitdm' or 'github', or null.
@@ -2413,7 +2418,8 @@ document.addEventListener('mouseout', e => {
 
 async function init() {
   initTheme();
-  await Promise.all([loadCache(), loadAffiliations(), loadSigsCache()]);
+  await Promise.all([loadCache(), loadAffiliations()]);
+  loadSigsCache(); // non-blocking: starts fetching in background while init continues
 
   const { tab, detail } = parseHash();
   if (VALID_TABS.includes(tab)) {

@@ -320,10 +320,6 @@
               <div class="text-3xl font-bold text-orange-400" id="bc-top-pct">—</div>
               <div class="text-xs text-slate-400 dark:text-gray-500 mt-1">of all activity</div>
             </div>
-            <div class="text-center">
-              <div class="text-3xl font-bold text-slate-500 dark:text-gray-400" id="bc-other-n">—</div>
-              <div class="text-xs text-slate-400 dark:text-gray-500 mt-1">other contributors</div>
-            </div>
           </div>
           <canvas id="bcChart" height="200"></canvas>
         </div>
@@ -332,7 +328,7 @@
         <h2 class="text-sm font-semibold">Core Contributor List</h2>
         <p class="text-xs text-slate-400 dark:text-gray-500 mt-0.5 mb-4">The small group driving most of the project's activity</p>
         <div id="bc-list-loading" class="flex justify-center py-10"><span class="spinner"></span></div>
-        <div id="bc-list" class="hidden space-y-1 overflow-y-auto max-h-72 pr-1"></div>
+        <div id="bc-list" class="hidden space-y-1"></div>
       </div>
     </div>
     <div class="bg-white dark:bg-gray-900 rounded-xl border border-slate-200 dark:border-gray-800 p-4">
@@ -619,7 +615,7 @@
     <!-- Organizations section -->
     <div class="px-4 pt-4 pb-6">
       <h3 class="text-sm font-semibold mb-3">Organizations</h3>
-      <div id="sig-modal-orgs-list" class="space-y-0.5 max-h-72 overflow-y-auto pr-1"></div>
+      <div id="sig-modal-orgs-list" class="space-y-0.5"></div>
     </div>
   </div>
 </div>
@@ -1765,7 +1761,6 @@ async function loadConcentration() {
     // Contributor bus factor
     el('bc-top-n').textContent   = conc.topContributors.count;
     el('bc-top-pct').textContent = pct(conc.topContributors.percentage);
-    el('bc-other-n').textContent = num(conc.otherContributors.count);
     hide('bc-loading'); show('bc-content');
 
     destroyChart('bcChart');
@@ -1791,7 +1786,7 @@ async function loadConcentration() {
     });
 
     hide('bc-list-loading'); show('bc-list');
-    el('bc-list').innerHTML = (conc.list || []).map((c, i) => renderPersonRow(c, i)).join('');
+    el('bc-list').innerHTML = (conc.list || []).map((c, i) => renderPersonRow(c, i, { sigStyle: true })).join('');
 
     // Org dependency
     const top   = orgDep.topOrganizations  || {};

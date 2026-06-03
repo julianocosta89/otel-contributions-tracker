@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // Fetches CNCF gitdm developers_affiliations files and builds a
-// githubHandle -> currentCompany map, saved to data/affiliations.json.
+// githubHandle -> affiliation map, saved to data/affiliations.json.
 // Probes files starting at 1 and stops at the first 404, so new
 // files are picked up automatically without code changes.
 
@@ -24,7 +24,7 @@ function parseDates(line) {
   };
 }
 
-// Extract the company name (strip date qualifiers from the end of the line)
+// Extract the company name (strip date qualifiers from the end of the line).
 function companyName(line) {
   return line
     .replace(/\s+from \d{4}-\d{2}-\d{2}(\s+until \d{4}-\d{2}-\d{2})?/, '')
@@ -32,11 +32,24 @@ function companyName(line) {
     .trim();
 }
 
-// Given a block of tab-indented affiliation lines (each with { text, lineNum }),
-// return { company, lineNum } for the current affiliation, or null.
-// "Current" = no "until" date (or until date is in the future).
-// Among multiple current entries, pick the one with the latest "from" date.
-function currentCompanyEntry(affiliationLines) {
+// Given a block of tab-indented affiliation lines, return all ranges sorted
+// in the order they appear in the file (chronological in well-formed gitdm data).
+// Dates are stored as ISO strings (YYYY-MM-DD) or null for open-ended boundaries.
+export function allRanges(affiliationLines) {
+  return affiliationLines.map(e => {
+    const { from, until } = parseDates(e.text);
+    return {
+      company: companyName(e.text),
+      from:  from  ? from.toISOString().split('T')[0]  : null,
+      until: until ? until.toISOString().split('T')[0] : null,
+    };
+  });
+}
+
+// Return the currently-active company name, or null if no active affiliation.
+// "Current" = no "until" date, or "until" date is in the future.
+// Among multiple active entries, the one with the latest "from" date wins.
+export function activeCompany(affiliationLines) {
   const now = new Date();
   const active = affiliationLines
     .map(e => ({ ...e, ...parseDates(e.text) }))
@@ -44,7 +57,6 @@ function currentCompanyEntry(affiliationLines) {
 
   if (!active.length) return null;
 
-  // Sort by "from" date descending — null (no from) treated as earliest
   active.sort((a, b) => {
     if (!a.from && !b.from) return 0;
     if (!a.from) return 1;
@@ -52,7 +64,7 @@ function currentCompanyEntry(affiliationLines) {
     return b.from - a.from;
   });
 
-  return { company: companyName(active[0].text), lineNum: active[0].lineNum };
+  return companyName(active[0].text);
 }
 
 // Returns the file text, or null if the file does not exist (404).
@@ -74,17 +86,27 @@ async function fetchFile(n, retries = 3) {
   }
 }
 
-function parseAffiliations(text, fileNumber) {
+export function parseAffiliations(text, fileNumber) {
   const map = {};
   const lines = text.split('\n');
   let currentHandle = null;
+  let handleLineNum = null;
   let affiliationLines = []; // { text, lineNum }
 
   function flush() {
-    if (currentHandle && affiliationLines.length) {
-      const entry = currentCompanyEntry(affiliationLines);
-      if (entry) map[currentHandle] = { company: entry.company, file: fileNumber, line: entry.lineNum };
-    }
+    if (!currentHandle || !affiliationLines.length) return;
+    const company = activeCompany(affiliationLines);
+    if (!company) return;
+
+    const lineEnd = affiliationLines[affiliationLines.length - 1].lineNum;
+    map[currentHandle] = {
+      company,                      // backward compat — currently active company
+      ranges: allRanges(affiliationLines),
+      file:      fileNumber,
+      line:      handleLineNum,     // backward compat alias for lineStart
+      lineStart: handleLineNum,
+      lineEnd,
+    };
   }
 
   for (let i = 0; i < lines.length; i++) {
@@ -92,9 +114,8 @@ function parseAffiliations(text, fileNumber) {
     const lineNum = i + 1;
     if (!raw.startsWith('\t') && raw.includes(':')) {
       flush();
-      // New entry: "handle: email1, email2"
-      const handle = raw.split(':')[0].trim().toLowerCase();
-      currentHandle = handle;
+      currentHandle = raw.split(':')[0].trim().toLowerCase();
+      handleLineNum = lineNum;
       affiliationLines = [];
     } else if (raw.startsWith('\t') && currentHandle) {
       const trimmed = raw.trim();
@@ -129,4 +150,6 @@ async function main() {
   console.log(`Saved to ${OUT_PATH}`);
 }
 
-main().catch(e => { console.error(e); process.exit(1); });
+if (process.argv[1] === fileURLToPath(import.meta.url)) {
+  main().catch(e => { console.error(e); process.exit(1); });
+}

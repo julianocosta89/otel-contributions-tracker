@@ -1,4 +1,4 @@
-.PHONY: fetch-data fetch-data-full fetch-affiliations serve
+.PHONY: fetch-data fetch-data-full fetch-affiliations serve test
 
 fetch-data:
 	node scripts/fetch-data.mjs & P1=$$!; \
@@ -19,6 +19,9 @@ fetch-data-full:
 fetch-affiliations:
 	node scripts/fetch-affiliations.mjs
 	node scripts/fetch-github-companies.mjs
+
+test:
+	node --test test/**/*.test.mjs
 
 serve:
 	python3 -m http.server 3456

@@ -15,7 +15,7 @@ concurrency:
 jobs:
   refresh:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 60  # attribution enrichment makes extra sub-period API calls; 60 min matches refresh-affiliations
 
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
@@ -25,6 +25,10 @@ jobs:
           node-version: '24'
 
       - name: Fetch OpenTelemetry contributions from LF Insights
+        # fetch-data.mjs reads data/affiliations.json at startup for attribution enrichment.
+        # affiliations.json is committed and checked out above — no need to regenerate it here.
+        # Note: on Mondays this runs at 06:00 UTC before refresh-affiliations.yml fires at 07:00,
+        # so Monday's cache uses the previous week's affiliations (Tuesday onward picks up the fresh ones).
         run: node scripts/fetch-data.mjs
 
       - name: Commit updated cache

@@ -63,6 +63,17 @@ Main data cache. Used directly by the app when the user has not changed any filt
 
 Each contributor record in `data[]` contains: `avatar`, `name`, `contributions`, `percentage`, `roles`, `githubHandleArray`, `previousContributions`.
 
+Contributors who changed employers within the query window also carry an `attributedContributions` array (added by `enrich-attribution.mjs`):
+
+```json
+[
+  { "company": "Just Eat",     "from": "2024-06-03", "until": "2025-05-02", "contributions": 450,  "method": "actual"       },
+  { "company": "Grafana Labs", "from": "2025-05-02", "until": "2026-06-03", "contributions": 750,  "method": "actual"       }
+]
+```
+
+`from`/`until` are the overlap of the affiliation range with the query window (ISO dates, never null here). `method` is `"actual"` for top-100 contributors (real LFX sub-period counts) or `"proportional"` for contributors ranked 101+ (days-weighted estimate). Contributors with a single company in the window have no `attributedContributions` field.
+
 Each organization record contains: `logo`, `name`, `contributions`, `percentage`, `website`, `previousContributions`.
 
 `previousContributions` enables period-over-period comparison in the UI (e.g., rank change, contribution delta).
@@ -112,19 +123,31 @@ When a SIG period has `status: "partial"`, the period was refreshed but one or m
 
 ### affiliations.json
 
-Maps GitHub handles (lowercase) to current employer. Sourced from [CNCF gitdm](https://github.com/cncf/gitdm). This is the **highest-confidence** affiliation source.
+Maps GitHub handles (lowercase) to their full affiliation history sourced from [CNCF gitdm](https://github.com/cncf/gitdm). This is the **highest-confidence** affiliation source.
 
 ```json
 {
   "handle": {
-    "company": "Acme Corp",
+    "company": "Current Employer",
+    "ranges": [
+      { "company": "Old Employer",     "from": null,         "until": "2020-01-01" },
+      { "company": "Current Employer", "from": "2020-01-01", "until": null         }
+    ],
     "file": 3,
-    "line": 42
+    "line": 42,
+    "lineStart": 42,
+    "lineEnd": 44
   }
 }
 ```
 
-`file` and `line` are the source file index and line number within the gitdm dataset, useful for tracing the origin of an entry.
+| Field | Description |
+|-------|-------------|
+| `company` | Currently-active employer (latest range with no `until` or a future `until`). Backward-compatible shortcut — same value returned by `affiliationFor()` in the UI. |
+| `ranges[]` | All affiliation periods in file order. `from`/`until` are ISO dates; `null` means open-ended (no start recorded, or still current). |
+| `file` | Which `developers_affiliations{N}.txt` file this entry came from (later files override earlier ones). |
+| `lineStart` / `line` | Line number of the handle declaration in the source file. `line` is an alias kept for backward compatibility. |
+| `lineEnd` | Line number of the last affiliation entry in the block. Together with `lineStart`, forms the `#Lstart-Lend` GitHub fragment used by the gitdm badge in the UI. |
 
 ---
 
@@ -165,10 +188,12 @@ Role hierarchy (highest wins): `maintainer` > `approver` > `code-owner` > `triag
 
 When the app resolves a contributor's employer it checks sources in this order, stopping at the first match:
 
-1. `affiliations.json` — CNCF gitdm (highest confidence)
-2. `github-companies.json` — GitHub profile company field (fallback)
+1. `affiliations.json` — CNCF gitdm (highest confidence; stores full history with date ranges)
+2. `github-companies.json` — GitHub profile company field (fallback; current employer only, no date ranges)
 
-If neither source has the contributor, the app shows no company affiliation (the LF Insights API response does not include an organization field used by the app).
+If neither source covers the contributor, no company is shown.
+
+**Time-aware attribution** — for queries with a specific date window, `cache.json` may contain an `attributedContributions` array on split contributors (those who changed companies within the window). The UI uses this array to attribute contributions to the correct company per period rather than always crediting the current employer.
 
 ## How the app uses these files
 

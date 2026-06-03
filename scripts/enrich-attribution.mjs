@@ -136,22 +136,51 @@ export async function enrichWithAttribution(contributors, startDate, endDate, af
     }
 
     // Attach attributedContributions to each split contributor.
+    //
+    // Two-pass to handle two edge cases:
+    //
+    //   1. Range spans multiple sub-windows — when contributors have different split dates,
+    //      sub-windows are finer than any single affiliation range. We sum across every
+    //      sub-window contained within [from, until] rather than looking up one exact key.
+    //
+    //   2. Conservation — when some ranges have actual data and others fall back to
+    //      proportional, the fallback budget is (c.contributions − actualTotal) so that
+    //      actual + proportional always sums to the contributor's total.
     for (const { c, overlapping } of splitTop) {
-      c.attributedContributions = overlapping.map(r => {
+      // Pass 1: resolve actual counts per affiliation range.
+      const rangeData = overlapping.map(r => {
         const { from, until } = clampRange(r, startDate, endDate);
-        const subData = subResults[`${from}|${until}`];
-        const match   = subData && (c.githubHandleArray || [])
-          .map(h => subData.get(h.toLowerCase()))
-          .find(Boolean);
-
-        if (match) {
-          return { company: r.company, from, until, contributions: match.contributions, method: 'actual' };
+        const coveringWindows = subWindows.filter(([swS, swE]) => swS >= from && swE <= until);
+        let actualSum = 0;
+        let allFound  = coveringWindows.length > 0;
+        for (const [swS, swE] of coveringWindows) {
+          const swData = subResults[`${swS}|${swE}`];
+          const match  = swData && (c.githubHandleArray || [])
+            .map(h => swData.get(h.toLowerCase()))
+            .find(Boolean);
+          if (match) actualSum += match.contributions;
+          else allFound = false;
         }
-        // Proportional fallback when not found within depth cap.
+        return { r, from, until, actualSum, isActual: allFound };
+      });
+
+      // Pass 2: distribute the remaining budget among proportional-fallback ranges.
+      const actualTotal    = rangeData.filter(d => d.isActual).reduce((s, d) => s + d.actualSum, 0);
+      const fallbackBudget = c.contributions - actualTotal;
+      const fallbackDays   = rangeData
+        .filter(d => !d.isActual)
+        .reduce((s, d) => s + daysBetween(d.from, d.until), 0);
+
+      c.attributedContributions = rangeData.map(({ r, from, until, actualSum, isActual }) => {
+        if (isActual) {
+          return { company: r.company, from, until, contributions: actualSum, method: 'actual' };
+        }
         const days = daysBetween(from, until);
         return {
           company: r.company, from, until,
-          contributions: Math.round(c.contributions * (days / totalDays)),
+          contributions: fallbackDays > 0
+            ? Math.round(fallbackBudget * (days / fallbackDays))
+            : Math.round(c.contributions * (days / totalDays)),
           method: 'proportional',
         };
       });

@@ -255,6 +255,100 @@ test('enrichWithAttribution: rest (rank 101+) split contributor gets proportiona
   assert.equal(attr[0].contributions + attr[1].contributions, 600); // may be off by 1 due to rounding
 });
 
+test('enrichWithAttribution: range spanning multiple sub-windows sums actual counts', async () => {
+  // Alice changes on 2025-01-01; Bob changes on 2025-07-01.
+  // Sub-windows: [2024-01-01→2025-01-01], [2025-01-01→2025-07-01], [2025-07-01→2026-01-01].
+  // Alice's NewCo range (2025-01-01→end) spans two sub-windows — must sum both, not fall back.
+  // Bob's BobOld range (start→2025-07-01) likewise spans two sub-windows.
+  const contributors = {
+    data: [
+      { name: 'Alice', githubHandleArray: ['alice'], contributions: 1000, percentage: 1.0 },
+      { name: 'Bob',   githubHandleArray: ['bob'],   contributions: 800,  percentage: 0.8 },
+    ],
+  };
+  const affiliations = {
+    alice: { company: 'NewCo', ranges: [
+      { company: 'OldCo', from: null,         until: '2025-01-01' },
+      { company: 'NewCo', from: '2025-01-01', until: null         },
+    ], file: 1, lineStart: 1, lineEnd: 3 },
+    bob: { company: 'BobNew', ranges: [
+      { company: 'BobOld', from: null,         until: '2025-07-01' },
+      { company: 'BobNew', from: '2025-07-01', until: null         },
+    ], file: 1, lineStart: 4, lineEnd: 6 },
+  };
+  const mockGet = makeMockGet({
+    '2024-01-01|2025-01-01': [
+      { name: 'Alice', githubHandleArray: ['alice'], contributions: 250 },
+      { name: 'Bob',   githubHandleArray: ['bob'],   contributions: 400 },
+    ],
+    '2025-01-01|2025-07-01': [
+      { name: 'Alice', githubHandleArray: ['alice'], contributions: 400 },
+      { name: 'Bob',   githubHandleArray: ['bob'],   contributions: 200 },
+    ],
+    '2025-07-01|2026-01-01': [
+      { name: 'Alice', githubHandleArray: ['alice'], contributions: 350 },
+      { name: 'Bob',   githubHandleArray: ['bob'],   contributions: 200 },
+    ],
+  });
+
+  await enrichWithAttribution(contributors, '2024-01-01', '2026-01-01', affiliations, {
+    apiGet: mockGet, apiSleep: noopSleep,
+  });
+
+  // Alice OldCo: one sub-window → 250 actual
+  // Alice NewCo: spans two sub-windows → 400 + 350 = 750 actual (not proportional)
+  const aliceAttr = contributors.data[0].attributedContributions;
+  assert.equal(aliceAttr[0].company, 'OldCo');
+  assert.equal(aliceAttr[0].contributions, 250);
+  assert.equal(aliceAttr[0].method, 'actual');
+  assert.equal(aliceAttr[1].company, 'NewCo');
+  assert.equal(aliceAttr[1].contributions, 750);
+  assert.equal(aliceAttr[1].method, 'actual');
+
+  // Bob BobOld: spans two sub-windows → 400 + 200 = 600 actual
+  // Bob BobNew: one sub-window → 200 actual
+  const bobAttr = contributors.data[1].attributedContributions;
+  assert.equal(bobAttr[0].company, 'BobOld');
+  assert.equal(bobAttr[0].contributions, 600);
+  assert.equal(bobAttr[0].method, 'actual');
+  assert.equal(bobAttr[1].company, 'BobNew');
+  assert.equal(bobAttr[1].contributions, 200);
+  assert.equal(bobAttr[1].method, 'actual');
+});
+
+test('enrichWithAttribution: partial actual fallback conserves contributor total', async () => {
+  // Alice found in OldCo sub-window (actual 300) but not in NewCo sub-window.
+  // Fallback budget = 1000 − 300 = 700 → NewCo gets exactly 700 (not 1000 * 0.5).
+  const contributors = {
+    data: [
+      { name: 'Alice', githubHandleArray: ['alice'], contributions: 1000, percentage: 1.0 },
+    ],
+  };
+  const affiliations = makeAffiliations('alice', [
+    { company: 'OldCo', from: null,         until: '2025-01-01' },
+    { company: 'NewCo', from: '2025-01-01', until: null         },
+  ]);
+  // NewCo period absent from mock → contributor not found → proportional fallback
+  const mockGet = makeMockGet({
+    '2024-01-01|2025-01-01': [{ name: 'Alice', githubHandleArray: ['alice'], contributions: 300 }],
+  });
+
+  await enrichWithAttribution(contributors, '2024-01-01', '2026-01-01', affiliations, {
+    apiGet: mockGet, apiSleep: noopSleep,
+  });
+
+  const attr = contributors.data[0].attributedContributions;
+  assert.equal(attr.length, 2);
+  assert.equal(attr[0].company, 'OldCo');
+  assert.equal(attr[0].contributions, 300);
+  assert.equal(attr[0].method, 'actual');
+  assert.equal(attr[1].company, 'NewCo');
+  assert.equal(attr[1].method, 'proportional');
+  // Fallback budget = 1000 − 300 = 700; NewCo is the only fallback range so it gets all 700
+  assert.equal(attr[1].contributions, 700);
+  assert.equal(attr[0].contributions + attr[1].contributions, 1000);
+});
+
 test('enrichWithAttribution: three-way split produces correct sub-windows', async () => {
   const contributors = {
     data: [

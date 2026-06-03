@@ -305,8 +305,8 @@
 
   <!-- ── CONCENTRATION TAB ─────────────────────────────────────────── -->
   <div id="tab-concentration" class="tab-panel hidden space-y-4">
-    <div class="grid md:grid-cols-2 gap-4">
-      <div class="bg-white dark:bg-gray-900 rounded-xl border border-slate-200 dark:border-gray-800 p-4">
+    <div class="grid md:grid-cols-2 gap-4 items-start">
+      <div id="bc-factor-tile" class="bg-white dark:bg-gray-900 rounded-xl border border-slate-200 dark:border-gray-800 p-4">
         <h2 class="text-sm font-semibold">Contributor Bus Factor</h2>
         <p class="text-xs text-slate-400 dark:text-gray-500 mt-0.5 mb-4">How much of the project depends on a small group? High concentration in few contributors is a project health risk.</p>
         <div id="bc-loading" class="flex justify-center py-10"><span class="spinner"></span></div>
@@ -324,36 +324,37 @@
           <canvas id="bcChart" height="200"></canvas>
         </div>
       </div>
-      <div class="bg-white dark:bg-gray-900 rounded-xl border border-slate-200 dark:border-gray-800 p-4">
+      <div id="bc-list-tile" class="bg-white dark:bg-gray-900 rounded-xl border border-slate-200 dark:border-gray-800 p-4 flex flex-col">
         <h2 class="text-sm font-semibold">Core Contributor List</h2>
         <p class="text-xs text-slate-400 dark:text-gray-500 mt-0.5 mb-4">The small group driving most of the project's activity</p>
         <div id="bc-list-loading" class="flex justify-center py-10"><span class="spinner"></span></div>
-        <div id="bc-list" class="hidden space-y-1"></div>
+        <div id="bc-list" class="hidden space-y-1 overflow-y-auto min-h-0 flex-1 pr-1"></div>
       </div>
     </div>
-    <div class="bg-white dark:bg-gray-900 rounded-xl border border-slate-200 dark:border-gray-800 p-4">
-      <h2 class="text-sm font-semibold">Organization Dependency</h2>
-      <p class="text-xs text-slate-400 dark:text-gray-500 mt-0.5 mb-4">How much of the project is controlled by a few companies? Healthy projects spread contributions across many independent organizations.</p>
-      <div id="od-loading" class="flex justify-center py-10"><span class="spinner"></span></div>
-      <div id="od-content" class="hidden">
-        <div class="flex items-start gap-6 mb-5">
-          <div class="text-center">
-            <div class="text-3xl font-bold text-purple-400" id="od-top-n">—</div>
-            <div class="text-xs text-slate-400 dark:text-gray-500 mt-1">top organizations</div>
+    <div class="grid md:grid-cols-2 gap-4 items-start">
+      <div id="od-factor-tile" class="bg-white dark:bg-gray-900 rounded-xl border border-slate-200 dark:border-gray-800 p-4">
+        <h2 class="text-sm font-semibold">Organization Dependency</h2>
+        <p class="text-xs text-slate-400 dark:text-gray-500 mt-0.5 mb-4">How much of the project is controlled by a few companies? Healthy projects spread contributions across many independent organizations.</p>
+        <div id="od-loading" class="flex justify-center py-10"><span class="spinner"></span></div>
+        <div id="od-content" class="hidden">
+          <div class="flex items-start gap-6 mb-5">
+            <div class="text-center">
+              <div class="text-3xl font-bold text-purple-400" id="od-top-n">—</div>
+              <div class="text-xs text-slate-400 dark:text-gray-500 mt-1">top organizations</div>
+            </div>
+            <div class="text-center">
+              <div class="text-3xl font-bold text-pink-400" id="od-top-pct">—</div>
+              <div class="text-xs text-slate-400 dark:text-gray-500 mt-1">of all activity</div>
+            </div>
           </div>
-          <div class="text-center">
-            <div class="text-3xl font-bold text-pink-400" id="od-top-pct">—</div>
-            <div class="text-xs text-slate-400 dark:text-gray-500 mt-1">of all activity</div>
-          </div>
-          <div class="text-center">
-            <div class="text-3xl font-bold text-slate-500 dark:text-gray-400" id="od-other-n">—</div>
-            <div class="text-xs text-slate-400 dark:text-gray-500 mt-1">other organizations</div>
-          </div>
-        </div>
-        <div class="grid md:grid-cols-2 gap-4">
           <canvas id="odChart" height="180"></canvas>
-          <div id="od-list" class="space-y-1 overflow-y-auto max-h-52 pr-1"></div>
         </div>
+      </div>
+      <div id="od-list-tile" class="bg-white dark:bg-gray-900 rounded-xl border border-slate-200 dark:border-gray-800 p-4 flex flex-col">
+        <h2 class="text-sm font-semibold">Core Organizations List</h2>
+        <p class="text-xs text-slate-400 dark:text-gray-500 mt-0.5 mb-4">The top organizations driving most of the project's activity</p>
+        <div id="od-list-loading" class="flex justify-center py-10"><span class="spinner"></span></div>
+        <div id="od-list" class="hidden space-y-1 overflow-y-auto min-h-0 flex-1 pr-1"></div>
       </div>
     </div>
   </div>
@@ -1743,6 +1744,7 @@ async function loadConcentration() {
   show('bc-loading');  hide('bc-content');
   show('bc-list-loading'); hide('bc-list');
   show('od-loading');  hide('od-content');
+  show('od-list-loading'); hide('od-list');
 
   try {
     const cached = usingCache();
@@ -1785,15 +1787,24 @@ async function loadConcentration() {
       },
     });
 
+    let coreList;
+    if (cached) {
+      coreList = (data.contributors?.data || []).slice(0, conc.topContributors.count);
+    } else {
+      const lb = await liveApi('contributors/contributor-leaderboard', { offset: 0, limit: conc.topContributors.count });
+      coreList = lb.data || conc.list || [];
+    }
     hide('bc-list-loading'); show('bc-list');
-    el('bc-list').innerHTML = (conc.list || []).map((c, i) => renderPersonRow(c, i, { sigStyle: true })).join('');
+    el('bc-list').innerHTML = coreList.map((c, i) => renderPersonRow(c, i, { sigStyle: true })).join('');
+    requestAnimationFrame(() => {
+      el('bc-list-tile').style.maxHeight = el('bc-factor-tile').offsetHeight + 'px';
+    });
 
     // Org dependency
     const top   = orgDep.topOrganizations  || {};
     const other = orgDep.otherOrganizations || {};
     el('od-top-n').textContent   = top.count ?? '—';
     el('od-top-pct').textContent = pct(top.percentage);
-    el('od-other-n').textContent = num(other.count);
     hide('od-loading'); show('od-content');
 
     destroyChart('odChart');
@@ -1818,11 +1829,22 @@ async function loadConcentration() {
       },
     });
 
-    el('od-list').innerHTML = (orgDep.list || []).map((o, i) => renderOrgRow(o, i)).join('');
+    let coreOrgList;
+    if (cached) {
+      coreOrgList = (data.organizations?.data || []).slice(0, top.count);
+    } else {
+      const lb = await liveApi('contributors/organization-leaderboard', { offset: 0, limit: top.count });
+      coreOrgList = lb.data || orgDep.list || [];
+    }
+    hide('od-list-loading'); show('od-list');
+    el('od-list').innerHTML = coreOrgList.map((o, i) => renderOrgRow(o, i, { sigStyle: true })).join('');
+    requestAnimationFrame(() => {
+      el('od-list-tile').style.maxHeight = el('od-factor-tile').offsetHeight + 'px';
+    });
 
   } catch (e) {
     showError(e.message);
-    hide('bc-loading'); hide('bc-list-loading'); hide('od-loading');
+    hide('bc-loading'); hide('bc-list-loading'); hide('od-loading'); hide('od-list-loading');
   }
 }
 

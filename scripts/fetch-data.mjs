@@ -20,6 +20,7 @@
  */
 
 import { writeFileSync, readFileSync, mkdirSync } from 'node:fs';
+import { enrichWithAttribution } from './enrich-attribution.mjs';
 
 const BASE       = 'https://insights.linuxfoundation.org/api/project/opentelemetry';
 const CACHE_PATH = 'data/cache.json';
@@ -38,7 +39,7 @@ const PERIODS = [
   { key: '1y',  startDate: daysAgo(365),  prevStartDate: daysAgo(730),  alwaysRefresh: true  },
   { key: '2y',  startDate: daysAgo(730),  prevStartDate: daysAgo(1460), alwaysRefresh: false },
   { key: '3y',  startDate: daysAgo(1095), prevStartDate: daysAgo(2190), alwaysRefresh: false },
-  { key: 'all', startDate: '2019-01-01',  prevStartDate: null,          alwaysRefresh: false },
+  { key: 'all', startDate: '2019-01-01',  prevStartDate: null,          alwaysRefresh: false, skipAttribution: true },
 ];
 
 // 'all' is handled by fetchPeriod (full pagination); others are filter combos.
@@ -116,7 +117,7 @@ function applyPrevContributions(contributors, organizations, prev) {
 }
 
 // ── Full period fetch ────────────────────────────────────────────
-async function fetchPeriod(startDate, prevStartDate = null) {
+async function fetchPeriod(startDate, affiliations, prevStartDate = null, skipAttribution = false) {
   const p = { startDate, endDate, platform: 'all', activityType: 'all' };
 
   console.log('  Summary…');
@@ -141,6 +142,11 @@ async function fetchPeriod(startDate, prevStartDate = null) {
     console.log('  Previous period leaderboards…');
     const prev = await fetchPrevLeaderboards(prevStartDate, startDate);
     applyPrevContributions(contributors, organizations, prev);
+  }
+
+  if (!skipAttribution) {
+    console.log('  Attribution…');
+    await enrichWithAttribution(contributors, startDate, endDate, affiliations, { apiGet: get, apiSleep: sleep });
   }
 
   return { period: { startDate, endDate },
@@ -182,6 +188,14 @@ async function main() {
   console.log(`\nFetching OTel contributions${FULL ? ' (full refresh)' : ''}\n`);
   mkdirSync('data', { recursive: true });
 
+  let affiliations = {};
+  try {
+    affiliations = JSON.parse(readFileSync('data/affiliations.json', 'utf8'));
+    console.log(`Loaded ${Object.keys(affiliations).length} affiliations\n`);
+  } catch {
+    console.warn('⚠ data/affiliations.json not found — attribution will be skipped\n');
+  }
+
   const runStartedAt = new Date().toISOString();
   const existing     = loadExistingCache();
   const periods      = existing?.periods      ? { ...existing.periods }      : {};
@@ -203,7 +217,7 @@ async function main() {
     null;
 
   // ── Full periods (all×all) ────────────────────────────────────
-  for (const { key, startDate, prevStartDate, alwaysRefresh } of PERIODS) {
+  for (const { key, startDate, prevStartDate, alwaysRefresh, skipAttribution } of PERIODS) {
     const cached  = existing?.periods?.[key];
     const old     = ageDays(cached?.period?.endDate);
     const skip    = !FULL && !alwaysRefresh && old < 7;
@@ -214,7 +228,7 @@ async function main() {
     } else {
       console.log(`\n── ${key}  (${startDate} → ${endDate})`);
       try {
-        periods[key] = await fetchPeriod(startDate, prevStartDate);
+        periods[key] = await fetchPeriod(startDate, affiliations, prevStartDate, skipAttribution);
         sources.periods[key] = { fetchedAt: runStartedAt, status: 'fresh' };
       } catch (e) {
         console.error(`  ✗ ${key} period fetch failed: ${e.message}`);

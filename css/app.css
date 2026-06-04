@@ -1,0 +1,65 @@
+body { font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+.spinner {
+  display: inline-block;
+  border: 2px solid rgba(0,0,0,0.08);
+  border-top-color: #3b82f6;
+  border-radius: 50%;
+  width: 20px; height: 20px;
+  animation: spin 0.7s linear infinite;
+}
+html.dark .spinner { border-color: rgba(255,255,255,0.1); border-top-color: #3b82f6; }
+@keyframes spin { to { transform: rotate(360deg); } }
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+html.dark ::-webkit-scrollbar-thumb { background: #374151; }
+.tab-btn { transition: color 0.15s, border-color 0.15s; }
+.tab-btn.active { color: #2563eb; border-bottom: 2px solid #2563eb; }
+.tab-btn:not(.active) { color: #64748b; border-bottom: 2px solid transparent; }
+.tab-btn:not(.active):hover { color: #0f172a; }
+html.dark .tab-btn.active { color: #60a5fa; border-bottom: 2px solid #60a5fa; }
+html.dark .tab-btn:not(.active) { color: #9ca3af; }
+html.dark .tab-btn:not(.active):hover { color: #e5e7eb; }
+tr:last-child td { border-bottom: none; }
+.contrib-row { cursor: pointer; }
+#contrib-modal-panel { will-change: transform; }
+#contrib-modal-panel.open { transform: translateX(0); }
+
+/* ── Role badge tooltip ──────────────────────────────────────────── */
+.role-badge-wrap { display: inline-block; }
+.role-tooltip {
+  position: fixed;
+  visibility: hidden;
+  z-index: 9999;
+  pointer-events: none;
+}
+.role-tooltip.visible { visibility: visible; pointer-events: auto; }
+.role-tooltip-inner {
+  background: #f8fafc;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  padding: 6px 8px;
+  font-size: 11px;
+  white-space: nowrap;
+  min-width: max-content;
+}
+html.dark .role-tooltip-inner {
+  background: #111827;
+  border-color: #374151;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+}
+
+input[type="date"], select { background-color: #ffffff; border-color: #cbd5e1; color: #0f172a; }
+option { background-color: #ffffff; color: #0f172a; }
+html.dark input[type="date"], html.dark select { background-color: #1f2937; border-color: #374151; color: #d1d5db; }
+html.dark option { background-color: #1f2937; color: #d1d5db; }
+#error-toast { background-color: #ffffff; }
+html.dark #error-toast { background-color: #111827; }
+
+.org-row { cursor: pointer; }
+#org-modal-panel { will-change: transform; }
+#org-modal-panel.open { transform: translateX(0); }
+.sig-row { cursor: pointer; }
+#sig-modal-panel { will-change: transform; }
+#sig-modal-panel.open { transform: translateX(0); }

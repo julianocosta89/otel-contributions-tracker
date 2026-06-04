@@ -1,6 +1,6 @@
 # OTel Contributions Tracker
 
-A single-file static web app that visualizes [OpenTelemetry contribution data](https://insights.linuxfoundation.org/project/opentelemetry/contributors) sourced from the Linux Foundation Insights API. Designed to run on GitHub Pages with zero build tooling.
+A static web app that visualizes [OpenTelemetry contribution data](https://insights.linuxfoundation.org/project/opentelemetry/contributors) sourced from the Linux Foundation Insights API. Built as native ES modules with no build step, designed to run on GitHub Pages with zero build tooling.
 
 ## Features
 

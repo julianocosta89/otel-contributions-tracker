@@ -1,7 +1,7 @@
 import { SIGS_CACHE, S } from '../state.js';
 import { el, num, show, hide } from '../utils.js';
 import { renderPersonRow, renderOrgRow } from '../render.js';
-import { setHash } from '../routing.js';
+import { setHash, timeframeHash } from '../routing.js';
 
 export function openSigModal(repoName) {
   const period = SIGS_CACHE?.periods?.[S.preset]?.[repoName];
@@ -30,7 +30,7 @@ export function openSigModal(repoName) {
   modal.classList.remove('hidden');
   requestAnimationFrame(() => requestAnimationFrame(() => panel.classList.add('open')));
   document.body.style.overflow = 'hidden';
-  setHash('sigs', repoName);
+  setHash('sigs', timeframeHash(S), repoName);
 }
 
 export function closeSigModal() {
@@ -38,5 +38,5 @@ export function closeSigModal() {
   panel.classList.remove('open');
   document.body.style.overflow = '';
   setTimeout(() => el('sig-modal').classList.add('hidden'), 200);
-  setHash('sigs');
+  setHash('sigs', timeframeHash(S));
 }

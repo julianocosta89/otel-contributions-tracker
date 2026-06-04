@@ -6,7 +6,7 @@ import { loadSigsCache, orgReposFromCache } from '../cache.js';
 import { fetchOrgRepos } from '../api.js';
 import { renderPersonRow, renderReposList } from '../render.js';
 import { contributorsForOrg, renderOrgConcentration } from '../attribution.js';
-import { setHash, pageDetail } from '../routing.js';
+import { setHash, pageDetail, timeframeHash } from '../routing.js';
 
 export async function openOrgModal(org) {
   const panel = el('org-modal-panel');
@@ -66,7 +66,7 @@ export async function openOrgModal(org) {
   el('org-modal').classList.remove('hidden');
   requestAnimationFrame(() => requestAnimationFrame(() => panel.classList.add('open')));
   document.body.style.overflow = 'hidden';
-  setHash('organizations', org.name);
+  setHash('organizations', timeframeHash(S), org.name);
 
   if (contribs.length === 0) {
     hide('org-modal-repos-loading');
@@ -132,5 +132,5 @@ export function closeOrgModal() {
   el('org-modal-panel').classList.remove('open');
   document.body.style.overflow = '';
   setTimeout(() => el('org-modal').classList.add('hidden'), 200);
-  setHash('organizations', pageDetail(S.pages.organizations));
+  setHash('organizations', timeframeHash(S), pageDetail(S.pages.organizations));
 }

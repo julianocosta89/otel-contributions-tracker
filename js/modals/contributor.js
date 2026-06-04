@@ -6,7 +6,7 @@ import { logoForCompany } from '../companies.js';
 import { loadSigsCache, reposFromCache } from '../cache.js';
 import { fetchContribRepos } from '../api.js';
 import { renderReposList } from '../render.js';
-import { setHash, pageDetail } from '../routing.js';
+import { setHash, pageDetail, timeframeHash } from '../routing.js';
 
 export async function openContribModal(contributor) {
   const modal   = el('contrib-modal');
@@ -64,7 +64,7 @@ export async function openContribModal(contributor) {
   document.body.style.overflow = 'hidden';
 
   const primaryHandle = (contributor.githubHandleArray || [])[0] || contributor.name;
-  setHash('contributors', primaryHandle);
+  setHash('contributors', timeframeHash(S), primaryHandle);
 
   // Prefer LFX cache; fall back to GitHub PR search
   await loadSigsCache();
@@ -107,7 +107,7 @@ export function closeContribModal() {
   panel.classList.remove('open');
   document.body.style.overflow = '';
   setTimeout(() => el('contrib-modal').classList.add('hidden'), 200);
-  setHash('contributors', pageDetail(S.pages.contributors));
+  setHash('contributors', timeframeHash(S), pageDetail(S.pages.contributors));
 }
 
 export function renderContribRepos(result, handles) {

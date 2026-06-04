@@ -1,7 +1,7 @@
 import { S } from './state.js';
 import { el, show, hide, today, daysAgo } from './utils.js';
 import { showCurrentSourceBadge, showSourceBadge } from './cache.js';
-import { setHash, pageDetail } from './routing.js';
+import { setHash, pageDetail, timeframeHash, VALID_PRESETS } from './routing.js';
 import { loadOverview } from './tabs/overview.js';
 import { loadContributors } from './tabs/contributors.js';
 import { loadOrganizations } from './tabs/organizations.js';
@@ -34,7 +34,7 @@ export function setTab(tab, { updateHash = true } = {}) {
   document.querySelectorAll('.tab-btn').forEach(b => {
     b.classList.toggle('active', b.getAttribute('onclick') === `setTab('${tab}')`);
   });
-  if (updateHash) setHash(tab);
+  if (updateHash) setHash(tab, timeframeHash(S));
   loadTab(tab);
 }
 
@@ -53,16 +53,16 @@ export function loadTab(tab) {
 export function changePage(type, delta) {
   S.pages[type] += delta;
   if (type === 'contributors') {
-    setHash('contributors', pageDetail(S.pages.contributors));
+    setHash('contributors', timeframeHash(S), pageDetail(S.pages.contributors));
     loadContributors();
   }
   if (type === 'organizations') {
-    setHash('organizations', pageDetail(S.pages.organizations));
+    setHash('organizations', timeframeHash(S), pageDetail(S.pages.organizations));
     loadOrganizations();
   }
 }
 
-export function setPreset(preset) {
+export function setPreset(preset, { updateHash = true } = {}) {
   S.preset = preset;
   const days = { '30d': 30, '90d': 90, '6m': 182, '1y': 365, '2y': 730, '3y': 1095 };
   S.filters.endDate = today();
@@ -76,8 +76,34 @@ export function setPreset(preset) {
   });
 
   showCurrentSourceBadge();
+  if (updateHash) setHash(S.tab, preset);
 
   reload();
+}
+
+// Applies a timeframe string from the URL hash without updating the hash itself.
+// tab is used only when redirecting an invalid timeframe to correct the URL.
+export function applyTimeframeFromHash(timeframe, tab = S.tab) {
+  if (!timeframe) { setPreset('1y', { updateHash: false }); return; }
+  if (VALID_PRESETS.includes(timeframe)) {
+    setPreset(timeframe, { updateHash: false });
+  } else if (/^\d{4}-\d{2}-\d{2}\.\.\d{4}-\d{2}-\d{2}$/.test(timeframe)) {
+    const [start, end] = timeframe.split('..');
+    S.preset            = 'custom';
+    S.filters.startDate = start;
+    S.filters.endDate   = end;
+    el('startDate').value = start;
+    el('endDate').value   = end;
+    document.querySelectorAll('.preset-btn').forEach(b => {
+      b.className = 'preset-btn px-2.5 py-1 rounded-md text-slate-500 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white transition-colors';
+    });
+    showSourceBadge('live');
+    reload();
+  } else {
+    // Unknown timeframe — silently redirect to 1y
+    setPreset('1y', { updateHash: false });
+    setHash(tab, '1y');
+  }
 }
 
 export function onDateChange() {
@@ -88,7 +114,10 @@ export function onDateChange() {
     b.className = 'preset-btn px-2.5 py-1 rounded-md text-slate-500 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white transition-colors';
   });
   showSourceBadge('live');
-  if (S.filters.startDate && S.filters.endDate) reload();
+  if (S.filters.startDate && S.filters.endDate) {
+    setHash(S.tab, timeframeHash(S));
+    reload();
+  }
 }
 
 export function onFilterChange() {

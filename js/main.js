@@ -5,7 +5,7 @@ import { initTheme, toggleTheme } from './theme.js';
 import { loadCache } from './cache.js';
 import { loadAffiliations } from './affiliations.js';
 import { VALID_TABS, parseHash, applyPageDetail, setHash } from './routing.js';
-import { setTab, reload, loadTab, changePage, setPreset, onDateChange, onFilterChange, hideError } from './ui.js';
+import { setTab, reload, loadTab, changePage, setPreset, onDateChange, onFilterChange, hideError, applyTimeframeFromHash } from './ui.js';
 import { openContribModal, closeContribModal } from './modals/contributor.js';
 import { openOrgModal, closeOrgModal } from './modals/org.js';
 import { openSigModal, closeSigModal } from './modals/sig.js';
@@ -68,8 +68,9 @@ document.addEventListener('keydown', e => {
 
 // ── Hash-based routing ─────────────────────────────────────────────
 async function navigateToHash() {
-  const { tab, detail } = parseHash();
+  const { tab, timeframe, detail } = parseHash();
   if (!VALID_TABS.includes(tab)) return;
+  applyTimeframeFromHash(timeframe, tab);
   if (applyPageDetail(tab, detail, S)) {
     // Page navigation: if already on this tab just reload, otherwise switch
     if (tab === S.tab) loadTab(tab);
@@ -116,14 +117,14 @@ async function init() {
   initTheme();
   await Promise.all([loadCache(), loadAffiliations()]);
 
-  const { tab, detail } = parseHash();
+  const { tab, timeframe, detail } = parseHash();
   if (VALID_TABS.includes(tab)) {
     if (!applyPageDetail(tab, detail, S) && detail) PENDING_DETAIL = { tab, detail };
-    setPreset('1y'); // resets pages to 0 — restore page after this
-    applyPageDetail(tab, detail, S); // re-apply after setPreset's reload() reset it
+    applyTimeframeFromHash(timeframe, tab); // resets pages to 0 — restore page after this
+    applyPageDetail(tab, detail, S);   // re-apply after applyTimeframeFromHash's reload() reset it
     setTab(tab, { updateHash: false });
   } else {
-    setPreset('1y');
+    applyTimeframeFromHash(timeframe);
   }
 }
 

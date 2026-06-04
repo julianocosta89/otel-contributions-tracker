@@ -141,7 +141,7 @@ Tab orchestration and filter controls. Imports all six tab loaders.
 
 ### `main.js`
 Entry point. Runs `init()` on load.
-- `init()` — applies saved theme, awaits `loadCache()` + `loadAffiliations()` in parallel, then applies any hash-based deep link before calling `setPreset('1y')`
+- `init()` — applies saved theme, awaits `loadCache()` + `loadAffiliations()` in parallel, then parses the hash, applies the requested timeframe (defaulting to `1y` when omitted), restores page/detail state, and switches to the requested tab
 - `resolvePendingDetail(tab)` — when a deep-link `#tab/detail` was present at startup, opens the correct modal once the tab's data has finished loading. Triggered by the `tabLoaded` custom event dispatched from each tab loader
 - Registers delegated click handlers for `.contrib-row`, `.org-row`, `.sig-row`
 - Registers the global Escape key listener (`closeOrgModal`, `closeContribModal`, `closeSigModal`)

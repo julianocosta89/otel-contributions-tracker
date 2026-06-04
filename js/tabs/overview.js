@@ -3,7 +3,8 @@ import { el, num, pct, changeBadge, show, hide, destroyChart } from '../utils.js
 import { C } from '../theme.js';
 import { usingCache, cacheData } from '../cache.js';
 import { liveApi } from '../api.js';
-import { resolveOrgLogo, orgPlaceholder } from '../render.js';
+import { orgPlaceholder } from '../render.js';
+import { resolveOrgLogo } from '../companies.js';
 import { renderChoropleth } from '../geo.js';
 import { showError } from '../error.js';
 

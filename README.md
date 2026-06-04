@@ -14,7 +14,39 @@ A single-file static web app that visualizes [OpenTelemetry contribution data](h
 ## Project Structure
 
 ```
-index.html                          # entire web app (HTML + vanilla JS + Tailwind/Chart.js via CDN)
+index.html                          # HTML skeleton + CDN script tags
+css/
+  app.css                           # custom styles not covered by Tailwind
+js/
+  main.js                           # entry point: init, deep-link routing, event wiring
+  config.js                         # constants (API_BASE, PAGE_SIZE, COLORS)
+  state.js                          # mutable runtime state (CACHE, AFFILIATIONS, S, …)
+  utils.js                          # formatting helpers + DOM shortcuts
+  theme.js                          # dark/light mode + chart colour palette
+  error.js                          # error toast
+  companies.js                      # company name matching + logo resolution
+  affiliations.js                   # gitdm affiliation lookup + loading
+  roles.js                          # GitHub team role badges
+  cache.js                          # data loading, caching, repo helpers
+  api.js                            # live API calls + GitHub PR fetches
+  render.js                         # shared row/list HTML builders
+  geo.js                            # choropleth world map (Chart.js + world-atlas)
+  attribution.js                    # org attribution + HHI concentration
+  routing.js                        # URL hash management (no side effects)
+  ui.js                             # tab management, paging, filter controls
+  tabs/
+    README.md
+    overview.js                     # Overview tab
+    contributors.js                 # Contributors tab + search
+    organizations.js                # Organizations tab + search
+    concentration.js                # Concentration tab (bus factor + org dependency)
+    geography.js                    # Geography tab
+    sigs.js                         # SIGs tab + search
+  modals/
+    README.md
+    contributor.js                  # Contributor drill-down panel
+    org.js                          # Organization drill-down panel
+    sig.js                          # SIG/repository drill-down panel
 docs/
   README.md                         # docs directory guide
   concentration.html                # standalone page explaining the HHI concentration metric
@@ -43,7 +75,15 @@ data/
 
 ### `index.html`
 
-The entire web application lives in a single file — no build step, no framework, no bundler. HTML structure, vanilla JavaScript, and CDN-loaded Tailwind CSS and Chart.js are all inline. All UI changes go here.
+HTML skeleton only — structure, CDN script tags (Tailwind, Chart.js), and a single `<script type="module" src="js/main.js">`. No inline JavaScript. All UI changes go in the relevant module under `js/`; see [`js/README.md`](js/README.md) for which file owns what.
+
+### `js/`
+
+ES modules with no build step. [`js/README.md`](js/README.md) documents every module — its purpose, key exports, and how it relates to its neighbours. Tab modules are documented in [`js/tabs/README.md`](js/tabs/README.md); modal modules in [`js/modals/README.md`](js/modals/README.md).
+
+### `css/`
+
+A single `app.css` extracted from `index.html`. Tailwind covers almost everything; this file only adds the loading spinner, slim scrollbar, tab-button active state, modal slide-in transitions, role-badge tooltip positioning, and dark-mode overrides for native form controls. See [`css/README.md`](css/README.md).
 
 ### `docs/`
 
@@ -94,10 +134,10 @@ Changing any filter triggers live API calls to the LF Insights endpoint. A badge
 
 ### Tech stack
 
-- Pure HTML and vanilla JavaScript — no build step, no `npm install`
+- Vanilla JavaScript as native ES modules — no build step, no `npm install`, no bundler
 - [Tailwind CSS](https://tailwindcss.com/) via CDN
 - [Chart.js](https://www.chartjs.org/) via CDN
 
 ## Contributing
 
-Contributions are welcome. Because the app is a single HTML file, all UI changes happen in `index.html`. For data pipeline changes, edit the relevant script in `scripts/` — each script is self-contained and documented in [`scripts/README.md`](scripts/README.md). Open a pull request with a clear description of what the change does and why.
+Contributions are welcome. The UI is split across `index.html` (structure) and the modules under `js/` (behaviour). [`js/README.md`](js/README.md) is the best starting point for understanding which file to edit. For data pipeline changes, edit the relevant script in `scripts/` — each script is self-contained and documented in [`scripts/README.md`](scripts/README.md). Open a pull request with a clear description of what the change does and why.

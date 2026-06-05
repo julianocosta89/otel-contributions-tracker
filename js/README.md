@@ -80,8 +80,6 @@ Everything related to matching contributor affiliations to leaderboard org names
 ### `cache.js`
 - `usingCache()` — true when the active preset + platform combo is available in `data/cache.json`
 - `cacheData()` — returns the cached data object for the active filters
-- `cacheSource()` — returns the source metadata object (fetch timestamp, status) for the active slice
-- `showSourceBadge(source, date, details)` / `showCurrentSourceBadge()` — updates the "cached Jun 4" / "live" header badge
 - `loadCache()` — fetches `data/cache.json` at startup; silent failure if unavailable
 - `loadSigsCache()` — singleton fetch of `data/sigs.json`; stores result in `SIGS_CACHE`
 - `reposFromCache(handles)` / `orgReposFromCache(contributors)` — look up repository contribution counts from the already-loaded SIG cache for a contributor or org's full contributor list
@@ -135,7 +133,7 @@ Tab orchestration and filter controls. Imports all six tab loaders.
 - `changePage(type, delta)` — advances/retreats a paginated tab and updates the hash
 - `updatePager(prefix, page, totalPages)` — updates the pagination controls for a table
 - `setPreset(preset)` — sets the active date preset, recalculates `startDate`/`endDate`, and calls `reload`
-- `onDateChange()` / `onFilterChange()` — handlers for the custom date inputs and platform select
+- `onFilterChange()` — handler for the platform select
 - Re-exports `showError` / `hideError` from `error.js`
 - Listens for `themeChanged` (from `theme.js`) to call `reload()`
 

@@ -12,13 +12,6 @@ export function cacheData() {
     : CACHE.filterCombos[S.preset][S.filters.platform];
 }
 
-export function cacheSource() {
-  if (!CACHE?.sources) return null;
-  return S.filters.platform === 'all'
-    ? CACHE.sources.periods?.[S.preset]
-    : CACHE.sources.filterCombos?.[S.preset]?.[S.filters.platform];
-}
-
 export async function loadCache() {
   try {
     const res = await fetch('./data/cache.json');

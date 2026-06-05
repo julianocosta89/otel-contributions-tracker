@@ -9,7 +9,7 @@ A static web app that visualizes [OpenTelemetry contribution data](https://insig
 - **Organizations** — horizontal bar chart of the top 15 organizations plus a paginated leaderboard table
 - **Concentration** — bus factor analysis showing how many top contributors account for what percentage of all work, with per-contributor and per-organization breakdowns
 - **Geography** — country-level bar chart and table with flags, contribution counts, and share bars
-- **Global filters** — date presets (30d, 90d, 6m, 1y), custom date range, platform filter, and activity type filter
+- **Global filters** — date presets (30d, 90d, 6m, 1y, 2y, 3y, all) and platform filter
 
 ## Project Structure
 

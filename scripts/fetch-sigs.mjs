@@ -6,7 +6,7 @@
  *   - Full contributor leaderboard (all pages)
  *   - Full organization leaderboard (all pages)
  *
- * Across all 7 time presets: 30d, 90d, 6m, 1y, 2y, 3y, all
+ * Across all 8 time presets: 30d, 60d, 90d, 6m, 1y, 2y, 3y, all
  *
  * Short presets (30d–1y) always refresh. Long presets (2y, 3y, all) are
  * skipped if data/sigs.json was already fetched within the last 7 days.
@@ -34,6 +34,7 @@ function daysAgo(n) {
 
 const PERIODS = [
   { key: '30d', startDate: daysAgo(30),   alwaysRefresh: true  },
+  { key: '60d', startDate: daysAgo(60),   alwaysRefresh: true  },
   { key: '90d', startDate: daysAgo(90),   alwaysRefresh: true  },
   { key: '6m',  startDate: daysAgo(182),  alwaysRefresh: true  },
   { key: '1y',  startDate: daysAgo(365),  alwaysRefresh: true  },

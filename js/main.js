@@ -5,7 +5,7 @@ import { initTheme, toggleTheme } from './theme.js';
 import { loadCache } from './cache.js';
 import { loadAffiliations } from './affiliations.js';
 import { VALID_TABS, parseHash, applyPageDetail, setHash } from './routing.js';
-import { setTab, reload, loadTab, changePage, setPreset, onDateChange, onFilterChange, hideError, applyTimeframeFromHash } from './ui.js';
+import { setTab, reload, loadTab, changePage, setPreset, onFilterChange, hideError, applyTimeframeFromHash } from './ui.js';
 import { openContribModal, closeContribModal } from './modals/contributor.js';
 import { openOrgModal, closeOrgModal } from './modals/org.js';
 import { openSigModal, closeSigModal } from './modals/sig.js';
@@ -132,7 +132,7 @@ init();
 
 // ── Expose functions needed by inline HTML event handlers ─────────
 Object.assign(window, {
-  setPreset, onDateChange, onFilterChange, toggleTheme, setTab,
+  setPreset, onFilterChange, toggleTheme, setTab,
   onContribSearch, clearContribSearch, changePage,
   onOrgSearch, clearOrgSearch, onSigsSearch, clearSigsSearch,
   closeOrgModal, closeContribModal, closeSigModal, hideError,

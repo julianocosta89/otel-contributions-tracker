@@ -80,7 +80,7 @@ Everything related to matching contributor affiliations to leaderboard org names
 ### `cache.js`
 - `usingCache()` — true when the active preset + platform combo is available in `data/cache.json`
 - `cacheData()` — returns the cached data object for the active filters
-- `loadCache()` — fetches `data/cache.json` at startup; silent failure if unavailable
+- `loadCache()` — fetches `data/cache.json` at startup; populates the `cached <date>` header tag; silent failure if unavailable
 - `loadSigsCache()` — singleton fetch of `data/sigs.json`; stores result in `SIGS_CACHE`
 - `reposFromCache(handles)` / `orgReposFromCache(contributors)` — look up repository contribution counts from the already-loaded SIG cache for a contributor or org's full contributor list
 
@@ -118,7 +118,7 @@ Hash format: `#tab` | `#tab/timeframe` | `#tab/timeframe/detail`
 
 Exports:
 - `VALID_TABS` — array of valid tab names used to validate hash fragments
-- `VALID_PRESETS` — array of valid preset keys (`30d`, `90d`, `6m`, `1y`, `2y`, `3y`, `all`)
+- `VALID_PRESETS` — array of valid preset keys (`30d`, `60d`, `90d`, `6m`, `1y`, `2y`, `3y`, `all`)
 - `timeframeHash(S)` — returns the URL-safe timeframe string for the current state (`S.preset` or `startDate..endDate` for custom ranges)
 - `setHash(tab, timeframe, detail)` — writes `#tab`, `#tab/timeframe`, or `#tab/timeframe/detail` to the address bar via `history.replaceState`
 - `pageDetail(pageIndex)` — converts a 0-indexed page to a `page/N` URL detail string (or `null` for page 0)

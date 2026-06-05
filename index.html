@@ -22,6 +22,7 @@
       <div class="flex items-center gap-2.5 shrink-0">
         <img src="assets/logo.svg" width="28" height="28" alt="OTel Contributions Tracker">
         <span class="font-semibold text-sm tracking-tight">OTel Contributions Tracker</span>
+        <span id="cache-date-tag" class="hidden text-xs px-2 py-0.5 rounded-full border font-medium border-slate-300 dark:border-gray-700 text-slate-500 dark:text-gray-400"></span>
       </div>
     </div>
 
@@ -30,6 +31,7 @@
       <!-- Date presets -->
       <div class="flex bg-slate-200 dark:bg-gray-800 rounded-lg p-0.5 gap-0.5 text-xs">
         <button data-preset="30d"  onclick="setPreset('30d')"  class="preset-btn px-2.5 py-1 rounded-md text-slate-500 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white transition-colors">30d</button>
+        <button data-preset="60d"  onclick="setPreset('60d')"  class="preset-btn px-2.5 py-1 rounded-md text-slate-500 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white transition-colors">60d</button>
         <button data-preset="90d"  onclick="setPreset('90d')"  class="preset-btn px-2.5 py-1 rounded-md text-slate-500 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white transition-colors">90d</button>
         <button data-preset="6m"   onclick="setPreset('6m')"   class="preset-btn px-2.5 py-1 rounded-md text-slate-500 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white transition-colors">6m</button>
         <button data-preset="1y"   onclick="setPreset('1y')"   class="preset-btn px-2.5 py-1 rounded-md bg-blue-600 text-white">1y</button>

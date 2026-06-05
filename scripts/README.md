@@ -22,11 +22,11 @@ Calls the LF Insights API and writes `data/cache.json`. This is the primary data
 
 **Cache structure:**
 
-- `periods` — full paginated contributor and org leaderboards for all 7 time presets, using the all-platforms / all-activity-types filter
+- `periods` — full paginated contributor and org leaderboards for all 8 time presets, using the all-platforms / all-activity-types filter
 - `filterCombos` — summary stats and full leaderboards for each preset × platform combination (platforms: `github`, `git`, `gerrit`, `gitlab`, `confluence`, `jira`)
 - `sources` — per-period and per-platform freshness metadata, including cached fallback status when a refresh slice failed but older data was preserved
 
-**Time presets:** `30d`, `90d`, `6m`, `1y`, `2y`, `3y`, `all`
+**Time presets:** `30d`, `60d`, `90d`, `6m`, `1y`, `2y`, `3y`, `all`
 
 **Smart refresh:** Short presets (`30d`–`1y`) always refresh. Long presets (`2y`, `3y`, `all`) are skipped if already cached within the last 7 days. Pass `--full` to force-refresh everything.
 
@@ -47,7 +47,7 @@ node scripts/fetch-data.mjs --full    # force-refresh everything
 
 Fetches per-repository (per-SIG) contributor and org leaderboards and writes `data/sigs.json`.
 
-Queries the GitHub API for all non-archived repos in the `open-telemetry` org, then for each repo fetches the full contributor and org leaderboard from LF Insights for all 7 time presets. Repos are processed 3 at a time.
+Queries the GitHub API for all non-archived repos in the `open-telemetry` org, then for each repo fetches the full contributor and org leaderboard from LF Insights for all 8 time presets. Repos are processed 3 at a time.
 
 Applies the same smart-refresh logic as `fetch-data.mjs`: short presets always refresh, long presets are skipped if their per-period source metadata is less than 7 days old. If source metadata is missing, the period is refreshed so future runs can make the skip decision accurately.
 

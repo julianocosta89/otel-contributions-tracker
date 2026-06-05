@@ -63,7 +63,7 @@ export function changePage(type, delta) {
 
 export function setPreset(preset, { updateHash = true } = {}) {
   S.preset = preset;
-  const days = { '30d': 30, '90d': 90, '6m': 182, '1y': 365, '2y': 730, '3y': 1095 };
+  const days = { '30d': 30, '60d': 60, '90d': 90, '6m': 182, '1y': 365, '2y': 730, '3y': 1095 };
   S.filters.endDate = today();
   S.filters.startDate = preset === 'all' ? '2019-01-01' : daysAgo(days[preset]);
 

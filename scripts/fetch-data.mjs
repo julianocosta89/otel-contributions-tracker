@@ -3,7 +3,7 @@
  * Fetches OpenTelemetry contribution data from LF Insights API.
  *
  * Two cache layers:
- *   periods      — full data (all contributors paginated) for all×all filter, 7 presets
+ *   periods      — full data (all contributors paginated) for all×all filter, 8 presets
  *   filterCombos — summary + top-25 contributors + top-15 orgs for every
  *                  platform × activityType combination, per preset
  *
@@ -34,6 +34,7 @@ function daysAgo(n) {
 
 const PERIODS = [
   { key: '30d', startDate: daysAgo(30),   prevStartDate: daysAgo(60),   alwaysRefresh: true  },
+  { key: '60d', startDate: daysAgo(60),   prevStartDate: daysAgo(120),  alwaysRefresh: true  },
   { key: '90d', startDate: daysAgo(90),   prevStartDate: daysAgo(180),  alwaysRefresh: true  },
   { key: '6m',  startDate: daysAgo(182),  prevStartDate: daysAgo(364),  alwaysRefresh: true  },
   { key: '1y',  startDate: daysAgo(365),  prevStartDate: daysAgo(730),  alwaysRefresh: true  },

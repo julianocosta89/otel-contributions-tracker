@@ -38,7 +38,7 @@ Main data cache. Used directly by the app when the user has not changed any filt
     }
   },
   "periods": {
-    "<preset>": { ... }   // presets: 30d, 90d, 6m, 1y, 2y, 3y, all
+    "<preset>": { ... }   // presets: 30d, 60d, 90d, 6m, 1y, 2y, 3y, all
   },
   "filterCombos": {
     "<preset>": {
@@ -115,7 +115,7 @@ Per-repository contributor and organization leaderboards. Used by the SIG/repo b
 }
 ```
 
-`repos` is the list of all non-archived repositories in the `open-telemetry` GitHub organization. Presets match those in `cache.json`: `30d`, `90d`, `6m`, `1y`, `2y`, `3y`, `all`.
+`repos` is the list of all non-archived repositories in the `open-telemetry` GitHub organization. Presets match those in `cache.json`: `30d`, `60d`, `90d`, `6m`, `1y`, `2y`, `3y`, `all`.
 
 When a SIG period has `status: "partial"`, the period was refreshed but one or more repositories reused cached fallback data. The source entry may include `fallbackRepos`, `fallbackFrom`, and `errors` for troubleshooting.
 

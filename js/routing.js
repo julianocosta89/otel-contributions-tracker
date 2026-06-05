@@ -1,5 +1,5 @@
 export const VALID_TABS    = ['overview', 'contributors', 'organizations', 'concentration', 'geography', 'sigs'];
-export const VALID_PRESETS = ['30d', '90d', '6m', '1y', '2y', '3y', 'all'];
+export const VALID_PRESETS = ['30d', '60d', '90d', '6m', '1y', '2y', '3y', 'all'];
 
 // Returns true for valid presets, date ranges, AND things that look like
 // preset attempts (e.g. "20d", "5y") so they reach the redirect fallback

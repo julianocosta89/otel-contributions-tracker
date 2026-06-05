@@ -1,4 +1,14 @@
 import { CACHE, SIGS_CACHE, S, setCache, setSigsCache, _sigsLoadPromise, setSigsLoadPromise } from './state.js';
+import { el } from './utils.js';
+
+function showCacheDateTag(isoDate) {
+  if (!isoDate) return;
+  const tag = el('cache-date-tag');
+  const d = new Date(isoDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  tag.textContent = `cached ${d}`;
+  tag.classList.remove('hidden');
+}
+
 export function usingCache() {
   if (CACHE === null) return false;
   if (S.filters.platform === 'all') return S.preset in CACHE.periods;
@@ -16,7 +26,9 @@ export async function loadCache() {
   try {
     const res = await fetch('./data/cache.json');
     if (!res.ok) return;
-    setCache(await res.json());
+    const data = await res.json();
+    setCache(data);
+    showCacheDateTag(data.fetchedAt);
   } catch {
     // cache not available — use live API
   }

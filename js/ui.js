@@ -1,6 +1,5 @@
 import { S } from './state.js';
 import { el, show, hide, today, daysAgo } from './utils.js';
-import { showCurrentSourceBadge, showSourceBadge } from './cache.js';
 import { setHash, pageDetail, timeframeHash, VALID_PRESETS } from './routing.js';
 import { loadOverview } from './tabs/overview.js';
 import { loadContributors } from './tabs/contributors.js';
@@ -67,15 +66,12 @@ export function setPreset(preset, { updateHash = true } = {}) {
   const days = { '30d': 30, '90d': 90, '6m': 182, '1y': 365, '2y': 730, '3y': 1095 };
   S.filters.endDate = today();
   S.filters.startDate = preset === 'all' ? '2019-01-01' : daysAgo(days[preset]);
-  el('startDate').value = S.filters.startDate;
-  el('endDate').value   = S.filters.endDate;
 
   document.querySelectorAll('.preset-btn').forEach(b => {
     const on = b.dataset.preset === preset;
     b.className = `preset-btn px-2.5 py-1 rounded-md transition-colors ${on ? 'bg-blue-600 text-white' : 'text-slate-500 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white'}`;
   });
 
-  showCurrentSourceBadge();
   if (updateHash) setHash(S.tab, preset);
 
   reload();
@@ -92,12 +88,9 @@ export function applyTimeframeFromHash(timeframe, tab = S.tab) {
     S.preset            = 'custom';
     S.filters.startDate = start;
     S.filters.endDate   = end;
-    el('startDate').value = start;
-    el('endDate').value   = end;
     document.querySelectorAll('.preset-btn').forEach(b => {
       b.className = 'preset-btn px-2.5 py-1 rounded-md text-slate-500 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white transition-colors';
     });
-    showSourceBadge('live');
     reload();
   } else {
     // Unknown timeframe — silently redirect to 1y
@@ -106,22 +99,7 @@ export function applyTimeframeFromHash(timeframe, tab = S.tab) {
   }
 }
 
-export function onDateChange() {
-  S.preset            = 'custom';
-  S.filters.startDate = el('startDate').value;
-  S.filters.endDate   = el('endDate').value;
-  document.querySelectorAll('.preset-btn').forEach(b => {
-    b.className = 'preset-btn px-2.5 py-1 rounded-md text-slate-500 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white transition-colors';
-  });
-  showSourceBadge('live');
-  if (S.filters.startDate && S.filters.endDate) {
-    setHash(S.tab, timeframeHash(S));
-    reload();
-  }
-}
-
 export function onFilterChange() {
   S.filters.platform = el('platform').value;
-  showCurrentSourceBadge();
   reload();
 }

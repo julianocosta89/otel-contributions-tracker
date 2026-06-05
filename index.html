@@ -22,7 +22,6 @@
       <div class="flex items-center gap-2.5 shrink-0">
         <img src="assets/logo.svg" width="28" height="28" alt="OTel Contributions Tracker">
         <span class="font-semibold text-sm tracking-tight">OTel Contributions Tracker</span>
-        <span id="source-badge" class="hidden text-xs px-2 py-0.5 rounded-full border font-medium"></span>
       </div>
     </div>
 
@@ -38,13 +37,6 @@
         <button data-preset="3y"   onclick="setPreset('3y')"   class="preset-btn px-2.5 py-1 rounded-md text-slate-500 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white transition-colors">3y</button>
         <button data-preset="all"  onclick="setPreset('all')"  class="preset-btn px-2.5 py-1 rounded-md text-slate-500 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white transition-colors">all</button>
       </div>
-
-      <!-- Custom dates -->
-      <input type="date" id="startDate" onchange="onDateChange()"
-        class="bg-slate-200 dark:bg-gray-800 border border-slate-300 dark:border-gray-700 rounded px-2 py-1 text-xs text-slate-700 dark:text-gray-300 focus:outline-none focus:border-blue-500">
-      <span class="text-slate-300 dark:text-gray-600 text-xs">→</span>
-      <input type="date" id="endDate" onchange="onDateChange()"
-        class="bg-slate-200 dark:bg-gray-800 border border-slate-300 dark:border-gray-700 rounded px-2 py-1 text-xs text-slate-700 dark:text-gray-300 focus:outline-none focus:border-blue-500">
 
       <!-- Platform -->
       <select id="platform" onchange="onFilterChange()"

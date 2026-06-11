@@ -11,6 +11,15 @@ on:
       - 'docs/**'
       - 'index.html'
   workflow_dispatch:
+  workflow_run:
+    branches: [main]
+    workflows:
+      - "Refresh contribution data"
+      - "Refresh SIG data"
+      - "Refresh contributor affiliations"
+      - "Refresh contributor roles"
+    types:
+      - completed
 
 permissions:
   contents: read
@@ -23,6 +32,7 @@ concurrency:
 
 jobs:
   deploy:
+    if: ${{ github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
     environment:
       name: github-pages

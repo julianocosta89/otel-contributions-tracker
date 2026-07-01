@@ -3,7 +3,7 @@ import { el, num, pct, show, hide, deltaCell } from '../utils.js';
 import { PAGE_SIZE } from '../config.js';
 import { usingCache, cacheData } from '../cache.js';
 import { liveApi } from '../api.js';
-import { affiliationFor } from '../affiliations.js';
+import { affiliationFor, affiliationsInWindow } from '../affiliations.js';
 import { roleBadge } from '../roles.js';
 import { personPlaceholder, companyCell } from '../render.js';
 import { showError } from '../error.js';
@@ -75,7 +75,10 @@ export function renderContribTable(rows, baseOffset, ranks) {
     const gitdmUrl = affiliation?.file
       ? `https://github.com/cncf/gitdm/blob/master/developers_affiliations${affiliation.file}.txt#L${affiliation.lineStart}${affiliation.lineEnd !== affiliation.lineStart ? `-L${affiliation.lineEnd}` : ''}`
       : 'https://github.com/cncf/gitdm';
-    const company = companyCell(c, affiliation, gitdmUrl);
+    const ranges = c.attributedContributions?.length > 1
+      ? null
+      : affiliationsInWindow(c.githubHandleArray, S.filters.startDate, S.filters.endDate);
+    const company = companyCell(c, affiliation, gitdmUrl, ranges);
     const barW = Math.min(100, (c.percentage || 0) * 6).toFixed(0);
     return `
       <tr class="contrib-row border-b border-slate-200 dark:border-gray-800/40 hover:bg-slate-200/50 dark:hover:bg-gray-800/20 transition-colors" data-idx="${i}" title="Click to see repositories">

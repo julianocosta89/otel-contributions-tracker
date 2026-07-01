@@ -68,7 +68,7 @@ Everything related to matching contributor affiliations to leaderboard org names
 
 ### `affiliations.js`
 - `affiliationFor(handles)` — returns the currently-active affiliation `{ company, source, file, lineStart, lineEnd }` for a contributor (gitdm takes priority over GitHub profile)
-- `affiliationsInWindow(handles, startDate, endDate)` — returns all gitdm ranges overlapping a date window; used for time-aware org attribution
+- `affiliationsInWindow(handles, startDate, endDate)` — returns all gitdm ranges overlapping a date window; used for time-aware org attribution and as the Contributors tab's company-history fallback when a period has no `attributedContributions` (e.g. `all`)
 - `loadAffiliations()` — fetches `data/affiliations.json`, `data/github-companies.json`, and `data/roles.json` in parallel at startup
 
 ### `roles.js`
@@ -95,7 +95,7 @@ Shared HTML builder functions used by both tabs and modals.
 - `renderPersonRow(c, i, opts)` — a contributor row (avatar, name, handle, affiliation, contribution count). `opts.sigStyle` renders a wider hover-able variant used in the SIG modal and concentration lists; `opts.orgModal` renders the compact variant used inside the org modal
 - `renderOrgRow(o, i, opts)` — an org row (logo, name, count). `opts.sigStyle` renders the hover variant used in the SIG modal and concentration lists
 - `renderReposList({ repos, unit, barColor, listElId, note })` — renders a list of repository links with a contribution/PR count label
-- `companyCell(c, affiliation, gitdmUrl)` — renders the company cell for a contributor table row, including multi-employer split stacking with date labels
+- `companyCell(c, affiliation, gitdmUrl, ranges)` — renders the company cell for a contributor table row, including multi-employer split stacking with date labels. `ranges` (from `affiliationsInWindow`) is the fallback source of stacking data for periods with no `attributedContributions` (e.g. the `all` preset)
 - `personPlaceholder(cls)` / `orgPlaceholder(cls)` — fallback SVG avatars when no image is available
 
 ### `geo.js`

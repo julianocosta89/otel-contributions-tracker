@@ -122,7 +122,11 @@ export function renderOrgRow(o, i, opts = {}) {
 // Renders the company cell for a contributor row.
 // For split contributors (attributedContributions.length > 1), stacks each company
 // with a compact date label showing when the company change occurred.
-export function companyCell(c, affiliation, gitdmUrl) {
+// `ranges` is the affiliationsInWindow() fallback used when the period has no
+// attributedContributions (e.g. the 'all' preset, which skips attribution entirely) —
+// it still surfaces the full gitdm employer history even without a per-company
+// contribution split.
+export function companyCell(c, affiliation, gitdmUrl, ranges) {
   if (!affiliation) return '<span class="text-slate-300 dark:text-gray-600">—</span>';
 
   const badgeHref = affiliation.source === 'gitdm'
@@ -130,7 +134,7 @@ export function companyCell(c, affiliation, gitdmUrl) {
     : `https://github.com/${(c.githubHandleArray || [])[0]}`;
   const badge = `<a href="${badgeHref}" target="_blank" onclick="event.stopPropagation()" class="inline-block px-1 py-0.5 rounded text-slate-400 dark:text-gray-500 hover:text-slate-700 dark:text-gray-300 border border-slate-300 dark:border-gray-700 hover:border-gray-500 text-[10px] leading-none transition-colors ml-1">${affiliation.source}</a>`;
 
-  const attrs = c.attributedContributions;
+  const attrs = c.attributedContributions?.length > 1 ? c.attributedContributions : ranges;
   if (attrs?.length > 1) {
     return attrs.map((a, idx) => {
       const isLast  = idx === attrs.length - 1;

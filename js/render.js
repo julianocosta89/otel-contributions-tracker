@@ -78,8 +78,16 @@ export function renderPersonRow(c, i, opts = {}) {
   const wrapperPy = opts.orgModal ? 'py-1' : 'py-0.5';
   const linkOnClick = opts.orgModal ? ' onclick="event.stopPropagation()"' : '';
   const avatarOnerror = opts.orgModal ? ' onerror="this.style.display=\'none\'"' : '';
+  // Reserve the border slot for every row when active/inactive mode is on, so the
+  // accent doesn't shift active rows relative to unaccented ones. Contributors sitting
+  // exactly on the threshold get a yellow "just barely active" accent instead of green.
+  const activeBorder = opts.activeMode
+    ? (opts.atLimit ? ' border-l-2 border-yellow-500 dark:border-yellow-400 pl-2'
+      : opts.active  ? ' border-l-2 border-green-500 dark:border-green-400 pl-2'
+      : ' border-l-2 border-transparent pl-2')
+    : '';
   return `
-        <div class="flex items-center gap-2 ${wrapperPy}">
+        <div class="flex items-center gap-2 ${wrapperPy}${activeBorder}">
           <span class="text-slate-300 dark:text-gray-600 text-xs w-5 text-right shrink-0">${i + 1}</span>
           ${c.avatar ? `<img src="${c.avatar}" class="w-5 h-5 rounded-full shrink-0"${avatarOnerror}>` : personPlaceholder('w-5 h-5')}
           <span class="text-xs flex-1 truncate">${c.name}</span>
@@ -87,6 +95,17 @@ export function renderPersonRow(c, i, opts = {}) {
           <span class="text-xs text-slate-400 dark:text-gray-500 font-mono shrink-0">${num(c.contributions)}</span>
           ${opts.orgModal ? `<span class="text-xs text-slate-300 dark:text-gray-600 shrink-0">${orgTotal > 0 ? pct(c.contributions / orgTotal * 100) : ''}</span>` : ''}
           ${opts.orgModal && !c.attributedContributions?.length ? deltaBadge(c.contributions, c.previousContributions) : ''}
+        </div>`;
+}
+
+// Divider row marking the boundary between active (>=threshold contributions) and
+// occasional contributors in a sorted-by-contributions list. See activeThreshold() in utils.js.
+export function renderActiveDivider(threshold) {
+  return `
+        <div class="flex items-center gap-2 py-1">
+          <div class="flex-1 h-px bg-slate-300 dark:bg-gray-700"></div>
+          <span class="text-[10px] uppercase tracking-wide text-slate-400 dark:text-gray-500 shrink-0">Less than ${num(threshold)} contributions &middot; inactive (&lt;2/mo)</span>
+          <div class="flex-1 h-px bg-slate-300 dark:bg-gray-700"></div>
         </div>`;
 }
 

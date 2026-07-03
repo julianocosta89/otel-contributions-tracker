@@ -1,10 +1,10 @@
 import { S } from '../state.js';
-import { el, num, show, hide } from '../utils.js';
+import { el, num, show, hide, activeThreshold } from '../utils.js';
 import { resolveOrgLogo } from '../companies.js';
 import { roleFor } from '../roles.js';
 import { loadSigsCache, orgReposFromCache } from '../cache.js';
 import { fetchOrgRepos } from '../api.js';
-import { renderPersonRow, renderReposList } from '../render.js';
+import { renderPersonRow, renderReposList, renderActiveDivider } from '../render.js';
 import { contributorsForOrg, renderOrgConcentration } from '../attribution.js';
 import { setHash, pageDetail, timeframeHash } from '../routing.js';
 
@@ -25,8 +25,19 @@ export async function openOrgModal(org) {
   // Find contributors from cache, sorted by org-attributed contributions
   const contribs = contributorsForOrg(org.name)
     .sort((a, b) => b.contributions - a.contributions);
-  el('org-modal-contributor-count').textContent = contribs.length || '—';
   renderOrgConcentration(contribs, org.contributions);
+
+  // Contributors tile: for presets with an active-contributor threshold, show
+  // "active / total" and relabel the tile; otherwise show the plain total.
+  const threshold = activeThreshold(S.preset);
+  if (threshold != null) {
+    const activeCount = contribs.filter(c => c.contributions >= threshold).length;
+    el('org-modal-contributor-label').textContent = 'Active Contributors';
+    el('org-modal-contributor-count').textContent = contribs.length ? `${num(activeCount)} / ${num(contribs.length)}` : '—';
+  } else {
+    el('org-modal-contributor-label').textContent = 'Contributors';
+    el('org-modal-contributor-count').textContent = contribs.length || '—';
+  }
 
   // Attribution note: surface discrepancy between LFX org total and gitdm-attributed total
   // when any contributor in the list was split across employers within the query window.
@@ -49,10 +60,25 @@ export async function openOrgModal(org) {
   el('org-modal-repo-count').innerHTML =
     '<span id="org-repo-count-spinner" class="spinner" style="width:14px;height:14px;border-width:1.5px"></span>';
 
-  // Render full contributor list (scrollable)
-  el('org-modal-contrib-list').innerHTML = contribs.map((c, i) =>
-    renderPersonRow(c, i, { orgModal: true, orgTotal: org.contributions })
-  ).join('');
+  // Render full contributor list (scrollable), with an active/occasional divider.
+  // The list is sorted by contributions descending, so contributors at or above the
+  // threshold are always a contiguous prefix — no need to reorder, just find the split.
+  const rows = contribs.map((c, i) =>
+    renderPersonRow(c, i, {
+      orgModal: true,
+      orgTotal: org.contributions,
+      activeMode: threshold != null,
+      active: threshold != null && c.contributions >= threshold,
+      atLimit: threshold != null && c.contributions === threshold,
+    })
+  );
+  if (threshold != null) {
+    const splitIndex = contribs.findIndex(c => c.contributions < threshold);
+    if (splitIndex > 0 && splitIndex < contribs.length) {
+      rows.splice(splitIndex, 0, renderActiveDivider(threshold));
+    }
+  }
+  el('org-modal-contrib-list').innerHTML = rows.join('');
 
   el('org-modal-contrib-more').classList.add('hidden');
 

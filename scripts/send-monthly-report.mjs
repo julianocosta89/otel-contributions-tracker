@@ -103,6 +103,16 @@ export function monthWindow(refDate, override = null) {
   return { key: `${year}-${pad(month0 + 1)}`, startDate, endDate };
 }
 
+// One calendar day after `iso` (UTC). Used to convert the report's inclusive
+// last day into the exclusive boundary enrichWithAttribution's internal date
+// math (daysBetween, range overlap, sub-window splitting) expects — see the
+// call site in main() for why these two representations can't be the same value.
+export function dayAfter(iso) {
+  const d = new Date(`${iso}T00:00:00Z`);
+  d.setUTCDate(d.getUTCDate() + 1);
+  return d.toISOString().split('T')[0];
+}
+
 export function monthLabel(key) {
   const [y, m] = key.split('-');
   return `${MONTH_NAMES[+m - 1]} ${y}`;
@@ -305,7 +315,25 @@ async function main() {
   console.log(`  ✓ ${organizations.data.length} organizations`);
 
   console.log('Enriching attribution for employer changes within the month…');
-  await enrichWithAttribution(contributors, startDate, endDate, affiliationsRaw, { apiGet: get, apiSleep: sleep });
+  // `endDate` above is the month's real, inclusive last day (correct for the LF
+  // Insights/GitHub queries, which both treat their end bound as inclusive). But
+  // enrichWithAttribution's internal math (daysBetween, range overlap, sub-window
+  // splitting) treats its `endDate` argument as an EXCLUSIVE boundary, so feeding
+  // it the same inclusive value would undercount the month by one day in the
+  // proportional-split ratios. Pass the day after instead — the true exclusive
+  // edge — for that call only; the queries above keep the inclusive `endDate`.
+  //
+  // Residual limitation (not fixed here): fetchSubPeriod() inside
+  // enrich-attribution.mjs forwards its own sub-window boundaries straight to the
+  // same inclusive LFX endpoint, so a split contributor whose affiliation changed
+  // on an interior date within the month can still have that day's contributions
+  // double-counted across two "actual" sub-periods. That's a pre-existing
+  // characteristic of the shared helper (also used by fetch-data.mjs's daily
+  // pipeline for every preset), not something introduced by this script — fixing
+  // it properly means adjusting fetchSubPeriod's live query boundary and revisiting
+  // its existing test suite, which is out of scope here.
+  const attributionEndDate = dayAfter(endDate);
+  await enrichWithAttribution(contributors, startDate, attributionEndDate, affiliationsRaw, { apiGet: get, apiSleep: sleep });
 
   const datadogContribs = contributors.data
     .map(c => ({ ...c, contributions: datadogContributionsFor(c) }))

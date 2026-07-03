@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { monthWindow, monthLabel, computeGrowth, escapeHtml } from '../scripts/send-monthly-report.mjs';
+import { monthWindow, monthLabel, computeGrowth, escapeHtml, dayAfter } from '../scripts/send-monthly-report.mjs';
 
 // ── monthWindow ──────────────────────────────────────────────────────────────
 
@@ -46,6 +46,24 @@ test('monthWindow: rejects a malformed --month override', () => {
 test('monthWindow: rejects a --month override with an out-of-range month number', () => {
   assert.throws(() => monthWindow('2026-01-01', '2026-13'), /month must be 01-12/);
   assert.throws(() => monthWindow('2026-01-01', '2026-00'), /month must be 01-12/);
+});
+
+// ── dayAfter ─────────────────────────────────────────────────────────────────
+
+test('dayAfter: mid-month day advances by one', () => {
+  assert.equal(dayAfter('2026-06-15'), '2026-06-16');
+});
+
+test('dayAfter: last day of a 30-day month rolls into the next month', () => {
+  assert.equal(dayAfter('2026-06-30'), '2026-07-01');
+});
+
+test('dayAfter: last day of December rolls into the next year', () => {
+  assert.equal(dayAfter('2025-12-31'), '2026-01-01');
+});
+
+test('dayAfter: leap-year Feb 29 rolls into March 1st', () => {
+  assert.equal(dayAfter('2024-02-29'), '2024-03-01');
 });
 
 // ── monthLabel ───────────────────────────────────────────────────────────────

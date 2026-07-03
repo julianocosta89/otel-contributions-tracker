@@ -32,6 +32,15 @@ function daysAgo(n) {
   return new Date(Date.now() - n * 86_400_000).toISOString().split('T')[0];
 }
 
+// enrichWithAttribution() treats its `endDate` argument as an EXCLUSIVE boundary
+// internally, but `endDate` here is a real, inclusive calendar day ("today" — used
+// as-is for the direct LF Insights queries below, which are inclusive of it). Pass
+// the day after into enrichWithAttribution specifically so its day-count math and
+// live sub-period queries are correct — see the contract note atop enrich-attribution.mjs.
+function dayAfter(iso) {
+  return new Date(new Date(`${iso}T00:00:00Z`).getTime() + 86_400_000).toISOString().split('T')[0];
+}
+
 const PERIODS = [
   { key: '30d', startDate: daysAgo(30),   prevStartDate: daysAgo(60),   alwaysRefresh: true  },
   { key: '60d', startDate: daysAgo(60),   prevStartDate: daysAgo(120),  alwaysRefresh: true  },
@@ -147,7 +156,7 @@ async function fetchPeriod(startDate, affiliations, prevStartDate = null, skipAt
 
   if (!skipAttribution) {
     console.log('  Attribution…');
-    await enrichWithAttribution(contributors, startDate, endDate, affiliations, { apiGet: get, apiSleep: sleep });
+    await enrichWithAttribution(contributors, startDate, dayAfter(endDate), affiliations, { apiGet: get, apiSleep: sleep });
   }
 
   return { period: { startDate, endDate },

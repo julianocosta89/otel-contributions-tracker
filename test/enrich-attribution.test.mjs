@@ -5,6 +5,7 @@ import {
   intersectingRanges,
   buildSubWindows,
   clampRange,
+  subtractDay,
   enrichWithAttribution,
   TOP_N,
 } from '../scripts/enrich-attribution.mjs';
@@ -17,6 +18,24 @@ test('daysBetween: 365-day year', () => {
 
 test('daysBetween: same day is 0', () => {
   assert.equal(daysBetween('2025-01-01', '2025-01-01'), 0);
+});
+
+// ── subtractDay ───────────────────────────────────────────────────────────────
+
+test('subtractDay: mid-month day steps back by one', () => {
+  assert.equal(subtractDay('2026-06-15'), '2026-06-14');
+});
+
+test('subtractDay: first of month rolls back into the previous month', () => {
+  assert.equal(subtractDay('2026-07-01'), '2026-06-30');
+});
+
+test('subtractDay: first of January rolls back into the previous year', () => {
+  assert.equal(subtractDay('2026-01-01'), '2025-12-31');
+});
+
+test('subtractDay: March 1st of a leap year rolls back to Feb 29', () => {
+  assert.equal(subtractDay('2024-03-01'), '2024-02-29');
 });
 
 // ── intersectingRanges ────────────────────────────────────────────────────────
@@ -120,10 +139,21 @@ function makeAffiliations(handle, ranges) {
   };
 }
 
-// Mock apiGet: returns sub-period leaderboard keyed by "startDate|endDate"
+// Mock apiGet: returns sub-period leaderboard keyed by "startDate|endDate", where
+// endDate is the sub-window's ORIGINAL exclusive boundary (matching each test's
+// affiliation range dates below, for readability). fetchSubPeriod now queries the
+// real (inclusive) API with that boundary shifted back one day via subtractDay()
+// — see the dedicated wire-level test further down — so we shift the incoming
+// param forward by one day here to reconstruct the original key before lookup.
+function addDayForTest(iso) {
+  const d = new Date(`${iso}T00:00:00Z`);
+  d.setUTCDate(d.getUTCDate() + 1);
+  return d.toISOString().split('T')[0];
+}
+
 function makeMockGet(subPeriodData) {
   return async (_path, params) => {
-    const key  = `${params.startDate}|${params.endDate}`;
+    const key  = `${params.startDate}|${addDayForTest(params.endDate)}`;
     const data = subPeriodData[key] ?? [];
     return { meta: { offset: 0, limit: 200, total: data.length }, data };
   };
@@ -376,4 +406,68 @@ test('enrichWithAttribution: three-way split produces correct sub-windows', asyn
   assert.equal(attr[1].company, 'B');  assert.equal(attr[1].contributions, 1400);
   assert.equal(attr[2].company, 'C');  assert.equal(attr[2].contributions, 1000);
   assert.ok(attr.every(a => a.method === 'actual'));
+});
+
+// ── Regression: inclusive-endDate double-counting at an interior split date ────
+//
+// The real LFX API is inclusive of its `endDate` param (empirically verified:
+// startDate=2026-06-01&endDate=2026-06-30 and .../endDate=2026-07-01 return
+// different totals — the extra day's activity is included). fetchSubPeriod must
+// therefore query with (swEnd - 1 day), not swEnd itself, or two adjacent
+// sub-windows meeting at an interior split date would each include that date's
+// activity once, double-counting it. This test bypasses makeMockGet's
+// key-reconstruction convenience and asserts on the raw wire-level params.
+
+test('enrichWithAttribution: interior split date does not double-count the boundary day', async () => {
+  const contributors = {
+    data: [
+      { name: 'Grace', githubHandleArray: ['grace'], contributions: 1000, percentage: 1.0 },
+    ],
+  };
+  const affiliations = makeAffiliations('grace', [
+    { company: 'OldCo', from: null,         until: '2026-06-15' },
+    { company: 'NewCo', from: '2026-06-15', until: null         },
+  ]);
+
+  const calls = [];
+  const mockGet = async (_path, params) => {
+    calls.push({ startDate: params.startDate, endDate: params.endDate });
+    // Sub-window 1 is logically [2026-06-01, 2026-06-15) — the real (inclusive)
+    // query for it must end at 2026-06-14, one day short of the split date.
+    if (params.startDate === '2026-06-01' && params.endDate === '2026-06-14') {
+      return { meta: { total: 1 }, data: [{ name: 'Grace', githubHandleArray: ['grace'], contributions: 400 }] };
+    }
+    // Sub-window 2 is logically [2026-06-15, 2026-06-30) — the real query for it
+    // must end at 2026-06-29, one day short of the outer (exclusive) boundary.
+    if (params.startDate === '2026-06-15' && params.endDate === '2026-06-29') {
+      return { meta: { total: 1 }, data: [{ name: 'Grace', githubHandleArray: ['grace'], contributions: 600 }] };
+    }
+    // Any other params (e.g. the unadjusted swEnd, if the fix regresses) miss both
+    // branches above and fall through here, returning empty — which would surface
+    // as a proportional-fallback result below instead of 'actual', failing the test.
+    return { meta: { total: 0 }, data: [] };
+  };
+
+  await enrichWithAttribution(contributors, '2026-06-01', '2026-06-30', affiliations, {
+    apiGet: mockGet, apiSleep: noopSleep,
+  });
+
+  // Exactly one call per sub-window, each with the day-before-swEnd boundary —
+  // proves fetchSubPeriod never sends the raw (unadjusted, double-counting) swEnd.
+  assert.deepEqual(calls, [
+    { startDate: '2026-06-01', endDate: '2026-06-14' },
+    { startDate: '2026-06-15', endDate: '2026-06-29' },
+  ]);
+
+  const attr = contributors.data[0].attributedContributions;
+  assert.equal(attr.length, 2);
+  assert.equal(attr[0].company, 'OldCo');
+  assert.equal(attr[0].contributions, 400);
+  assert.equal(attr[0].method, 'actual');
+  assert.equal(attr[1].company, 'NewCo');
+  assert.equal(attr[1].contributions, 600);
+  assert.equal(attr[1].method, 'actual');
+  // Conservation: actual + actual must equal the contributor's true total — no
+  // double-counting of 2026-06-15 (the split date) across the two sub-windows.
+  assert.equal(attr[0].contributions + attr[1].contributions, 1000);
 });

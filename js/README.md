@@ -88,8 +88,8 @@ Everything related to matching contributor affiliations to leaderboard org names
 ### `api.js`
 - `liveApi(path, extra)` — wraps `fetch` against `API_BASE` with the active query string
 - `buildQS(extra)` — assembles the shared query string from current filter state
-- `fetchContribRepos(handles, startDate, endDate)` — GitHub Issues Search API: finds PRs authored by a contributor in the `open-telemetry` org within the date range, grouped by repository
-- `fetchOrgRepos(contributors, org, startDate, endDate)` — calls `fetchContribRepos` for each contributor in parallel then merges the results
+- `fetchContribRepos(handles, startDate, endDate, token?)` — GitHub Issues Search API: finds PRs authored by a contributor in the `open-telemetry` org within the date range, grouped by repository. Optional `token` adds an `Authorization` header (used by `scripts/send-monthly-report.mjs` for a higher rate limit; browser call sites omit it)
+- `fetchOrgRepos(contributors, org, startDate, endDate, token?)` — calls `fetchContribRepos` for each contributor in parallel then merges the results. Returns `failedCount` (number of contributors whose search request failed, e.g. rate limiting) alongside `repos`/`totalPRs`/`truncated`; browser call sites ignore it, `scripts/send-monthly-report.mjs` surfaces it as a warning
 
 ### `render.js`
 Shared HTML builder functions used by both tabs and modals.

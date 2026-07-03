@@ -18,8 +18,8 @@ jobs:
     timeout-minutes: 30
 
     env:
-      REPORT_FROM: contrib-tracker@otelminutes.jcosta.dev
-      REPORT_TO: juliano.costa@datadoghq.com
+      REPORT_FROM: ${{ secrets.REPORT_FROM }}
+      REPORT_TO: ${{ secrets.REPORT_TO }}
       RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 

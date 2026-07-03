@@ -15,7 +15,7 @@ export async function liveApi(path, extra = {}) {
   return res.json();
 }
 
-export async function fetchContribRepos(handles, startDate, endDate) {
+export async function fetchContribRepos(handles, startDate, endDate, token) {
   const handle = handles[0]; // primary handle
   const dateFilter = `${startDate}..${endDate}`;
 
@@ -23,7 +23,9 @@ export async function fetchContribRepos(handles, startDate, endDate) {
   const q = encodeURIComponent(`author:${handle} org:open-telemetry is:pr created:${dateFilter}`);
   const url = `https://api.github.com/search/issues?q=${q}&per_page=100&sort=created&order=desc`;
 
-  const res = await fetch(url, { headers: { Accept: 'application/vnd.github.v3+json' } });
+  const headers = { Accept: 'application/vnd.github.v3+json' };
+  if (token) headers.Authorization = `Bearer ${token}`;
+  const res = await fetch(url, { headers });
   if (res.status === 403) throw new Error('GitHub rate limit reached. Try again in a minute.');
   if (!res.ok) throw new Error(`GitHub API error: HTTP ${res.status}`);
 
@@ -52,18 +54,19 @@ export async function fetchContribRepos(handles, startDate, endDate) {
   };
 }
 
-export async function fetchOrgRepos(contributors, org, startDate, endDate) {
+export async function fetchOrgRepos(contributors, org, startDate, endDate, token) {
   // Fetch repos for each contributor in parallel, then merge
   const results = await Promise.allSettled(
-    contributors.map(c => fetchContribRepos(c.githubHandleArray, startDate, endDate))
+    contributors.map(c => fetchContribRepos(c.githubHandleArray, startDate, endDate, token))
   );
 
   const repoMap = new Map();
-  let totalPRs  = 0;
-  let truncated = false;
+  let totalPRs    = 0;
+  let truncated   = false;
+  let failedCount = 0;
 
   for (const r of results) {
-    if (r.status !== 'fulfilled') continue;
+    if (r.status !== 'fulfilled') { failedCount++; continue; }
     totalPRs  += r.value.totalPRs;
     if (r.value.truncated) truncated = true;
     for (const repo of r.value.repos) {
@@ -79,5 +82,9 @@ export async function fetchOrgRepos(contributors, org, startDate, endDate) {
     repos: [...repoMap.values()].sort((a, b) => b.count - a.count),
     totalPRs,
     truncated,
+    // Count of contributors whose search request failed (e.g. rate limiting) —
+    // their PRs are missing from `repos`/`totalPRs`. 0 for all browser call sites
+    // that don't check it; scripts/send-monthly-report.mjs surfaces it as a warning.
+    failedCount,
   };
 }

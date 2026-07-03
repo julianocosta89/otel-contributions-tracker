@@ -46,6 +46,7 @@ No-side-effect helpers used across the codebase.
 - **DOM** — `el(id)`, `show(id)`, `hide(id)`
 - **Table** — `changeBadge` (coloured Δ% HTML), `deltaCell` (table `<td>` for Δ vs prior period)
 - **Charts** — `destroyChart(id)` — destroys and removes a Chart.js instance from `S.charts`
+- **Active contributors** — `activeThreshold(preset)` — returns the minimum contributions (≥2/month, scaled to the preset's span) to count as "active" for `30d`/`60d`/`90d`/`6m`/`1y`; returns `null` for longer presets (`2y`, `3y`, `all`) where the split isn't meaningful
 
 ### `theme.js`
 - `isDark()` — reads `html.dark` class
@@ -92,9 +93,10 @@ Everything related to matching contributor affiliations to leaderboard org names
 
 ### `render.js`
 Shared HTML builder functions used by both tabs and modals.
-- `renderPersonRow(c, i, opts)` — a contributor row (avatar, name, handle, affiliation, contribution count). `opts.sigStyle` renders a wider hover-able variant used in the SIG modal and concentration lists; `opts.orgModal` renders the compact variant used inside the org modal
+- `renderPersonRow(c, i, opts)` — a contributor row (avatar, name, handle, affiliation, contribution count). `opts.sigStyle` renders a wider hover-able variant used in the SIG modal and concentration lists; `opts.orgModal` renders the compact variant used inside the org modal. `opts.activeMode` reserves a left-border accent slot (used by the org modal's active-contributor treatment): `opts.atLimit` renders it yellow (contributor sits exactly on the threshold), `opts.active` renders it green, otherwise it's transparent
 - `renderOrgRow(o, i, opts)` — an org row (logo, name, count). `opts.sigStyle` renders the hover variant used in the SIG modal and concentration lists
 - `renderReposList({ repos, unit, barColor, listElId, note })` — renders a list of repository links with a contribution/PR count label
+- `renderActiveDivider(threshold)` — a thin-line divider with a caption ("Less than N contributions · inactive (<2/mo)") marking the boundary between active and occasional contributors in a contributions-sorted list
 - `companyCell(c, affiliation, gitdmUrl, ranges)` — renders the company cell for a contributor table row, including multi-employer split stacking with date labels. `ranges` (from `affiliationsInWindow`) is the fallback source of stacking data for periods with no `attributedContributions` (e.g. the `all` preset)
 - `personPlaceholder(cls)` / `orgPlaceholder(cls)` — fallback SVG avatars when no image is available
 

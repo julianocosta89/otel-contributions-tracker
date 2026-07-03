@@ -6,6 +6,15 @@
 //
 // Mutates contributors.data in place — adds attributedContributions[] to split
 // contributors only. Contributors with a single company are left untouched.
+//
+// IMPORTANT — `endDate` contract: enrichWithAttribution() and every helper in this
+// module (daysBetween, intersectingRanges, buildSubWindows, clampRange) treat
+// `startDate`/`endDate` as a half-open [startDate, endDate) interval — `endDate`
+// itself is EXCLUSIVE. Callers whose own query boundary is inclusive (e.g. LF
+// Insights' `endDate` param, which includes activity ON that date) must pass the
+// day AFTER their real last day here, not the real last day itself — otherwise
+// the day-count math undercounts by one day. See scripts/send-monthly-report.mjs's
+// `dayAfter()` usage for the pattern.
 
 export const TOP_N = 100;
 export const PAGE_DEPTH_CAP = 1000; // max contributors to scan per sub-period call
@@ -14,6 +23,15 @@ export const PAGE_DEPTH_CAP = 1000; // max contributors to scan per sub-period c
 
 export function daysBetween(isoStart, isoEnd) {
   return (new Date(isoEnd) - new Date(isoStart)) / 86_400_000;
+}
+
+// One calendar day before `iso` (UTC). Used to convert an exclusive sub-window
+// boundary into the inclusive `endDate` the real LFX API expects — see the call
+// site in fetchSubPeriod() for why this matters.
+export function subtractDay(iso) {
+  const d = new Date(`${iso}T00:00:00Z`);
+  d.setUTCDate(d.getUTCDate() - 1);
+  return d.toISOString().split('T')[0];
 }
 
 // All ranges from `ranges` that overlap (startDate, endDate).
@@ -45,12 +63,22 @@ export function clampRange(r, startDate, endDate) {
 
 // ── LFX fetching ─────────────────────────────────────────────────
 
-// Pages the contributor leaderboard for [swStart, swEnd] until all targetHandles
+// Pages the contributor leaderboard for [swStart, swEnd) until all targetHandles
 // (lowercase) are found or PAGE_DEPTH_CAP contributors have been scanned.
 // Returns a Map<lowercaseHandle, contributorObject>.
+//
+// swEnd is an EXCLUSIVE boundary (per buildSubWindows/intersectingRanges'
+// half-open-interval convention throughout this module), but the real LFX API
+// treats its own `endDate` param as INCLUSIVE — querying startDate=2026-06-01&
+// endDate=2026-06-30 vs endDate=2026-07-01 returns measurably different totals,
+// confirming the extra day's activity is included when endDate matches it exactly.
+// So the wire-level query must use the day BEFORE swEnd to correctly represent
+// "up to but not including swEnd" against an inclusive endpoint. Without this,
+// two adjacent sub-windows meeting at an interior split date would each include
+// that day's activity once, double-counting it across their "actual" sums.
 async function fetchSubPeriod(apiGet, apiSleep, swStart, swEnd, targetHandles) {
   const LIMIT  = 200;
-  const params = { startDate: swStart, endDate: swEnd, platform: 'all', activityType: 'all' };
+  const params = { startDate: swStart, endDate: subtractDay(swEnd), platform: 'all', activityType: 'all' };
   let   offset = 0, total = Infinity;
   const found     = new Map();
   const remaining = new Set(targetHandles);

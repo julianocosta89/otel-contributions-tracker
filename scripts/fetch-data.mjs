@@ -22,7 +22,8 @@
 import { writeFileSync, readFileSync, mkdirSync } from 'node:fs';
 import { enrichWithAttribution } from './enrich-attribution.mjs';
 
-const BASE       = 'https://insights.linuxfoundation.org/api/project/opentelemetry';
+const BASE       = 'https://insights.linuxfoundation.org/api/widget';
+const PROJECT    = 'opentelemetry';
 const CACHE_PATH = 'data/cache.json';
 const FULL       = process.argv.includes('--full');
 
@@ -83,11 +84,19 @@ function ageDays(isoDate) {
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 
 async function get(path, params = {}) {
-  const qs  = new URLSearchParams(params);
+  const qs  = new URLSearchParams({ project: PROJECT, ...params });
   const url = `${BASE}/${path}?${qs}`;
-  const res = await fetch(url);
-  if (!res.ok) throw new Error(`HTTP ${res.status} — GET ${path}`);
-  return res.json();
+  for (let attempt = 0; ; attempt++) {
+    const res = await fetch(url);
+    if (res.ok) return res.json();
+    // 429/503 are transient (rate limiting / brief upstream unavailability) —
+    // retry a couple of times before treating it as an operational error.
+    if ((res.status === 429 || res.status === 503) && attempt < 2) {
+      await sleep(500 * (attempt + 1));
+      continue;
+    }
+    throw new Error(`HTTP ${res.status} — GET ${path}`);
+  }
 }
 
 async function getAll(path, params = {}) {

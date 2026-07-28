@@ -35,7 +35,7 @@ Calls the LF Insights API and writes `data/cache.json`. This is the primary data
 
 **Attribution enrichment:** After fetching each period's leaderboard, `enrich-attribution.mjs` is called to add `attributedContributions[]` to contributors who changed employers within the query window. Reads `data/affiliations.json` at startup — run `fetch-affiliations.mjs` first if refreshing both. The `all`-time preset skips attribution (`skipAttribution: true`).
 
-**API base:** `https://insights.linuxfoundation.org/api/project/opentelemetry` — no authentication required.
+**API base:** `https://insights.linuxfoundation.org/api/widget` (project-scoped via `?project=opentelemetry`) — no authentication required.
 
 ```bash
 node scripts/fetch-data.mjs           # smart refresh

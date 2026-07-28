@@ -17,8 +17,10 @@
  */
 
 import { writeFileSync, readFileSync, mkdirSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
 
-const BASE       = 'https://insights.linuxfoundation.org/api/project/opentelemetry';
+const BASE       = 'https://insights.linuxfoundation.org/api/widget';
+const PROJECT    = 'opentelemetry';
 const GH_API     = 'https://api.github.com';
 const CACHE_PATH = 'data/sigs.json';
 const FULL       = process.argv.includes('--full');
@@ -27,6 +29,21 @@ const GH_TOKEN   = process.env.GITHUB_TOKEN;
 const endDate = new Date().toISOString().split('T')[0];
 
 const EMPTY_REPO = { contributors: { total: 0, data: [] }, organizations: { total: 0, data: [] } };
+
+// A cached entry is only a genuine "last known good" fallback if it actually has
+// data — an EMPTY_REPO-shaped stub (e.g. left over from a prior outage) is no
+// better than having no cache at all and must not be reported as one.
+export function isUsableCache(entry) {
+  return !!entry && (entry.contributors?.total > 0 || entry.organizations?.total > 0);
+}
+
+// A 404 on one repo legitimately means "no LFX data for this repo" — but if the
+// vast majority of repos 404 in the same run, that means the LF Insights API
+// itself is down or its route shape changed, not that every repo lost its
+// history simultaneously.
+export function isSuspectedOutage(notFoundCount, totalCount) {
+  return totalCount > 0 && notFoundCount > totalCount * 0.5;
+}
 
 function daysAgo(n) {
   return new Date(Date.now() - n * 86_400_000).toISOString().split('T')[0];
@@ -71,11 +88,19 @@ function ageDays(isoDate) {
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 
 async function get(path, params = {}) {
-  const qs  = new URLSearchParams(params);
+  const qs  = new URLSearchParams({ project: PROJECT, ...params });
   const url = `${BASE}/${path}?${qs}`;
-  const res = await fetch(url);
-  if (!res.ok) throw new Error(`HTTP ${res.status} — GET ${path}`);
-  return res.json();
+  for (let attempt = 0; ; attempt++) {
+    const res = await fetch(url);
+    if (res.ok) return res.json();
+    // 429/503 are transient (rate limiting / brief upstream unavailability) —
+    // retry a couple of times before treating it as an operational error.
+    if ((res.status === 429 || res.status === 503) && attempt < 2) {
+      await sleep(500 * (attempt + 1));
+      continue;
+    }
+    throw new Error(`HTTP ${res.status} — GET ${path}`);
+  }
 }
 
 async function getAll(path, params = {}) {
@@ -161,28 +186,29 @@ async function main() {
     console.log(`\n── ${key}  (${startDate} → ${endDate})`);
     periods[key] = {};
 
-    let succeeded = 0, skipped = 0, errored = 0;
+    let succeeded = 0, errored = 0;
+    const notFoundRepos = [];
     const fallbackRepos = [];
     const errors = {};
+    const results = {};
 
     await withConcurrency(repos, 3, async (repo, i) => {
       try {
-        periods[key][repo] = await fetchSigData(repo, startDate);
+        results[repo] = await fetchSigData(repo, startDate);
         succeeded++;
-        process.stdout.write(`\r  [${(succeeded + skipped + errored).toString().padStart(2)}/${repos.length}] ${repo.padEnd(55)}`);
+        process.stdout.write(`\r  [${(succeeded + notFoundRepos.length + errored).toString().padStart(2)}/${repos.length}] ${repo.padEnd(55)}`);
       } catch (e) {
         const isNotFound = e.message.includes('HTTP 404');
         if (isNotFound) {
-          // No LFX data for this repo — normal, store as empty
-          periods[key][repo] = EMPTY_REPO;
-          skipped++;
+          notFoundRepos.push(repo);
         } else {
           // Operational error (rate limit, auth, network) — log and preserve cached data
           process.stdout.write('\n');
           console.log(`  ✗ ${repo}: ${e.message}`);
           const cached = existing?.periods?.[key]?.[repo];
-          periods[key][repo] = cached ?? EMPTY_REPO;
-          if (cached) {
+          const usable = isUsableCache(cached);
+          periods[key][repo] = usable ? cached : EMPTY_REPO;
+          if (usable) {
             fallbackRepos.push(repo);
             errors[repo] = e.message;
           } else {
@@ -194,7 +220,32 @@ async function main() {
     });
 
     process.stdout.write('\n');
-    console.log(`  ✓ ${succeeded} fetched, ${skipped} empty, ${errored} errors`);
+
+    // Treat a suspected outage like any other operational error (preserve cached
+    // data) instead of overwriting everything with empty stubs.
+    const suspectedOutage = isSuspectedOutage(notFoundRepos.length, repos.length);
+    for (const repo of notFoundRepos) {
+      if (suspectedOutage) {
+        const cached = existing?.periods?.[key]?.[repo];
+        const usable = isUsableCache(cached);
+        periods[key][repo] = usable ? cached : EMPTY_REPO;
+        if (usable) {
+          fallbackRepos.push(repo);
+          errors[repo] = 'HTTP 404 — suspected LF Insights outage (most repos 404\'d this run)';
+        } else {
+          totalHardFails++;
+        }
+        errored++;
+      } else {
+        periods[key][repo] = EMPTY_REPO;
+      }
+    }
+    for (const repo of repos) periods[key][repo] ??= results[repo];
+
+    if (suspectedOutage) {
+      console.log(`  ⚠ ${notFoundRepos.length}/${repos.length} repos 404'd — suspected LF Insights outage, falling back to cache`);
+    }
+    console.log(`  ✓ ${succeeded} fetched, ${suspectedOutage ? 0 : notFoundRepos.length} empty, ${errored} errors`);
     sources.periods[key] = fallbackRepos.length
       ? {
           fetchedAt: runStartedAt,
@@ -218,4 +269,6 @@ async function main() {
   console.log(`\n✓ Saved ${CACHE_PATH}  (${sizeKB} KB)\n`);
 }
 
-main().catch(e => { console.error('\nFetch failed:', e.message); process.exit(1); });
+if (process.argv[1] === fileURLToPath(import.meta.url)) {
+  main().catch(e => { console.error('\nFetch failed:', e.message); process.exit(1); });
+}

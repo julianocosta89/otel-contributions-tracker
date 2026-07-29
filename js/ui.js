@@ -7,6 +7,7 @@ import { loadOrganizations } from './tabs/organizations.js';
 import { loadConcentration } from './tabs/concentration.js';
 import { loadGeography } from './tabs/geography.js';
 import { loadSigs } from './tabs/sigs.js';
+import { loadCoverage } from './tabs/coverage.js';
 export { showError, hideError } from './error.js';
 
 document.addEventListener('themeChanged', () => reload());
@@ -22,7 +23,8 @@ export function setTab(tab, { updateHash = true } = {}) {
     // Clear all search inputs when switching tabs
     [['contributor-search', 'contrib-search-clear'],
      ['org-search',         'org-search-clear'],
-     ['sigs-search',        'sigs-search-clear']].forEach(([inputId, btnId]) => {
+     ['sigs-search',        'sigs-search-clear'],
+     ['coverage-search',    'coverage-search-clear']].forEach(([inputId, btnId]) => {
       el(inputId).value = '';
       el(btnId).classList.add('hidden');
     });
@@ -40,13 +42,14 @@ export function setTab(tab, { updateHash = true } = {}) {
 export function reload() {
   S.pages.contributors  = 0;
   S.pages.organizations = 0;
+  S.pages.coverage      = 0;
   loadTab(S.tab);
 }
 
 export function loadTab(tab) {
   ({ overview: loadOverview, contributors: loadContributors,
      organizations: loadOrganizations, concentration: loadConcentration,
-     geography: loadGeography, sigs: loadSigs })[tab]?.();
+     geography: loadGeography, sigs: loadSigs, coverage: loadCoverage })[tab]?.();
 }
 
 export function changePage(type, delta) {
@@ -58,6 +61,10 @@ export function changePage(type, delta) {
   if (type === 'organizations') {
     setHash('organizations', timeframeHash(S), pageDetail(S.pages.organizations));
     loadOrganizations();
+  }
+  if (type === 'coverage') {
+    setHash('coverage', timeframeHash(S), pageDetail(S.pages.coverage));
+    loadCoverage();
   }
 }
 

@@ -9,9 +9,11 @@ import { setTab, reload, loadTab, changePage, setPreset, onFilterChange, hideErr
 import { openContribModal, closeContribModal } from './modals/contributor.js';
 import { openOrgModal, closeOrgModal } from './modals/org.js';
 import { openSigModal, closeSigModal } from './modals/sig.js';
+import { openCoverageModal, closeCoverageModal } from './modals/coverage.js';
 import { onContribSearch, clearContribSearch } from './tabs/contributors.js';
 import { onOrgSearch, clearOrgSearch } from './tabs/organizations.js';
 import { onSigsSearch, clearSigsSearch } from './tabs/sigs.js';
+import { onCoverageSearch, clearCoverageSearch } from './tabs/coverage.js';
 import { usingCache, cacheData } from './cache.js';
 
 // ── Deep link: resolve pending modal detail once tab data has loaded ──
@@ -33,6 +35,10 @@ function resolvePendingDetail(tab) {
       (c.githubHandleArray || []).some(h => h.toLowerCase() === detail.toLowerCase())
     );
     if (c) openContribModal(c);
+  } else if (tab === 'coverage') {
+    const data = usingCache() ? cacheData()?.organizations?.data : S.coverage.filtered;
+    const org = (data || []).find(o => o.name?.toLowerCase() === detail.toLowerCase());
+    if (org) openCoverageModal(org);
   }
 }
 
@@ -61,9 +67,17 @@ document.addEventListener('click', e => {
   openSigModal(row.dataset.repo);
 });
 
+document.addEventListener('click', e => {
+  const row = e.target.closest('tr.coverage-row');
+  if (!row) return;
+  const idx  = parseInt(row.dataset.idx, 10);
+  const rows = document.getElementById('coverage-tbody')._rows;
+  if (rows && rows[idx]) openCoverageModal(rows[idx]);
+});
+
 // ── Keyboard shortcuts ────────────────────────────────────────────
 document.addEventListener('keydown', e => {
-  if (e.key === 'Escape') { closeOrgModal(); closeContribModal(); closeSigModal(); }
+  if (e.key === 'Escape') { closeOrgModal(); closeContribModal(); closeSigModal(); closeCoverageModal(); }
 });
 
 // ── Hash-based routing ─────────────────────────────────────────────
@@ -135,5 +149,6 @@ Object.assign(window, {
   setPreset, onFilterChange, toggleTheme, setTab,
   onContribSearch, clearContribSearch, changePage,
   onOrgSearch, clearOrgSearch, onSigsSearch, clearSigsSearch,
-  closeOrgModal, closeContribModal, closeSigModal, hideError,
+  onCoverageSearch, clearCoverageSearch,
+  closeOrgModal, closeContribModal, closeSigModal, closeCoverageModal, hideError,
 });

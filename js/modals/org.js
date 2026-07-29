@@ -155,7 +155,9 @@ function renderOrgRepos(repos, truncated, totalPRs, org, isPartial) {
 }
 
 export function closeOrgModal() {
-  el('org-modal-panel').classList.remove('open');
+  const panel = el('org-modal-panel');
+  if (!panel.classList.contains('open')) return; // no-op if not the currently open modal (e.g. Escape closing another one)
+  panel.classList.remove('open');
   document.body.style.overflow = '';
   setTimeout(() => el('org-modal').classList.add('hidden'), 200);
   setHash('organizations', timeframeHash(S), pageDetail(S.pages.organizations));

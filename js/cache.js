@@ -50,25 +50,28 @@ export async function loadSigsCache() {
   return _sigsLoadPromise;
 }
 
-export function reposFromSigsCache(normalizedHandles) {
+// Returns per-repo detail — name, url, total contributions, and the matching
+// contributor rows (sorted by contribution count) — for the given set of
+// lowercased GitHub handles. Returns null if SIGS_CACHE isn't loaded/available.
+export function sigDetailsForHandles(normalizedHandles) {
   if (!SIGS_CACHE?.periods) return null;
   const periodData = SIGS_CACHE.periods[S.preset];
   if (!periodData) return null;
 
-  const repoMap = new Map();
+  const repos = [];
   for (const [repoName, repoData] of Object.entries(periodData)) {
-    let repoTotal = 0;
-    for (const c of (repoData.contributors?.data ?? [])) {
-      if ((c.githubHandleArray || []).some(h => normalizedHandles.has(h.toLowerCase()))) {
-        repoTotal += c.contributions;
-      }
-    }
-    if (repoTotal > 0) {
-      const repoUrl = `https://github.com/open-telemetry/${repoName}`;
-      repoMap.set(repoUrl, { name: repoName, url: repoUrl, count: repoTotal });
-    }
+    const contributors = (repoData.contributors?.data ?? [])
+      .filter(c => (c.githubHandleArray || []).some(h => normalizedHandles.has(h.toLowerCase())))
+      .sort((a, b) => b.contributions - a.contributions);
+    if (!contributors.length) continue;
+    const count = contributors.reduce((s, c) => s + c.contributions, 0);
+    repos.push({ name: repoName, url: `https://github.com/open-telemetry/${repoName}`, count, contributors });
   }
-  return [...repoMap.values()].sort((a, b) => b.count - a.count);
+  return repos.sort((a, b) => b.count - a.count);
+}
+
+export function reposFromSigsCache(normalizedHandles) {
+  return sigDetailsForHandles(normalizedHandles)?.map(({ name, url, count }) => ({ name, url, count })) ?? null;
 }
 
 export function reposFromCache(handles) {

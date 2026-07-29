@@ -32,10 +32,37 @@ export function teamsFor(githubHandleArray) {
   return [...teams];
 }
 
-export function roleBadge(githubHandleArray, small = false) {
-  const role = roleFor(githubHandleArray);
+// Role scoped to a single repo/SIG, using the rolesByRepo breakdown built by
+// scripts/fetch-roles.mjs from each team's actual repo mapping. Returns null
+// (no badge) for data fetched before rolesByRepo existed, or if the person
+// holds no role in this specific repo — never falls back to the org-wide
+// best role, since that would tag people with roles earned on unrelated SIGs.
+export function roleForRepo(githubHandleArray, repoName) {
+  let best = null;
+  for (const h of (githubHandleArray || [])) {
+    const entry = ROLES[h.toLowerCase()]?.rolesByRepo?.[repoName];
+    if (entry && (!best || ROLE_RANK[entry.role] > ROLE_RANK[best])) best = entry.role;
+  }
+  return best;
+}
+
+export function teamsForRepo(githubHandleArray, repoName) {
+  const role = roleForRepo(githubHandleArray, repoName);
+  if (!role) return [];
+  const teams = new Set();
+  for (const h of (githubHandleArray || [])) {
+    const entry = ROLES[h.toLowerCase()]?.rolesByRepo?.[repoName];
+    if (entry && entry.role === role) for (const t of entry.teams) teams.add(t);
+  }
+  return [...teams];
+}
+
+// repoName: when given, scopes the badge to that repo/SIG (via roleForRepo)
+// instead of the person's single best role org-wide.
+export function roleBadge(githubHandleArray, small = false, repoName = null) {
+  const role = repoName ? roleForRepo(githubHandleArray, repoName) : roleFor(githubHandleArray);
   if (!role) return '';
-  const teams = teamsFor(githubHandleArray);
+  const teams = repoName ? teamsForRepo(githubHandleArray, repoName) : teamsFor(githubHandleArray);
   const px = small ? 'px-1.5 py-0.5' : 'px-2 py-0.5';
   const teamLinks = teams.map(t =>
     `<div><a href="https://github.com/orgs/open-telemetry/teams/${t}" target="_blank" onclick="event.stopPropagation()" class="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:text-blue-300">${t}</a></div>`

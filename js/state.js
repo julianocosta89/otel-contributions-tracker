@@ -17,9 +17,10 @@ export const S = {
   tab:    'overview',
   preset: '1y',
   filters: { startDate: '', endDate: '', platform: 'all' },
-  pages:  { contributors: 0, organizations: 0 },
+  pages:  { contributors: 0, organizations: 0, coverage: 0 },
   charts: {},
   // runtime search/filter state
-  contrib: { filtered: [], total: 0 },
-  orgs:    { filtered: [], total: 0 },
+  contrib:  { filtered: [], total: 0 },
+  orgs:     { filtered: [], total: 0 },
+  coverage: { filtered: [], total: 0 },
 };

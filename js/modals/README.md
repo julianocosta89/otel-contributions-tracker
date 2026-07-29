@@ -4,7 +4,9 @@ Right-panel slide-in modals. Each modal manages its own open/close animation and
 
 The slide-in transition is CSS-driven: the panel starts at `translateX(100%)` (off-screen right) and the `.open` class in `css/app.css` returns it to `translateX(0)`. Opening always does two nested `requestAnimationFrame` calls to ensure the browser has painted the visible state before the transition starts.
 
-Delegated click handlers (`tr.contrib-row`, `tr.org-row`, `tr.sig-row`) and the global Escape key listener live in `main.js`, which calls the relevant `open*Modal` function.
+Delegated click handlers (`tr.contrib-row`, `tr.org-row`, `tr.sig-row`, `tr.coverage-row`) and the global Escape key listener live in `main.js`, which calls the relevant `open*Modal` function.
+
+The Escape handler calls all four `close*Modal` functions unconditionally (it doesn't track which one is actually open), so every `close*Modal` starts with a guard — `if (!panel.classList.contains('open')) return;` — that no-ops for the three that weren't open. Without it, whichever modal's close function ran last would always win the `setHash()` call, silently overwriting the URL with the wrong tab regardless of which modal the user actually closed.
 
 ## Modules
 
@@ -32,3 +34,10 @@ Opens when a row in the SIGs tab is clicked. Shows the repository name (linked t
 All data comes from the already-loaded `SIGS_CACHE`; no additional network requests are made.
 
 Exports: `openSigModal`, `closeSigModal`
+
+### `coverage.js`
+Opens when a row in the Coverage tab is clicked. Shows the company logo/name, SIG and people counts for the selected period, and a collapsible (`<details>`) list of every SIG the company's contributors touched — each expands to the list of people (via `renderPersonRow(c, i, { sigStyle: true, showRole: true, repoName: repo.name })`), tagged with their maintainer/approver/triager role badge *scoped to that specific repo* (`roleForRepo()` in `roles.js`) — someone who's an approver on one SIG but has no role on another is only tagged where it's actually true. Wider than the other slide-in modals (`max-w-2xl`) to leave room for the role badges.
+
+Contributor-to-company matching reuses `contributorsForOrg()` (`attribution.js`); the per-SIG breakdown comes from `sigDetailsForHandles()` (`cache.js`), which requires `SIGS_CACHE` to already be loaded (done eagerly by the Coverage tab before this modal can open).
+
+Exports: `openCoverageModal`, `closeCoverageModal`

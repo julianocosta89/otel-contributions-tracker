@@ -12,8 +12,28 @@
  * Hierarchy (highest wins per contributor):
  *   maintainer (4) > approver (3) > code-owner (2) > triager (1)
  *
+ * Each role team is also mapped to the repos it actually *owns* (via the
+ * team's own /repos endpoint) so a contributor's role can be scoped to a
+ * specific repo/SIG, not just their single best role org-wide.
+ *
+ * Ownership can't be determined by a single fixed permission level (e.g.
+ * "maintain or admin") — GitHub's permission ceiling differs per role tier
+ * (a *-maintainers team's own repo is often "maintain", but a *-approvers
+ * team's own repo is normally just "write", and a *-contributors team's own
+ * repo can be as low as "read"). Instead, for each repo we compute the max
+ * permission level held by ANY team of a given role tier, and only count a
+ * team as owning that repo if its own permission there matches that tier's
+ * ceiling. This is what distinguishes e.g. rust-approvers' real ownership of
+ * opentelemetry-rust (where they hold approver-tier's max permission there)
+ * from their merely-incidental "triage" access to the shared opentelemetry.io
+ * docs site (where docs-approvers holds the actual approver-tier ceiling).
+ *
  * Output: data/roles.json
- *   { fetchedAt, roles: { githubHandle: { role: "maintainer" | "approver" | "code-owner" | "triager", teams: string[] } } }
+ *   { fetchedAt, roles: { githubHandle: {
+ *       role: "maintainer" | "approver" | "code-owner" | "triager",  // best role org-wide
+ *       teams: string[],                                              // teams that earned that best role
+ *       rolesByRepo: { repoName: { role, teams: string[] } }          // best role scoped to each repo
+ *   } } }
  *
  * Usage:
  *   node scripts/fetch-roles.mjs
@@ -53,6 +73,19 @@ function roleForSlug(slug) {
     if (slug.endsWith(suffix)) return role;
   }
   return null;
+}
+
+const PERM_RANK = { none: 0, read: 1, triage: 2, write: 3, maintain: 4, admin: 5 };
+
+function permRankOf(repo) {
+  if (repo.role_name && repo.role_name in PERM_RANK) return PERM_RANK[repo.role_name];
+  const p = repo.permissions || {};
+  if (p.admin) return PERM_RANK.admin;
+  if (p.maintain) return PERM_RANK.maintain;
+  if (p.push) return PERM_RANK.write;
+  if (p.triage) return PERM_RANK.triage;
+  if (p.pull) return PERM_RANK.read;
+  return PERM_RANK.none;
 }
 
 const sleep = ms => new Promise(r => setTimeout(r, ms));
@@ -95,18 +128,59 @@ async function main() {
 
   console.log(`   ${roleTeams.length} role teams to process\n`);
 
-  // ── 3. Fetch members per team, apply hierarchy ─────────────────────
-  const roles = {}; // handle (lowercase) → { role, teams: string[] }
+  // ── 3. Fetch each role team's repos (with permission level) ────────
+  console.log('── Fetching repos per team…');
+  const teamRepos = new Map(); // slug → [{ name, permRank }]
 
-  function applyRole(handle, role, slug) {
-    const h    = handle.toLowerCase();
-    const curr = roles[h];
-    if (!curr) {
-      roles[h] = { role, teams: [slug] };
-    } else if (ROLE_RANK[role] > ROLE_RANK[curr.role]) {
-      roles[h] = { role, teams: [slug] };
-    } else if (ROLE_RANK[role] === ROLE_RANK[curr.role]) {
-      curr.teams.push(slug);
+  for (let i = 0; i < roleTeams.length; i++) {
+    const { slug } = roleTeams[i];
+    process.stdout.write(`\r  [${(i + 1).toString().padStart(3)}/${roleTeams.length}] ${slug.padEnd(60)}`);
+    try {
+      const repos = await ghGetAll(`/orgs/${ORG}/teams/${slug}/repos`);
+      teamRepos.set(slug, repos.map(r => ({ name: r.name, permRank: permRankOf(r) })));
+      await sleep(120);
+    } catch (e) {
+      process.stdout.write(` ✗ ${e.message}\n`);
+      teamRepos.set(slug, []);
+    }
+  }
+  process.stdout.write('\n');
+
+  // ── 4. Compute, per repo and role tier, the max permission any team of ──
+  //      that tier holds there — the signal for "this team truly owns it"
+  const repoTierMax = {}; // repo → role → maxPermRank
+  for (const { slug, role } of roleTeams) {
+    for (const { name, permRank } of teamRepos.get(slug)) {
+      repoTierMax[name] ??= {};
+      if (!(role in repoTierMax[name]) || permRank > repoTierMax[name][role]) {
+        repoTierMax[name][role] = permRank;
+      }
+    }
+  }
+
+  // ── 5. Fetch members per team, apply hierarchy scoped to owned repos ────
+  console.log('── Fetching members per team…');
+  const roles = {}; // handle (lowercase) → { role, teams: string[], rolesByRepo: { repo: { role, teams } } }
+
+  function applyRole(handle, role, slug, repoNames) {
+    const h = handle.toLowerCase();
+    if (!roles[h]) {
+      roles[h] = { role, teams: [slug], rolesByRepo: {} };
+    } else if (ROLE_RANK[role] > ROLE_RANK[roles[h].role]) {
+      roles[h].role  = role;
+      roles[h].teams = [slug];
+    } else if (ROLE_RANK[role] === ROLE_RANK[roles[h].role]) {
+      roles[h].teams.push(slug);
+    }
+
+    const byRepo = roles[h].rolesByRepo;
+    for (const repo of repoNames) {
+      const existing = byRepo[repo];
+      if (!existing || ROLE_RANK[role] > ROLE_RANK[existing.role]) {
+        byRepo[repo] = { role, teams: [slug] };
+      } else if (ROLE_RANK[role] === ROLE_RANK[existing.role] && !existing.teams.includes(slug)) {
+        existing.teams.push(slug);
+      }
     }
   }
 
@@ -116,7 +190,10 @@ async function main() {
 
     try {
       const members = await ghGetAll(`/orgs/${ORG}/teams/${slug}/members`);
-      for (const m of members) applyRole(m.login, role, slug);
+      const repoNames = teamRepos.get(slug)
+        .filter(({ name, permRank }) => permRank === repoTierMax[name][role])
+        .map(r => r.name);
+      for (const m of members) applyRole(m.login, role, slug, repoNames);
       await sleep(120);
     } catch (e) {
       process.stdout.write(` ✗ ${e.message}\n`);
@@ -125,7 +202,7 @@ async function main() {
 
   process.stdout.write('\n');
 
-  // ── 4. Summary ─────────────────────────────────────────────────────
+  // ── 6. Summary ─────────────────────────────────────────────────────
   const counts = Object.values(roles).reduce((acc, { role }) => {
     acc[role] = (acc[role] || 0) + 1;
     return acc;
@@ -135,7 +212,7 @@ async function main() {
     console.log(`  ${role.padEnd(12)} ${count}`);
   }
 
-  // ── 5. Write output ────────────────────────────────────────────────
+  // ── 7. Write output ────────────────────────────────────────────────
   const out  = { fetchedAt: new Date().toISOString(), roles };
   const json = JSON.stringify(out);
   writeFileSync(OUT_PATH, json);

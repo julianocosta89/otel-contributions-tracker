@@ -11,6 +11,7 @@ function deltaBadge(current, previous) {
 }
 import { affiliationFor } from './affiliations.js';
 import { resolveOrgLogo } from './companies.js';
+import { roleBadge } from './roles.js';
 
 export const SVG_PERSON   = `<svg viewBox="0 0 24 24" fill="none" class="w-full h-full"><rect width="24" height="24" rx="12" fill="#374151"/><circle cx="12" cy="9" r="3.5" fill="#9CA3AF"/><path fill-rule="evenodd" clip-rule="evenodd" d="M5 20c0-3.866 3.134-7 7-7s7 3.134 7 7H5z" fill="#9CA3AF"/></svg>`;
 export const SVG_BUILDING = `<svg viewBox="0 0 24 24" fill="none" class="w-full h-full"><rect width="24" height="24" rx="4" fill="#D1D5DB"/><rect x="7" y="3" width="10" height="16" fill="#4B5563"/><rect x="8.5" y="5.5" width="2.5" height="2" rx=".4" fill="#9CA3AF"/><rect x="13" y="5.5" width="2.5" height="2" rx=".4" fill="#9CA3AF"/><rect x="8.5" y="9" width="2.5" height="2" rx=".4" fill="#9CA3AF"/><rect x="13" y="9" width="2.5" height="2" rx=".4" fill="#9CA3AF"/><rect x="8.5" y="12.5" width="2.5" height="2" rx=".4" fill="#9CA3AF"/><rect x="13" y="12.5" width="2.5" height="2" rx=".4" fill="#9CA3AF"/><rect x="11" y="15.5" width="2" height="3.5" rx=".4" fill="#9CA3AF"/></svg>`;
@@ -49,8 +50,10 @@ export function renderReposList({ repos, unit, barColor, listElId, note }) {
   return true;
 }
 
-// opts: { showAffiliation, orgTotal, sigStyle }
+// opts: { showAffiliation, orgTotal, sigStyle, showRole, repoName }
 // sigStyle: use wider avatar, hover wrapper, affiliation div, and c.percentage instead of orgTotal ratio
+// showRole: append the maintainer/approver/triager role badge next to the handle (sigStyle only)
+// repoName: scopes the role badge to this repo/SIG instead of the person's org-wide best role
 export function renderPersonRow(c, i, opts = {}) {
   const handle = (c.githubHandleArray || [])[0];
   if (opts.sigStyle) {
@@ -65,6 +68,7 @@ export function renderPersonRow(c, i, opts = {}) {
               <div class="flex items-center gap-1.5 min-w-0">
                 <span class="text-xs font-medium text-slate-800 dark:text-gray-200 truncate">${c.name}</span>
                 ${handle ? `<a href="https://github.com/${handle}" target="_blank" class="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:text-blue-300 text-xs shrink-0" onclick="event.stopPropagation()">@${handle}</a>` : ''}
+                ${opts.showRole ? roleBadge(c.githubHandleArray, true, opts.repoName) : ''}
               </div>
               ${aff ? `<div class="text-xs text-slate-400 dark:text-gray-500 truncate">${aff.company}</div>` : ''}
             </div>

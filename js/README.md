@@ -73,9 +73,10 @@ Everything related to matching contributor affiliations to leaderboard org names
 - `loadAffiliations()` — fetches `data/affiliations.json`, `data/github-companies.json`, and `data/roles.json` in parallel at startup
 
 ### `roles.js`
-- `roleFor(handles)` — returns the highest role (`maintainer > approver > code-owner > triager`) for a contributor
-- `teamsFor(handles)` — returns the GitHub team slugs associated with that role
-- `roleBadge(handles, small)` — renders a coloured badge HTML string with an optional tooltip listing team links
+- `roleFor(handles)` — returns the highest role (`maintainer > approver > code-owner > triager`) a contributor holds anywhere in the org
+- `teamsFor(handles)` — returns the GitHub team slugs associated with that org-wide best role
+- `roleForRepo(handles, repoName)` / `teamsForRepo(handles, repoName)` — same, but scoped to a single repo/SIG via each team's `rolesByRepo` mapping (built by `scripts/fetch-roles.mjs` from GitHub's own team→repo permissions). Returns `null`/`[]` if the contributor holds no role in that specific repo — never falls back to the org-wide role, since that would mislabel someone with a role earned on an unrelated SIG
+- `roleBadge(handles, small, repoName?)` — renders a coloured badge HTML string with an optional tooltip listing team links; pass `repoName` to scope the badge to that repo instead of the org-wide best role
 - `ROLE_STYLE` — Tailwind class strings per role, keyed by role name
 
 ### `cache.js`
@@ -84,6 +85,7 @@ Everything related to matching contributor affiliations to leaderboard org names
 - `loadCache()` — fetches `data/cache.json` at startup; populates the `cached <date>` header tag; silent failure if unavailable
 - `loadSigsCache()` — singleton fetch of `data/sigs.json`; stores result in `SIGS_CACHE`
 - `reposFromCache(handles)` / `orgReposFromCache(contributors)` — look up repository contribution counts from the already-loaded SIG cache for a contributor or org's full contributor list
+- `sigDetailsForHandles(normalizedHandles)` — like the above but returns full per-repo contributor rows (not just counts); `reposFromSigsCache()` is a thin wrapper that strips it down to `{ name, url, count }`. Powers the Coverage tab/modal's per-SIG people breakdown
 
 ### `api.js`
 - `liveApi(path, extra)` — wraps `fetch` against `API_BASE` with the active query string
@@ -93,7 +95,7 @@ Everything related to matching contributor affiliations to leaderboard org names
 
 ### `render.js`
 Shared HTML builder functions used by both tabs and modals.
-- `renderPersonRow(c, i, opts)` — a contributor row (avatar, name, handle, affiliation, contribution count). `opts.sigStyle` renders a wider hover-able variant used in the SIG modal and concentration lists; `opts.orgModal` renders the compact variant used inside the org modal. `opts.activeMode` reserves a left-border accent slot (used by the org modal's active-contributor treatment): `opts.atLimit` renders it yellow (contributor sits exactly on the threshold), `opts.active` renders it green, otherwise it's transparent
+- `renderPersonRow(c, i, opts)` — a contributor row (avatar, name, handle, affiliation, contribution count). `opts.sigStyle` renders a wider hover-able variant used in the SIG modal, Coverage modal, and concentration lists; `opts.orgModal` renders the compact variant used inside the org modal. `opts.activeMode` reserves a left-border accent slot (used by the org modal's active-contributor treatment): `opts.atLimit` renders it yellow (contributor sits exactly on the threshold), `opts.active` renders it green, otherwise it's transparent. `opts.showRole` (sigStyle only) appends the maintainer/approver/triager role badge next to the handle — used by the Coverage modal
 - `renderOrgRow(o, i, opts)` — an org row (logo, name, count). `opts.sigStyle` renders the hover variant used in the SIG modal and concentration lists
 - `renderReposList({ repos, unit, barColor, listElId, note })` — renders a list of repository links with a contribution/PR count label
 - `renderActiveDivider(threshold)` — a thin-line divider with a caption ("Less than N contributions · inactive (<2/mo)") marking the boundary between active and occasional contributors in a contributions-sorted list

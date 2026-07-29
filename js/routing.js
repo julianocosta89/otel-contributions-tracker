@@ -1,4 +1,4 @@
-export const VALID_TABS    = ['overview', 'contributors', 'organizations', 'concentration', 'geography', 'sigs'];
+export const VALID_TABS    = ['overview', 'contributors', 'organizations', 'concentration', 'geography', 'sigs', 'coverage'];
 export const VALID_PRESETS = ['30d', '60d', '90d', '6m', '1y', '2y', '3y', 'all'];
 
 // Returns true for valid presets, date ranges, AND things that look like
@@ -67,5 +67,6 @@ export function applyPageDetail(tab, detail, S) {
   if (isNaN(n) || n < 1) return false;
   if (tab === 'contributors')  S.pages.contributors  = n - 1;
   if (tab === 'organizations') S.pages.organizations = n - 1;
+  if (tab === 'coverage')      S.pages.coverage      = n - 1;
   return true;
 }

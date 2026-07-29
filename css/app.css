@@ -63,3 +63,6 @@ html.dark #error-toast { background-color: #111827; }
 .sig-row { cursor: pointer; }
 #sig-modal-panel { will-change: transform; }
 #sig-modal-panel.open { transform: translateX(0); }
+.coverage-row { cursor: pointer; }
+#coverage-modal-panel { will-change: transform; }
+#coverage-modal-panel.open { transform: translateX(0); }

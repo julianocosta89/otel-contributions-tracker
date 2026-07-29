@@ -77,6 +77,7 @@
     <button class="tab-btn         px-4 py-3 text-sm font-medium whitespace-nowrap" onclick="setTab('contributors')">Contributors</button>
     <button class="tab-btn         px-4 py-3 text-sm font-medium whitespace-nowrap" onclick="setTab('organizations')">Organizations</button>
     <button class="tab-btn         px-4 py-3 text-sm font-medium whitespace-nowrap" onclick="setTab('sigs')">SIGs</button>
+    <button class="tab-btn         px-4 py-3 text-sm font-medium whitespace-nowrap" onclick="setTab('coverage')">Coverage</button>
     <button class="tab-btn         px-4 py-3 text-sm font-medium whitespace-nowrap" onclick="setTab('concentration')">Concentration</button>
     <button class="tab-btn         px-4 py-3 text-sm font-medium whitespace-nowrap" onclick="setTab('geography')">Geography</button>
   </div>
@@ -357,6 +358,55 @@
     </div>
   </div>
 
+  <!-- ── COVERAGE TAB ──────────────────────────────────────────────── -->
+  <div id="tab-coverage" class="tab-panel hidden">
+    <div class="bg-white dark:bg-gray-900 rounded-xl border border-slate-200 dark:border-gray-800 flex flex-col">
+      <div class="flex items-center justify-between p-4 border-b border-slate-200 dark:border-gray-800 flex-wrap gap-2">
+        <div>
+          <h2 class="text-sm font-semibold">Company Coverage</h2>
+          <p class="text-xs text-slate-400 dark:text-gray-500 mt-0.5">SIGs / repos each company's contributors are active in, for the selected period</p>
+        </div>
+        <div class="flex items-center gap-2">
+          <div class="relative">
+            <input type="text" id="coverage-search" placeholder="Search company…"
+              class="bg-slate-200 dark:bg-gray-800 border border-slate-300 dark:border-gray-700 rounded px-3 py-1.5 text-xs text-slate-700 dark:text-gray-300 focus:outline-none focus:border-blue-500 w-52 pr-7"
+              oninput="onCoverageSearch()">
+            <button id="coverage-search-clear" onclick="clearCoverageSearch()"
+              class="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 dark:text-gray-500 hover:text-slate-700 dark:text-gray-300 hidden text-sm leading-none">✕</button>
+          </div>
+          <span id="coverage-total-label" class="text-xs text-slate-400 dark:text-gray-500 whitespace-nowrap"></span>
+        </div>
+      </div>
+      <div id="coverage-loading" class="hidden flex justify-center py-14"><span class="spinner"></span></div>
+      <div id="coverage-empty" class="hidden text-center py-14 text-slate-400 dark:text-gray-500 text-sm leading-relaxed">
+        Coverage data not available.<br>
+        <span class="text-xs text-slate-300 dark:text-gray-600">Requires <code class="bg-slate-200 dark:bg-gray-800 px-1.5 py-0.5 rounded text-slate-500 dark:text-gray-400">data/cache.json</code> and <code class="bg-slate-200 dark:bg-gray-800 px-1.5 py-0.5 rounded text-slate-500 dark:text-gray-400">data/sigs.json</code> — run <code class="bg-slate-200 dark:bg-gray-800 px-1.5 py-0.5 rounded text-slate-500 dark:text-gray-400">make fetch-data</code>.</span>
+      </div>
+      <div id="coverage-table-wrap" class="hidden overflow-x-auto flex-1">
+        <table class="w-full">
+          <thead>
+            <tr class="border-b border-slate-200 dark:border-gray-800 text-xs text-slate-400 dark:text-gray-500 uppercase tracking-wide">
+              <th class="text-left px-4 py-3 w-8">#</th>
+              <th class="text-left px-4 py-3">Company</th>
+              <th class="text-right px-4 py-3">SIGs</th>
+              <th class="text-right px-4 py-3">Maintainers</th>
+              <th class="text-right px-4 py-3">Approvers</th>
+              <th class="text-right px-4 py-3">Contributions</th>
+            </tr>
+          </thead>
+          <tbody id="coverage-tbody"></tbody>
+        </table>
+      </div>
+      <div class="flex items-center justify-between px-4 py-3 border-t border-slate-200 dark:border-gray-800 mt-auto">
+        <button id="coverage-prev" onclick="changePage('coverage',-1)"
+          class="px-3 py-1.5 text-xs bg-slate-200 dark:bg-gray-800 rounded hover:bg-slate-300 dark:hover:bg-gray-700 disabled:opacity-30 disabled:cursor-not-allowed transition-colors">← Prev</button>
+        <span id="coverage-page-info" class="text-xs text-slate-400 dark:text-gray-500"></span>
+        <button id="coverage-next" onclick="changePage('coverage', 1)"
+          class="px-3 py-1.5 text-xs bg-slate-200 dark:bg-gray-800 rounded hover:bg-slate-300 dark:hover:bg-gray-700 disabled:opacity-30 disabled:cursor-not-allowed transition-colors">Next →</button>
+      </div>
+    </div>
+  </div>
+
 </main>
 
 <!-- ================================================================ ORGANIZATION MODAL -->
@@ -566,6 +616,49 @@
     <div class="px-4 pt-4 pb-6">
       <h3 class="text-sm font-semibold mb-3">Organizations</h3>
       <div id="sig-modal-orgs-list" class="space-y-0.5"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ================================================================ COVERAGE MODAL -->
+<div id="coverage-modal" class="hidden fixed inset-0 z-50 flex items-start justify-end">
+  <div id="coverage-modal-backdrop" class="absolute inset-0 bg-black/60 backdrop-blur-sm" onclick="closeCoverageModal()"></div>
+  <div id="coverage-modal-panel"
+    class="relative w-full max-w-2xl h-full bg-white dark:bg-gray-900 border-l border-slate-200 dark:border-gray-800 shadow-2xl overflow-y-auto
+           translate-x-full transition-transform duration-200 ease-out">
+
+    <!-- Header -->
+    <div class="sticky top-0 bg-white/95 dark:bg-gray-900/95 backdrop-blur border-b border-slate-200 dark:border-gray-800 px-4 py-3 flex items-center gap-3">
+      <img id="coverage-modal-logo" src="" alt="" class="w-8 h-8 rounded object-contain shrink-0" onerror="this.style.display='none'">
+      <span id="coverage-modal-logo-ph" class="w-8 h-8 shrink-0 hidden inline-block"><svg viewBox="0 0 24 24" fill="none" class="w-full h-full"><rect width="24" height="24" rx="4" fill="#D1D5DB"/><rect x="7" y="3" width="10" height="16" fill="#4B5563"/><rect x="8.5" y="5.5" width="2.5" height="2" rx=".4" fill="#9CA3AF"/><rect x="13" y="5.5" width="2.5" height="2" rx=".4" fill="#9CA3AF"/><rect x="8.5" y="9" width="2.5" height="2" rx=".4" fill="#9CA3AF"/><rect x="13" y="9" width="2.5" height="2" rx=".4" fill="#9CA3AF"/><rect x="8.5" y="12.5" width="2.5" height="2" rx=".4" fill="#9CA3AF"/><rect x="13" y="12.5" width="2.5" height="2" rx=".4" fill="#9CA3AF"/><rect x="11" y="15.5" width="2" height="3.5" rx=".4" fill="#9CA3AF"/></svg></span>
+      <div class="flex-1 min-w-0">
+        <div id="coverage-modal-name" class="font-semibold text-sm leading-tight truncate"></div>
+        <div class="text-xs text-slate-400 dark:text-gray-500 mt-0.5">Coverage across SIGs</div>
+      </div>
+      <button onclick="closeCoverageModal()" title="Close"
+        class="shrink-0 w-7 h-7 flex items-center justify-center rounded-lg text-slate-400 dark:text-gray-500 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-gray-800 transition-colors text-lg leading-none">×</button>
+    </div>
+
+    <!-- Stats row -->
+    <div class="grid grid-cols-3 gap-2 px-4 py-3 border-b border-slate-200 dark:border-gray-800">
+      <div class="bg-slate-100/60 dark:bg-gray-800/50 rounded-lg p-2.5">
+        <div class="text-xs text-slate-400 dark:text-gray-500 mb-1">SIGs</div>
+        <div id="coverage-modal-sig-count" class="text-lg font-bold leading-none"></div>
+      </div>
+      <div class="bg-slate-100/60 dark:bg-gray-800/50 rounded-lg p-2.5">
+        <div class="text-xs text-slate-400 dark:text-gray-500 mb-1">People</div>
+        <div id="coverage-modal-people-count" class="text-lg font-bold leading-none"></div>
+      </div>
+      <div class="bg-slate-100/60 dark:bg-gray-800/50 rounded-lg p-2.5">
+        <div class="text-xs text-slate-400 dark:text-gray-500 mb-1">Period</div>
+        <div id="coverage-modal-period" class="text-xs font-medium leading-snug mt-0.5 text-slate-700 dark:text-gray-300"></div>
+      </div>
+    </div>
+
+    <!-- SIG breakdown -->
+    <div class="px-4 pt-4 pb-6">
+      <h3 class="text-sm font-semibold mb-3">People per SIG</h3>
+      <div id="coverage-modal-list" class="space-y-1.5"></div>
     </div>
   </div>
 </div>

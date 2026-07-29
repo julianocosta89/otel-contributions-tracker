@@ -45,3 +45,14 @@ test('isSuspectedOutage: true when every repo 404s', () => {
 test('isSuspectedOutage: false when there are no repos to check', () => {
   assert.equal(isSuspectedOutage(0, 0), false);
 });
+
+// isSuspectedOutage is reused at the end of main() to decide whether hard fails
+// (non-404 errors with no cached fallback) are an isolated always-empty repo
+// blip or a genuine outage — same ratio, different counters.
+test('isSuspectedOutage: false for a single hard fail out of many repo-period attempts (isolated always-empty repo)', () => {
+  assert.equal(isSuspectedOutage(1, 81 * 5), false);
+});
+
+test('isSuspectedOutage: true when most repo-period attempts hard fail', () => {
+  assert.equal(isSuspectedOutage(300, 81 * 5), true);
+});

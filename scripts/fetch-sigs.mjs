@@ -167,6 +167,7 @@ async function main() {
     : { repos: null, periods: {} };
   sources.periods ??= {};
   let   totalHardFails = 0; // non-404 errors with no cached fallback
+  let   totalAttempted = 0; // repo-period fetches actually run (excludes skipped periods)
 
   console.log('── Fetching non-archived repo list from GitHub…');
   const repos = await fetchNonArchivedRepos();
@@ -185,6 +186,7 @@ async function main() {
 
     console.log(`\n── ${key}  (${startDate} → ${endDate})`);
     periods[key] = {};
+    totalAttempted += repos.length;
 
     let succeeded = 0, errored = 0;
     const notFoundRepos = [];
@@ -258,8 +260,16 @@ async function main() {
   }
 
   if (totalHardFails > 0) {
-    console.error(`\n✗ ${totalHardFails} repo(s) failed with no cached fallback — leaving cache unchanged`);
-    process.exit(1);
+    // A handful of hard fails are almost always a repo with no real LFX history
+    // (so it has no non-empty cache to fall back to) hitting a transient blip —
+    // not worth throwing away every other repo's freshly-fetched data over. Only
+    // bail out (and leave the cache untouched) when the ratio looks like a genuine
+    // widespread LF Insights outage rather than an isolated always-empty repo.
+    if (isSuspectedOutage(totalHardFails, totalAttempted)) {
+      console.error(`\n✗ ${totalHardFails}/${totalAttempted} repo-period fetches failed with no cached fallback — suspected LF Insights outage, leaving cache unchanged`);
+      process.exit(1);
+    }
+    console.warn(`\n⚠ ${totalHardFails}/${totalAttempted} repo-period fetch(es) failed with no cached fallback — saving cache with empty placeholder(s) for those`);
   }
 
   const cache  = { fetchedAt: runStartedAt, sources, repos, periods };

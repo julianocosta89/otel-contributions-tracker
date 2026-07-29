@@ -166,7 +166,7 @@ async function main() {
     ? JSON.parse(JSON.stringify(existing.sources))
     : { repos: null, periods: {} };
   sources.periods ??= {};
-  let   totalHardFails = 0; // non-404 errors with no cached fallback
+  let   totalHardFails = 0; // non-404 errors with no cached fallback, across all periods (informational only)
 
   console.log('── Fetching non-archived repo list from GitHub…');
   const repos = await fetchNonArchivedRepos();
@@ -187,6 +187,7 @@ async function main() {
     periods[key] = {};
 
     let succeeded = 0, errored = 0;
+    let periodHardFails = 0; // repos in THIS period with no cached fallback — checked against this period's own repo count, not diluted by other periods
     const notFoundRepos = [];
     const fallbackRepos = [];
     const errors = {};
@@ -212,7 +213,7 @@ async function main() {
             fallbackRepos.push(repo);
             errors[repo] = e.message;
           } else {
-            totalHardFails++;
+            periodHardFails++;
           }
           errored++;
         }
@@ -233,7 +234,7 @@ async function main() {
           fallbackRepos.push(repo);
           errors[repo] = 'HTTP 404 — suspected LF Insights outage (most repos 404\'d this run)';
         } else {
-          totalHardFails++;
+          periodHardFails++;
         }
         errored++;
       } else {
@@ -245,6 +246,22 @@ async function main() {
     if (suspectedOutage) {
       console.log(`  ⚠ ${notFoundRepos.length}/${repos.length} repos 404'd — suspected LF Insights outage, falling back to cache`);
     }
+
+    // A handful of hard fails in a period are almost always a repo with no real
+    // LFX history (so it has no non-empty cache to fall back to) hitting a
+    // transient blip — not worth throwing away every other period's freshly-
+    // fetched data over. But if MOST of this period's repos hard-failed, that's
+    // a genuine widespread LF Insights outage: bail out immediately, before
+    // writing anything, so the whole cache file is left exactly as it was.
+    // Checked per period (against that period's own repo count) rather than
+    // against a run-wide total — otherwise a full-period outage could hide
+    // below the threshold once diluted across several healthy periods.
+    if (isSuspectedOutage(periodHardFails, repos.length)) {
+      console.error(`\n✗ ${periodHardFails}/${repos.length} repos in ${key} failed with no cached fallback — suspected LF Insights outage, leaving cache unchanged`);
+      process.exit(1);
+    }
+    totalHardFails += periodHardFails;
+
     console.log(`  ✓ ${succeeded} fetched, ${suspectedOutage ? 0 : notFoundRepos.length} empty, ${errored} errors`);
     sources.periods[key] = fallbackRepos.length
       ? {
@@ -258,8 +275,7 @@ async function main() {
   }
 
   if (totalHardFails > 0) {
-    console.error(`\n✗ ${totalHardFails} repo(s) failed with no cached fallback — leaving cache unchanged`);
-    process.exit(1);
+    console.warn(`\n⚠ ${totalHardFails} repo-period fetch(es) failed with no cached fallback — saving cache with empty placeholder(s) for those`);
   }
 
   const cache  = { fetchedAt: runStartedAt, sources, repos, periods };

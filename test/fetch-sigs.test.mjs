@@ -45,3 +45,18 @@ test('isSuspectedOutage: true when every repo 404s', () => {
 test('isSuspectedOutage: false when there are no repos to check', () => {
   assert.equal(isSuspectedOutage(0, 0), false);
 });
+
+// isSuspectedOutage is also used per-period in main() to decide whether hard
+// fails (non-404 errors with no cached fallback) are an isolated always-empty
+// repo blip or a genuine outage for that period — checked against that
+// period's own repo count, not a run-wide total across all periods.
+test('isSuspectedOutage: false for a single hard fail in one period (isolated always-empty repo)', () => {
+  assert.equal(isSuspectedOutage(1, 81), false);
+});
+
+test('isSuspectedOutage: true when every repo in a single period hard-fails', () => {
+  // This must trip even though, diluted across e.g. 5 periods (81/405 = 20%),
+  // it would look isolated — the per-period check is what catches a genuine
+  // full-period outage that a run-wide ratio would hide.
+  assert.equal(isSuspectedOutage(81, 81), true);
+});

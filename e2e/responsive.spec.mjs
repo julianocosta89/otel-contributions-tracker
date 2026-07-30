@@ -43,7 +43,8 @@ test('an open modal fits within the viewport width', async ({ page }) => {
 
   const viewportWidth = page.viewportSize().width;
   const panelBox = await page.locator('#org-modal-panel').boundingBox();
-  expect(panelBox.width).toBeLessThanOrEqual(viewportWidth);
+  // +1px tolerance for sub-pixel layout rounding (e.g. 375.00003 vs 375).
+  expect(panelBox.width).toBeLessThanOrEqual(viewportWidth + 1);
 
   await expect(page.locator('#org-modal button[aria-label="Close organization details"]')).toBeVisible();
 });

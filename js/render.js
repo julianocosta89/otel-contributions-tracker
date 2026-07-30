@@ -62,7 +62,7 @@ export function renderPersonRow(c, i, opts = {}) {
           <div class="flex items-center gap-2 px-2 py-1.5 rounded hover:bg-slate-200/50 dark:hover:bg-gray-800/40 transition-colors">
             <span class="text-slate-300 dark:text-gray-600 text-xs w-5 shrink-0 text-right">${i + 1}</span>
             ${c.avatar
-              ? `<img src="${c.avatar}" class="w-6 h-6 rounded-full shrink-0" onerror="this.style.display='none'">`
+              ? `<img src="${c.avatar}" alt="" class="w-6 h-6 rounded-full shrink-0" onerror="this.style.display='none'">`
               : `<span class="w-6 h-6 shrink-0 inline-block">${SVG_PERSON}</span>`}
             <div class="flex-1 min-w-0">
               <div class="flex items-center gap-1.5 min-w-0">
@@ -93,7 +93,7 @@ export function renderPersonRow(c, i, opts = {}) {
   return `
         <div class="flex items-center gap-2 ${wrapperPy}${activeBorder}">
           <span class="text-slate-300 dark:text-gray-600 text-xs w-5 text-right shrink-0">${i + 1}</span>
-          ${c.avatar ? `<img src="${c.avatar}" class="w-5 h-5 rounded-full shrink-0"${avatarOnerror}>` : personPlaceholder('w-5 h-5')}
+          ${c.avatar ? `<img src="${c.avatar}" alt="" class="w-5 h-5 rounded-full shrink-0"${avatarOnerror}>` : personPlaceholder('w-5 h-5')}
           <span class="text-xs flex-1 truncate">${c.name}</span>
           ${handle ? `<a href="https://github.com/${handle}" target="_blank" class="text-blue-600 dark:text-blue-500 text-xs shrink-0 hover:text-blue-700 dark:text-blue-300"${linkOnClick}>@${handle}</a>` : ''}
           <span class="text-xs text-slate-400 dark:text-gray-500 font-mono shrink-0">${num(c.contributions)}</span>
@@ -122,7 +122,7 @@ export function renderOrgRow(o, i, opts = {}) {
           <div class="flex items-center gap-2 px-2 py-1.5 rounded hover:bg-slate-200/50 dark:hover:bg-gray-800/40 transition-colors">
             <span class="text-slate-300 dark:text-gray-600 text-xs w-5 shrink-0 text-right">${i + 1}</span>
             ${logo
-              ? `<img src="${logo}" class="w-6 h-6 rounded object-contain shrink-0" onerror="this.style.display='none'">`
+              ? `<img src="${logo}" alt="" class="w-6 h-6 rounded object-contain shrink-0" onerror="this.style.display='none'">`
               : `<span class="w-6 h-6 shrink-0 inline-block">${SVG_BUILDING}</span>`}
             <div class="flex-1 min-w-0">
               <div class="text-xs font-medium text-slate-800 dark:text-gray-200 truncate">${o.name}</div>
@@ -136,7 +136,7 @@ export function renderOrgRow(o, i, opts = {}) {
   return `
       <div class="flex items-center gap-2 py-0.5">
         <span class="text-slate-300 dark:text-gray-600 text-xs w-5 text-right shrink-0">${i + 1}</span>
-        ${logo ? `<img src="${logo}" class="w-5 h-5 rounded shrink-0" onerror="this.style.display='none'">` : orgPlaceholder('w-5 h-5')}
+        ${logo ? `<img src="${logo}" alt="" class="w-5 h-5 rounded shrink-0" onerror="this.style.display='none'">` : orgPlaceholder('w-5 h-5')}
         <span class="text-xs flex-1 truncate">${o.name}</span>
         <span class="text-xs text-slate-400 dark:text-gray-500 font-mono shrink-0">${num(o.contributions)}</span>
       </div>`;

@@ -41,7 +41,7 @@
       </div>
 
       <!-- Platform -->
-      <select id="platform" onchange="onFilterChange()"
+      <select id="platform" onchange="onFilterChange()" aria-label="Platform"
         class="bg-slate-200 dark:bg-gray-800 border border-slate-300 dark:border-gray-700 rounded px-2 py-1 text-xs text-slate-700 dark:text-gray-300 focus:outline-none focus:border-blue-500">
         <option value="all">All platforms</option>
         <option value="github">GitHub</option>
@@ -53,7 +53,7 @@
       </select>
 
       <!-- Theme toggle -->
-      <button onclick="toggleTheme()" title="Toggle light/dark mode"
+      <button onclick="toggleTheme()" title="Toggle light/dark mode" aria-label="Toggle light/dark mode"
         class="ml-auto p-1.5 rounded-lg bg-slate-200 dark:bg-gray-800 border border-slate-300 dark:border-gray-700 text-slate-500 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white transition-colors shrink-0">
         <svg id="icon-moon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
@@ -72,14 +72,14 @@
 
 <!-- ================================================================ TABS -->
 <nav class="bg-white dark:bg-gray-900 border-b border-slate-200 dark:border-gray-800">
-  <div class="max-w-7xl mx-auto px-4 sm:px-6 flex overflow-x-auto">
-    <button class="tab-btn active px-4 py-3 text-sm font-medium whitespace-nowrap" onclick="setTab('overview')">Overview</button>
-    <button class="tab-btn         px-4 py-3 text-sm font-medium whitespace-nowrap" onclick="setTab('contributors')">Contributors</button>
-    <button class="tab-btn         px-4 py-3 text-sm font-medium whitespace-nowrap" onclick="setTab('organizations')">Organizations</button>
-    <button class="tab-btn         px-4 py-3 text-sm font-medium whitespace-nowrap" onclick="setTab('sigs')">SIGs</button>
-    <button class="tab-btn         px-4 py-3 text-sm font-medium whitespace-nowrap" onclick="setTab('coverage')">Coverage</button>
-    <button class="tab-btn         px-4 py-3 text-sm font-medium whitespace-nowrap" onclick="setTab('concentration')">Concentration</button>
-    <button class="tab-btn         px-4 py-3 text-sm font-medium whitespace-nowrap" onclick="setTab('geography')">Geography</button>
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 flex overflow-x-auto" role="tablist">
+    <button id="tab-btn-overview" class="tab-btn active px-4 py-3 text-sm font-medium whitespace-nowrap" onclick="setTab('overview')" role="tab" aria-selected="true" aria-controls="tab-overview">Overview</button>
+    <button id="tab-btn-contributors" class="tab-btn         px-4 py-3 text-sm font-medium whitespace-nowrap" onclick="setTab('contributors')" role="tab" aria-selected="false" aria-controls="tab-contributors">Contributors</button>
+    <button id="tab-btn-organizations" class="tab-btn         px-4 py-3 text-sm font-medium whitespace-nowrap" onclick="setTab('organizations')" role="tab" aria-selected="false" aria-controls="tab-organizations">Organizations</button>
+    <button id="tab-btn-sigs" class="tab-btn         px-4 py-3 text-sm font-medium whitespace-nowrap" onclick="setTab('sigs')" role="tab" aria-selected="false" aria-controls="tab-sigs">SIGs</button>
+    <button id="tab-btn-coverage" class="tab-btn         px-4 py-3 text-sm font-medium whitespace-nowrap" onclick="setTab('coverage')" role="tab" aria-selected="false" aria-controls="tab-coverage">Coverage</button>
+    <button id="tab-btn-concentration" class="tab-btn         px-4 py-3 text-sm font-medium whitespace-nowrap" onclick="setTab('concentration')" role="tab" aria-selected="false" aria-controls="tab-concentration">Concentration</button>
+    <button id="tab-btn-geography" class="tab-btn         px-4 py-3 text-sm font-medium whitespace-nowrap" onclick="setTab('geography')" role="tab" aria-selected="false" aria-controls="tab-geography">Geography</button>
   </div>
 </nav>
 
@@ -87,7 +87,7 @@
 <main class="max-w-7xl mx-auto px-4 sm:px-6 py-6 space-y-4">
 
   <!-- ── OVERVIEW TAB ─────────────────────────────────────────────── -->
-  <div id="tab-overview" class="tab-panel space-y-4">
+  <div id="tab-overview" class="tab-panel space-y-4" role="tabpanel" aria-labelledby="tab-btn-overview">
     <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
       <div class="bg-white dark:bg-gray-900 rounded-xl p-4 border border-slate-200 dark:border-gray-800">
         <p class="text-slate-500 dark:text-gray-400 text-xs mb-1">Total Contributors</p>
@@ -141,7 +141,7 @@
   </div>
 
   <!-- ── CONTRIBUTORS TAB ──────────────────────────────────────────── -->
-  <div id="tab-contributors" class="tab-panel hidden">
+  <div id="tab-contributors" class="tab-panel hidden" role="tabpanel" aria-labelledby="tab-btn-contributors">
     <div class="bg-white dark:bg-gray-900 rounded-xl border border-slate-200 dark:border-gray-800">
       <div class="flex items-center justify-between p-4 border-b border-slate-200 dark:border-gray-800 flex-wrap gap-2">
         <h2 class="text-sm font-semibold">Contributor Leaderboard</h2>
@@ -150,7 +150,7 @@
             <input type="text" id="contributor-search" placeholder="Search name or @handle…"
               class="bg-slate-200 dark:bg-gray-800 border border-slate-300 dark:border-gray-700 rounded px-3 py-1.5 text-xs text-slate-700 dark:text-gray-300 focus:outline-none focus:border-blue-500 w-52 pr-7"
               oninput="onContribSearch()">
-            <button id="contrib-search-clear" onclick="clearContribSearch()"
+            <button id="contrib-search-clear" onclick="clearContribSearch()" aria-label="Clear search"
               class="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 dark:text-gray-500 hover:text-slate-700 dark:text-gray-300 hidden text-sm leading-none">✕</button>
           </div>
           <span id="contrib-total-label" class="text-xs text-slate-400 dark:text-gray-500 whitespace-nowrap"></span>
@@ -184,7 +184,7 @@
   </div>
 
   <!-- ── ORGANIZATIONS TAB ─────────────────────────────────────────── -->
-  <div id="tab-organizations" class="tab-panel hidden">
+  <div id="tab-organizations" class="tab-panel hidden" role="tabpanel" aria-labelledby="tab-btn-organizations">
     <div>
       <div id="org-chart-loading" class="hidden"></div>
       <div id="org-chart-wrap" class="hidden"><canvas id="orgChart"></canvas></div>
@@ -196,7 +196,7 @@
               <input type="text" id="org-search" placeholder="Search organization…"
                 class="bg-slate-200 dark:bg-gray-800 border border-slate-300 dark:border-gray-700 rounded px-3 py-1.5 text-xs text-slate-700 dark:text-gray-300 focus:outline-none focus:border-blue-500 w-52 pr-7"
                 oninput="onOrgSearch()">
-              <button id="org-search-clear" onclick="clearOrgSearch()"
+              <button id="org-search-clear" onclick="clearOrgSearch()" aria-label="Clear search"
                 class="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 dark:text-gray-500 hover:text-slate-700 dark:text-gray-300 hidden text-sm leading-none">✕</button>
             </div>
             <span id="orgs-total-label" class="text-xs text-slate-400 dark:text-gray-500 whitespace-nowrap"></span>
@@ -230,7 +230,7 @@
   </div>
 
   <!-- ── CONCENTRATION TAB ─────────────────────────────────────────── -->
-  <div id="tab-concentration" class="tab-panel hidden space-y-4">
+  <div id="tab-concentration" class="tab-panel hidden space-y-4" role="tabpanel" aria-labelledby="tab-btn-concentration">
     <div class="grid md:grid-cols-2 gap-4 items-start">
       <div id="bc-factor-tile" class="bg-white dark:bg-gray-900 rounded-xl border border-slate-200 dark:border-gray-800 p-4">
         <h2 class="text-sm font-semibold">Contributor Bus Factor</h2>
@@ -286,7 +286,7 @@
   </div>
 
   <!-- ── GEOGRAPHY TAB ─────────────────────────────────────────────── -->
-  <div id="tab-geography" class="tab-panel hidden">
+  <div id="tab-geography" class="tab-panel hidden" role="tabpanel" aria-labelledby="tab-btn-geography">
     <div class="grid md:grid-cols-2 gap-4">
       <div class="bg-white dark:bg-gray-900 rounded-xl border border-slate-200 dark:border-gray-800 p-4">
         <h2 class="text-sm font-semibold mb-0.5">World Map</h2>
@@ -302,7 +302,7 @@
           <p class="text-xs text-slate-400 dark:text-gray-500 mt-0.5" id="geo-country-count"></p>
         </div>
         <div id="geo-table-loading" class="flex justify-center py-14"><span class="spinner"></span></div>
-        <div id="geo-table-wrap" class="hidden overflow-y-auto" style="max-height:430px;">
+        <div id="geo-table-wrap" class="hidden overflow-y-auto" style="max-height:430px;" tabindex="0" role="region" aria-label="All countries">
           <table class="w-full">
             <thead class="sticky top-0 bg-white dark:bg-gray-900 z-10">
               <tr class="border-b border-slate-200 dark:border-gray-800 text-xs text-slate-400 dark:text-gray-500 uppercase tracking-wide">
@@ -319,7 +319,7 @@
   </div>
 
   <!-- ── SIGS TAB ──────────────────────────────────────────────────── -->
-  <div id="tab-sigs" class="tab-panel hidden">
+  <div id="tab-sigs" class="tab-panel hidden" role="tabpanel" aria-labelledby="tab-btn-sigs">
     <div class="bg-white dark:bg-gray-900 rounded-xl border border-slate-200 dark:border-gray-800">
       <div class="flex items-center justify-between p-4 border-b border-slate-200 dark:border-gray-800 flex-wrap gap-2">
         <div>
@@ -331,7 +331,7 @@
             <input type="text" id="sigs-search" placeholder="Search repository…"
               class="bg-slate-200 dark:bg-gray-800 border border-slate-300 dark:border-gray-700 rounded px-3 py-1.5 text-xs text-slate-700 dark:text-gray-300 focus:outline-none focus:border-blue-500 w-52 pr-7"
               oninput="onSigsSearch()">
-            <button id="sigs-search-clear" onclick="clearSigsSearch()"
+            <button id="sigs-search-clear" onclick="clearSigsSearch()" aria-label="Clear search"
               class="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 dark:text-gray-500 hover:text-slate-700 dark:text-gray-300 hidden text-sm leading-none">✕</button>
           </div>
           <span id="sigs-total-label" class="text-xs text-slate-400 dark:text-gray-500 whitespace-nowrap"></span>
@@ -359,7 +359,7 @@
   </div>
 
   <!-- ── COVERAGE TAB ──────────────────────────────────────────────── -->
-  <div id="tab-coverage" class="tab-panel hidden">
+  <div id="tab-coverage" class="tab-panel hidden" role="tabpanel" aria-labelledby="tab-btn-coverage">
     <div class="bg-white dark:bg-gray-900 rounded-xl border border-slate-200 dark:border-gray-800 flex flex-col">
       <div class="flex items-center justify-between p-4 border-b border-slate-200 dark:border-gray-800 flex-wrap gap-2">
         <div>
@@ -371,7 +371,7 @@
             <input type="text" id="coverage-search" placeholder="Search company…"
               class="bg-slate-200 dark:bg-gray-800 border border-slate-300 dark:border-gray-700 rounded px-3 py-1.5 text-xs text-slate-700 dark:text-gray-300 focus:outline-none focus:border-blue-500 w-52 pr-7"
               oninput="onCoverageSearch()">
-            <button id="coverage-search-clear" onclick="clearCoverageSearch()"
+            <button id="coverage-search-clear" onclick="clearCoverageSearch()" aria-label="Clear search"
               class="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 dark:text-gray-500 hover:text-slate-700 dark:text-gray-300 hidden text-sm leading-none">✕</button>
           </div>
           <span id="coverage-total-label" class="text-xs text-slate-400 dark:text-gray-500 whitespace-nowrap"></span>
@@ -424,7 +424,7 @@
         <div id="org-modal-name" class="font-semibold text-sm leading-tight truncate"></div>
         <div class="text-xs text-slate-400 dark:text-gray-500 mt-0.5">OpenTelemetry contributors</div>
       </div>
-      <button onclick="closeOrgModal()" title="Close"
+      <button onclick="closeOrgModal()" title="Close" aria-label="Close organization details"
         class="shrink-0 w-7 h-7 flex items-center justify-center rounded-lg text-slate-400 dark:text-gray-500 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-gray-800 transition-colors text-lg leading-none">×</button>
     </div>
 
@@ -533,7 +533,7 @@
         <div id="modal-handles" class="text-xs text-slate-400 dark:text-gray-500 mt-0.5"></div>
       </div>
       <div id="modal-roles-wrap" class="hidden flex gap-1.5 flex-wrap justify-end shrink-0"></div>
-      <button onclick="closeContribModal()" title="Close"
+      <button onclick="closeContribModal()" title="Close" aria-label="Close contributor details"
         class="shrink-0 w-7 h-7 flex items-center justify-center rounded-lg text-slate-400 dark:text-gray-500 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-gray-800 transition-colors text-lg leading-none">×</button>
     </div>
 
@@ -586,7 +586,7 @@
           class="font-semibold text-sm leading-tight truncate block hover:text-blue-600 dark:text-blue-400 transition-colors"></a>
         <div class="text-xs text-slate-400 dark:text-gray-500 mt-0.5">OpenTelemetry SIG</div>
       </div>
-      <button onclick="closeSigModal()" title="Close"
+      <button onclick="closeSigModal()" title="Close" aria-label="Close SIG details"
         class="shrink-0 w-7 h-7 flex items-center justify-center rounded-lg text-slate-400 dark:text-gray-500 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-gray-800 transition-colors text-lg leading-none">×</button>
     </div>
 
@@ -635,7 +635,7 @@
         <div id="coverage-modal-name" class="font-semibold text-sm leading-tight truncate"></div>
         <div class="text-xs text-slate-400 dark:text-gray-500 mt-0.5">Coverage across SIGs</div>
       </div>
-      <button onclick="closeCoverageModal()" title="Close"
+      <button onclick="closeCoverageModal()" title="Close" aria-label="Close coverage details"
         class="shrink-0 w-7 h-7 flex items-center justify-center rounded-lg text-slate-400 dark:text-gray-500 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-gray-800 transition-colors text-lg leading-none">×</button>
     </div>
 
@@ -677,7 +677,7 @@
         due to CORS. Cached data is used as fallback.
       </p>
     </div>
-    <button onclick="hideError()" class="text-slate-300 dark:text-gray-600 hover:text-slate-900 dark:hover:text-white text-lg leading-none shrink-0">×</button>
+    <button onclick="hideError()" aria-label="Dismiss error" class="text-slate-300 dark:text-gray-600 hover:text-slate-900 dark:hover:text-white text-lg leading-none shrink-0">×</button>
   </div>
 </div>
 

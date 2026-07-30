@@ -1,24 +1,27 @@
 export const VALID_TABS    = ['overview', 'contributors', 'organizations', 'concentration', 'geography', 'sigs', 'coverage'];
 export const VALID_PRESETS = ['30d', '60d', '90d', '6m', '1y', '2y', '3y', 'all'];
 
-// Returns true for valid presets, date ranges, AND things that look like
-// preset attempts (e.g. "20d", "5y") so they reach the redirect fallback
-// instead of being silently misread as entity-detail deep-links.
+// Tabs whose second hash segment may be an entity-detail deep-link (opens a
+// modal once the tab loads) rather than a timeframe. Every other tab has no
+// concept of a "detail", so any second segment there must be a (possibly
+// bogus) timeframe attempt rather than a legacy entity name.
+const DETAIL_TABS = ['contributors', 'organizations', 'sigs', 'coverage'];
+
+// Returns true for valid presets AND things that look like preset attempts
+// (e.g. "20d", "5y") so they reach the redirect fallback instead of being
+// silently misread as entity-detail deep-links.
 function isTimeframeSegment(s) {
   return VALID_PRESETS.includes(s)
-    || /^\d{4}-\d{2}-\d{2}\.\.\d{4}-\d{2}-\d{2}$/.test(s)
     || /^(\d+[dmy]|all)$/.test(s);
 }
 
 // Returns a URL-safe timeframe string from current state S.
 export function timeframeHash(S) {
-  return S.preset !== 'custom'
-    ? S.preset
-    : `${S.filters.startDate}..${S.filters.endDate}`;
+  return S.preset;
 }
 
 // Hash format: #tab  or  #tab/timeframe  or  #tab/timeframe/detail
-// timeframe is a preset key (e.g. "1y") or a date range ("2025-01-01..2026-01-01")
+// timeframe is a preset key (e.g. "1y")
 // detail is a page ref ("page/N") or an entity name (URL-encoded)
 export function setHash(tab, timeframe, detail) {
   let hash = tab;
@@ -42,10 +45,11 @@ export function parseHash() {
   const tab = decodeURIComponent(segments[0]);
   if (segments.length === 1) return { tab };
 
-  // Check if second segment is a timeframe; if not, treat everything after tab as detail (backward compat)
+  // Check if second segment is a timeframe; if not, treat everything after tab as detail
+  // (backward compat) — but only for tabs that actually support an entity-detail deep-link.
   let timeframe = null;
   let rest;
-  if (isTimeframeSegment(segments[1])) {
+  if (isTimeframeSegment(segments[1]) || !DETAIL_TABS.includes(tab)) {
     timeframe = segments[1];
     rest = segments.slice(2);
   } else {

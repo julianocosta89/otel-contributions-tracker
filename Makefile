@@ -1,4 +1,4 @@
-.PHONY: fetch-data fetch-data-full fetch-affiliations serve test
+.PHONY: fetch-data fetch-data-full fetch-affiliations serve test test-e2e-install test-e2e
 
 fetch-data:
 	node scripts/fetch-data.mjs & P1=$$!; \
@@ -25,3 +25,10 @@ test:
 
 serve:
 	python3 -m http.server 3456
+
+test-e2e-install:
+	npm ci
+	npx playwright install --with-deps
+
+test-e2e:
+	npx playwright test

@@ -83,7 +83,7 @@ export function renderOrgsTable(rows, baseOffset, ranks) {
         <td class="px-4 py-2.5 text-slate-300 dark:text-gray-600 text-xs">${rank}</td>
         <td class="px-4 py-2.5">
           <div class="flex items-center gap-2">
-            ${resolveOrgLogo(o) ? `<img src="${resolveOrgLogo(o)}" class="w-6 h-6 rounded object-contain shrink-0" onerror="this.style.display='none'">` : orgPlaceholder('w-6 h-6')}
+            ${resolveOrgLogo(o) ? `<img src="${resolveOrgLogo(o)}" alt="" class="w-6 h-6 rounded object-contain shrink-0" onerror="this.style.display='none'">` : orgPlaceholder('w-6 h-6')}
             <span class="text-sm">${o.name}</span>
           </div>
         </td>

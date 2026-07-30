@@ -38,6 +38,7 @@ function showCoverageEmpty(message) {
   el('coverage-search').value = '';
   el('coverage-search-clear').classList.add('hidden');
   hide('coverage-loading'); hide('coverage-table-wrap'); show('coverage-empty');
+  document.dispatchEvent(new CustomEvent('tabLoaded', { detail: 'coverage' }));
 }
 
 export async function loadCoverage() {
@@ -103,7 +104,7 @@ export function renderCoverageTable(rows, baseOffset) {
         <td class="px-4 py-2.5 text-slate-300 dark:text-gray-600 text-xs">${baseOffset + i + 1}</td>
         <td class="px-4 py-2.5">
           <div class="flex items-center gap-2">
-            ${logo ? `<img src="${logo}" class="w-6 h-6 rounded object-contain shrink-0" onerror="this.style.display='none'">` : orgPlaceholder('w-6 h-6')}
+            ${logo ? `<img src="${logo}" alt="" class="w-6 h-6 rounded object-contain shrink-0" onerror="this.style.display='none'">` : orgPlaceholder('w-6 h-6')}
             <span class="text-sm">${o.name}</span>
           </div>
         </td>

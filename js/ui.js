@@ -33,16 +33,22 @@ export function setTab(tab, { updateHash = true } = {}) {
   document.querySelectorAll('.tab-panel').forEach(p => p.classList.add('hidden'));
   show(`tab-${tab}`);
   document.querySelectorAll('.tab-btn').forEach(b => {
-    b.classList.toggle('active', b.getAttribute('onclick') === `setTab('${tab}')`);
+    const active = b.getAttribute('onclick') === `setTab('${tab}')`;
+    b.classList.toggle('active', active);
+    b.setAttribute('aria-selected', active ? 'true' : 'false');
   });
   if (updateHash) setHash(tab, timeframeHash(S));
   loadTab(tab);
 }
 
-export function reload() {
+export function resetPages() {
   S.pages.contributors  = 0;
   S.pages.organizations = 0;
   S.pages.coverage      = 0;
+}
+
+export function reload() {
+  resetPages();
   loadTab(S.tab);
 }
 
@@ -68,7 +74,7 @@ export function changePage(type, delta) {
   }
 }
 
-export function setPreset(preset, { updateHash = true } = {}) {
+export function setPreset(preset, { updateHash = true, autoReload = true } = {}) {
   S.preset = preset;
   const days = { '30d': 30, '60d': 60, '90d': 90, '6m': 182, '1y': 365, '2y': 730, '3y': 1095 };
   S.filters.endDate = today();
@@ -81,27 +87,22 @@ export function setPreset(preset, { updateHash = true } = {}) {
 
   if (updateHash) setHash(S.tab, preset);
 
-  reload();
+  if (autoReload) reload();
 }
 
-// Applies a timeframe string from the URL hash without updating the hash itself.
-// tab is used only when redirecting an invalid timeframe to correct the URL.
+// Applies a timeframe string from the URL hash without updating the hash itself,
+// and without triggering a reload — every call site immediately follows up with
+// its own setTab()/loadTab() call for the *target* tab, so an internal reload
+// here would (at best) be redundant and (at worst) race the wasted stale-S.tab
+// load's completion against the correct tab's, corrupting whichever fires last.
 export function applyTimeframeFromHash(timeframe, tab = S.tab) {
-  if (!timeframe) { setPreset('1y', { updateHash: false }); return; }
+  resetPages();
+  if (!timeframe) { setPreset('1y', { updateHash: false, autoReload: false }); return; }
   if (VALID_PRESETS.includes(timeframe)) {
-    setPreset(timeframe, { updateHash: false });
-  } else if (/^\d{4}-\d{2}-\d{2}\.\.\d{4}-\d{2}-\d{2}$/.test(timeframe)) {
-    const [start, end] = timeframe.split('..');
-    S.preset            = 'custom';
-    S.filters.startDate = start;
-    S.filters.endDate   = end;
-    document.querySelectorAll('.preset-btn').forEach(b => {
-      b.className = 'preset-btn px-2.5 py-1 rounded-md text-slate-500 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white transition-colors';
-    });
-    reload();
+    setPreset(timeframe, { updateHash: false, autoReload: false });
   } else {
     // Unknown timeframe — silently redirect to 1y
-    setPreset('1y', { updateHash: false });
+    setPreset('1y', { updateHash: false, autoReload: false });
     setHash(tab, '1y');
   }
 }

@@ -14,6 +14,7 @@ export async function loadSigs() {
 
   if (!SIGS_CACHE?.periods) {
     hide('sigs-loading'); show('sigs-empty');
+    document.dispatchEvent(new CustomEvent('tabLoaded', { detail: 'sigs' }));
     return;
   }
 

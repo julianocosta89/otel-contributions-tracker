@@ -13,11 +13,12 @@ function renderSigEntry(repo) {
         <svg class="w-3 h-3 text-slate-400 dark:text-gray-500 shrink-0 transition-transform group-open:rotate-90" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <polyline points="9,6 15,12 9,18"/>
         </svg>
-        <a href="${repo.url}" target="_blank" onclick="event.stopPropagation()"
-          class="text-xs font-medium text-slate-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 flex-1 truncate transition-colors">${repo.name}</a>
+        <span class="text-xs font-medium text-slate-700 dark:text-gray-300 flex-1 truncate">${repo.name}</span>
         <span class="text-xs text-slate-400 dark:text-gray-500 font-mono shrink-0">${num(repo.count)} · ${repo.contributors.length} ${repo.contributors.length === 1 ? 'person' : 'people'}</span>
       </summary>
       <div class="px-2 pb-2 space-y-0.5">
+        <a href="${repo.url}" target="_blank"
+          class="block text-xs text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors px-1 pb-1">${repo.name} on GitHub →</a>
         ${repo.contributors.map((c, i) => renderPersonRow(c, i, { sigStyle: true, showRole: true, repoName: repo.name })).join('')}
       </div>
     </details>`;
@@ -53,7 +54,7 @@ export function openCoverageModal(org) {
 
 export function closeCoverageModal() {
   const panel = el('coverage-modal-panel');
-  if (!panel.classList.contains('open')) return; // no-op if not the currently open modal (e.g. Escape closing another one)
+  if (el('coverage-modal').classList.contains('hidden')) return; // no-op if not the currently open modal (e.g. Escape closing another one)
   panel.classList.remove('open');
   document.body.style.overflow = '';
   setTimeout(() => el('coverage-modal').classList.add('hidden'), 200);

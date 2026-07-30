@@ -35,7 +35,7 @@ export function openSigModal(repoName) {
 
 export function closeSigModal() {
   const panel = el('sig-modal-panel');
-  if (!panel.classList.contains('open')) return; // no-op if not the currently open modal (e.g. Escape closing another one)
+  if (el('sig-modal').classList.contains('hidden')) return; // no-op if not the currently open modal (e.g. Escape closing another one)
   panel.classList.remove('open');
   document.body.style.overflow = '';
   setTimeout(() => el('sig-modal').classList.add('hidden'), 200);

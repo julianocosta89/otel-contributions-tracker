@@ -127,7 +127,7 @@ export async function openOrgModal(org) {
         hide('org-modal-repos-loading');
         show('org-modal-repos-error');
         el('org-modal-repos-error').innerHTML =
-          `<p class="mb-2">Could not load repositories.</p><p class="text-slate-300 dark:text-gray-600">${err.message}</p>`;
+          `<p class="mb-2">Could not load repositories.</p><p class="text-slate-500 dark:text-gray-400">${err.message}</p>`;
         el('org-modal-repo-count').textContent = '—';
       });
   }

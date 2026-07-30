@@ -88,7 +88,7 @@ export async function openContribModal(contributor) {
         show('modal-repos-error');
         el('modal-repos-error').innerHTML =
           `<p class="mb-2">Could not load repositories.</p>` +
-          `<p class="text-slate-300 dark:text-gray-600">${err.message}</p>` +
+          `<p class="text-slate-500 dark:text-gray-400">${err.message}</p>` +
           (handles[0]
             ? `<a href="https://github.com/search?q=author%3A${handles[0]}+org%3Aopen-telemetry&type=pullrequests" target="_blank"
                 class="inline-block mt-3 px-3 py-1.5 rounded bg-slate-200 dark:bg-gray-800 text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:text-blue-300 text-xs transition-colors">

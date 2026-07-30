@@ -6,7 +6,7 @@ export const ROLE_STYLE = {
   maintainer:   'bg-blue-100 dark:bg-blue-900/60 text-blue-700 dark:text-blue-300 border border-blue-300 dark:border-blue-800',
   approver:     'bg-violet-100 dark:bg-violet-900/60 text-violet-700 dark:text-violet-300 border border-violet-300 dark:border-violet-800',
   'code-owner': 'bg-teal-100 dark:bg-teal-900/60 text-teal-700 dark:text-teal-300 border border-teal-300 dark:border-teal-800',
-  triager:      'bg-slate-200 dark:bg-gray-800 text-slate-500 dark:text-gray-400 border border-slate-300 dark:border-gray-700',
+  triager:      'bg-slate-200 dark:bg-gray-800 text-slate-600 dark:text-gray-400 border border-slate-300 dark:border-gray-700',
 };
 
 export function roleFor(githubHandleArray) {
@@ -70,7 +70,7 @@ export function roleBadge(githubHandleArray, small = false, repoName = null) {
   const tooltip = teams.length ? `
     <div class="role-tooltip">
       <div class="role-tooltip-inner">
-        <div class="text-slate-400 dark:text-gray-500 mb-1">Teams:</div>
+        <div class="text-slate-600 dark:text-gray-400 mb-1">Teams:</div>
         ${teamLinks}
       </div>
     </div>` : '';

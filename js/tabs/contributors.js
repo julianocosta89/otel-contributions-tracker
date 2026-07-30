@@ -82,13 +82,13 @@ export function renderContribTable(rows, baseOffset, ranks) {
     const barW = Math.min(100, (c.percentage || 0) * 6).toFixed(0);
     return `
       <tr class="contrib-row border-b border-slate-200 dark:border-gray-800/40 hover:bg-slate-200/50 dark:hover:bg-gray-800/20 transition-colors" data-idx="${i}" title="Click to see repositories">
-        <td class="px-4 py-2.5 text-slate-300 dark:text-gray-600 text-xs">${rank}</td>
+        <td class="px-4 py-2.5 text-slate-500 dark:text-gray-400 text-xs">${rank}</td>
         <td class="px-4 py-2.5">
           <div class="flex items-center gap-2.5">
             ${c.avatar ? `<img src="${c.avatar}" alt="" class="w-7 h-7 rounded-full shrink-0" onerror="this.style.display='none'">` : personPlaceholder('w-7 h-7')}
             <div>
               <div class="text-sm font-medium leading-tight">${c.name}</div>
-              <div class="text-xs text-slate-400 dark:text-gray-500">${handles}</div>
+              <div class="text-xs text-slate-600 dark:text-gray-400">${handles}</div>
             </div>
           </div>
         </td>

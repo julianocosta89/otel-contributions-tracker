@@ -5,7 +5,7 @@ function deltaBadge(current, previous) {
   if (previous === 0) return '<span class="text-xs font-mono text-blue-600 dark:text-blue-400 shrink-0">new</span>';
   const change = (current - previous) / previous * 100;
   const sign = change > 0 ? '+' : '';
-  const cls = change > 0 ? 'text-green-600 dark:text-green-400' : change < 0 ? 'text-red-600 dark:text-red-400' : 'text-slate-400 dark:text-gray-500';
+  const cls = change > 0 ? 'text-green-700 dark:text-green-400' : change < 0 ? 'text-red-600 dark:text-red-400' : 'text-slate-600 dark:text-gray-400';
   const val = Math.abs(change) < 1 ? `${sign}${change.toFixed(1)}%` : `${sign}${Math.round(change)}%`;
   return `<span class="text-xs font-mono ${cls} shrink-0">${val}</span>`;
 }
@@ -38,14 +38,14 @@ export function renderReposList({ repos, unit, barColor, listElId, note }) {
         <div class="flex-1 min-w-0">
           <div class="text-xs font-medium text-slate-700 dark:text-gray-300 group-hover:text-slate-900 dark:group-hover:text-gray-100 truncate transition-colors">${repo.name}</div>
         </div>
-        <span class="text-xs text-slate-400 dark:text-gray-500 font-mono shrink-0">${label}</span>
-        <svg class="w-3 h-3 text-slate-300 dark:text-gray-600 group-hover:text-slate-500 dark:text-gray-400 shrink-0 transition-colors" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <span class="text-xs text-slate-600 dark:text-gray-400 font-mono shrink-0">${label}</span>
+        <svg class="w-3 h-3 text-slate-500 dark:text-gray-400 group-hover:text-slate-500 dark:text-gray-400 shrink-0 transition-colors" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15,3 21,3 21,9"/><line x1="10" y1="14" x2="21" y2="3"/>
         </svg>
       </a>`;
   }).join('');
   if (note) {
-    listEl.innerHTML += `<p class="text-xs text-slate-300 dark:text-gray-600 text-center pt-1">${note}</p>`;
+    listEl.innerHTML += `<p class="text-xs text-slate-500 dark:text-gray-400 text-center pt-1">${note}</p>`;
   }
   return true;
 }
@@ -60,7 +60,7 @@ export function renderPersonRow(c, i, opts = {}) {
     const aff = affiliationFor(c.githubHandleArray);
     return `
           <div class="flex items-center gap-2 px-2 py-1.5 rounded hover:bg-slate-200/50 dark:hover:bg-gray-800/40 transition-colors">
-            <span class="text-slate-300 dark:text-gray-600 text-xs w-5 shrink-0 text-right">${i + 1}</span>
+            <span class="text-slate-500 dark:text-gray-400 text-xs w-5 shrink-0 text-right">${i + 1}</span>
             ${c.avatar
               ? `<img src="${c.avatar}" alt="" class="w-6 h-6 rounded-full shrink-0" onerror="this.style.display='none'">`
               : `<span class="w-6 h-6 shrink-0 inline-block">${SVG_PERSON}</span>`}
@@ -70,11 +70,11 @@ export function renderPersonRow(c, i, opts = {}) {
                 ${handle ? `<a href="https://github.com/${handle}" target="_blank" class="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:text-blue-300 text-xs shrink-0" onclick="event.stopPropagation()">@${handle}</a>` : ''}
                 ${opts.showRole ? roleBadge(c.githubHandleArray, true, opts.repoName) : ''}
               </div>
-              ${aff ? `<div class="text-xs text-slate-400 dark:text-gray-500 truncate">${aff.company}</div>` : ''}
+              ${aff ? `<div class="text-xs text-slate-600 dark:text-gray-400 truncate">${aff.company}</div>` : ''}
             </div>
             <div class="text-right shrink-0">
               <div class="text-xs text-slate-700 dark:text-gray-300 font-mono">${num(c.contributions)}</div>
-              <div class="text-xs text-slate-400 dark:text-gray-500">${pct(c.percentage, 1)}</div>
+              <div class="text-xs text-slate-600 dark:text-gray-400">${pct(c.percentage, 1)}</div>
             </div>
           </div>`;
   }
@@ -92,12 +92,12 @@ export function renderPersonRow(c, i, opts = {}) {
     : '';
   return `
         <div class="flex items-center gap-2 ${wrapperPy}${activeBorder}">
-          <span class="text-slate-300 dark:text-gray-600 text-xs w-5 text-right shrink-0">${i + 1}</span>
+          <span class="text-slate-500 dark:text-gray-400 text-xs w-5 text-right shrink-0">${i + 1}</span>
           ${c.avatar ? `<img src="${c.avatar}" alt="" class="w-5 h-5 rounded-full shrink-0"${avatarOnerror}>` : personPlaceholder('w-5 h-5')}
           <span class="text-xs flex-1 truncate">${c.name}</span>
           ${handle ? `<a href="https://github.com/${handle}" target="_blank" class="text-blue-600 dark:text-blue-500 text-xs shrink-0 hover:text-blue-700 dark:text-blue-300"${linkOnClick}>@${handle}</a>` : ''}
-          <span class="text-xs text-slate-400 dark:text-gray-500 font-mono shrink-0">${num(c.contributions)}</span>
-          ${opts.orgModal ? `<span class="text-xs text-slate-300 dark:text-gray-600 shrink-0">${orgTotal > 0 ? pct(c.contributions / orgTotal * 100) : ''}</span>` : ''}
+          <span class="text-xs text-slate-600 dark:text-gray-400 font-mono shrink-0">${num(c.contributions)}</span>
+          ${opts.orgModal ? `<span class="text-xs text-slate-500 dark:text-gray-400 shrink-0">${orgTotal > 0 ? pct(c.contributions / orgTotal * 100) : ''}</span>` : ''}
           ${opts.orgModal && !c.attributedContributions?.length ? deltaBadge(c.contributions, c.previousContributions) : ''}
         </div>`;
 }
@@ -108,7 +108,7 @@ export function renderActiveDivider(threshold) {
   return `
         <div class="flex items-center gap-2 py-1">
           <div class="flex-1 h-px bg-slate-300 dark:bg-gray-700"></div>
-          <span class="text-[10px] uppercase tracking-wide text-slate-400 dark:text-gray-500 shrink-0">Less than ${num(threshold)} contributions &middot; inactive (&lt;2/mo)</span>
+          <span class="text-[10px] uppercase tracking-wide text-slate-600 dark:text-gray-400 shrink-0">Less than ${num(threshold)} contributions &middot; inactive (&lt;2/mo)</span>
           <div class="flex-1 h-px bg-slate-300 dark:bg-gray-700"></div>
         </div>`;
 }
@@ -120,7 +120,7 @@ export function renderOrgRow(o, i, opts = {}) {
   if (opts.sigStyle) {
     return `
           <div class="flex items-center gap-2 px-2 py-1.5 rounded hover:bg-slate-200/50 dark:hover:bg-gray-800/40 transition-colors">
-            <span class="text-slate-300 dark:text-gray-600 text-xs w-5 shrink-0 text-right">${i + 1}</span>
+            <span class="text-slate-500 dark:text-gray-400 text-xs w-5 shrink-0 text-right">${i + 1}</span>
             ${logo
               ? `<img src="${logo}" alt="" class="w-6 h-6 rounded object-contain shrink-0" onerror="this.style.display='none'">`
               : `<span class="w-6 h-6 shrink-0 inline-block">${SVG_BUILDING}</span>`}
@@ -129,16 +129,16 @@ export function renderOrgRow(o, i, opts = {}) {
             </div>
             <div class="text-right shrink-0">
               <div class="text-xs text-slate-700 dark:text-gray-300 font-mono">${num(o.contributions)}</div>
-              <div class="text-xs text-slate-400 dark:text-gray-500">${pct(o.percentage, 1)}</div>
+              <div class="text-xs text-slate-600 dark:text-gray-400">${pct(o.percentage, 1)}</div>
             </div>
           </div>`;
   }
   return `
       <div class="flex items-center gap-2 py-0.5">
-        <span class="text-slate-300 dark:text-gray-600 text-xs w-5 text-right shrink-0">${i + 1}</span>
+        <span class="text-slate-500 dark:text-gray-400 text-xs w-5 text-right shrink-0">${i + 1}</span>
         ${logo ? `<img src="${logo}" alt="" class="w-5 h-5 rounded shrink-0" onerror="this.style.display='none'">` : orgPlaceholder('w-5 h-5')}
         <span class="text-xs flex-1 truncate">${o.name}</span>
-        <span class="text-xs text-slate-400 dark:text-gray-500 font-mono shrink-0">${num(o.contributions)}</span>
+        <span class="text-xs text-slate-600 dark:text-gray-400 font-mono shrink-0">${num(o.contributions)}</span>
       </div>`;
 }
 
@@ -150,12 +150,12 @@ export function renderOrgRow(o, i, opts = {}) {
 // it still surfaces the full gitdm employer history even without a per-company
 // contribution split.
 export function companyCell(c, affiliation, gitdmUrl, ranges) {
-  if (!affiliation) return '<span class="text-slate-300 dark:text-gray-600">—</span>';
+  if (!affiliation) return '<span class="text-slate-500 dark:text-gray-400">—</span>';
 
   const badgeHref = affiliation.source === 'gitdm'
     ? gitdmUrl
     : `https://github.com/${(c.githubHandleArray || [])[0]}`;
-  const badge = `<a href="${badgeHref}" target="_blank" onclick="event.stopPropagation()" class="inline-block px-1 py-0.5 rounded text-slate-400 dark:text-gray-500 hover:text-slate-700 dark:text-gray-300 border border-slate-300 dark:border-gray-700 hover:border-gray-500 text-[10px] leading-none transition-colors ml-1">${affiliation.source}</a>`;
+  const badge = `<a href="${badgeHref}" target="_blank" onclick="event.stopPropagation()" class="inline-block px-1 py-0.5 rounded text-slate-600 dark:text-gray-400 hover:text-slate-700 dark:text-gray-300 border border-slate-300 dark:border-gray-700 hover:border-gray-500 text-[10px] leading-none transition-colors ml-1">${affiliation.source}</a>`;
 
   const attrs = c.attributedContributions?.length > 1 ? c.attributedContributions : ranges;
   if (attrs?.length > 1) {
@@ -163,7 +163,7 @@ export function companyCell(c, affiliation, gitdmUrl, ranges) {
       const isLast  = idx === attrs.length - 1;
       // Only show the split-point date, not the clamped window boundary:
       // first entry → "–until", last entry → "from–", middle → "from–until"
-      const dateSpan = s => `<span class="text-slate-400 dark:text-gray-500 text-[10px]">${s}</span>`;
+      const dateSpan = s => `<span class="text-slate-600 dark:text-gray-400 text-[10px]">${s}</span>`;
       const range = idx === 0       ? dateSpan(` –${shortYearMonth(a.until)}`)
                   : isLast          ? dateSpan(` ${shortYearMonth(a.from)}–`)
                   : dateSpan(` ${shortYearMonth(a.from)}–${shortYearMonth(a.until)}`);

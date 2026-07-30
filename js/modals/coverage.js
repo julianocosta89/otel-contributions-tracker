@@ -10,11 +10,11 @@ function renderSigEntry(repo) {
   return `
     <details class="group rounded-lg bg-slate-200/50 dark:bg-gray-800/30 overflow-hidden">
       <summary class="flex items-center gap-2 px-3 py-2 cursor-pointer select-none list-none hover:bg-slate-200/80 dark:hover:bg-gray-800/60 transition-colors">
-        <svg class="w-3 h-3 text-slate-400 dark:text-gray-500 shrink-0 transition-transform group-open:rotate-90" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <svg class="w-3 h-3 text-slate-600 dark:text-gray-400 shrink-0 transition-transform group-open:rotate-90" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <polyline points="9,6 15,12 9,18"/>
         </svg>
         <span class="text-xs font-medium text-slate-700 dark:text-gray-300 flex-1 truncate">${repo.name}</span>
-        <span class="text-xs text-slate-400 dark:text-gray-500 font-mono shrink-0">${num(repo.count)} · ${repo.contributors.length} ${repo.contributors.length === 1 ? 'person' : 'people'}</span>
+        <span class="text-xs text-slate-600 dark:text-gray-400 font-mono shrink-0">${num(repo.count)} · ${repo.contributors.length} ${repo.contributors.length === 1 ? 'person' : 'people'}</span>
       </summary>
       <div class="px-2 pb-2 space-y-0.5">
         <a href="${repo.url}" target="_blank"
@@ -43,7 +43,7 @@ export function openCoverageModal(org) {
 
   el('coverage-modal-list').innerHTML = repos.length
     ? repos.map(renderSigEntry).join('')
-    : '<p class="text-xs text-slate-300 dark:text-gray-600 text-center py-4">No SIG activity found for this period</p>';
+    : '<p class="text-xs text-slate-500 dark:text-gray-400 text-center py-4">No SIG activity found for this period</p>';
 
   panel.scrollTop = 0;
   el('coverage-modal').classList.remove('hidden');

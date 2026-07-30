@@ -13,14 +13,14 @@ import { updatePager } from '../ui.js';
 // platform filter would silently mix mismatched-scope numbers in the same row.
 const EMPTY_PLATFORM =
   'Coverage only supports "All platforms".<br>' +
-  '<span class="text-xs text-slate-300 dark:text-gray-600">SIG data (<code class="bg-slate-200 dark:bg-gray-800 px-1.5 py-0.5 rounded text-slate-500 dark:text-gray-400">data/sigs.json</code>) ' +
+  '<span class="text-xs text-slate-500 dark:text-gray-400">SIG data (<code class="bg-slate-200 dark:bg-gray-800 px-1.5 py-0.5 rounded text-slate-600 dark:text-gray-400">data/sigs.json</code>) ' +
   'isn\'t split by platform, so per-platform numbers here would be misleading. Switch the platform filter back to "All platforms".</span>';
 
 const EMPTY_NO_DATA =
   'Coverage data not available.<br>' +
-  '<span class="text-xs text-slate-300 dark:text-gray-600">Requires <code class="bg-slate-200 dark:bg-gray-800 px-1.5 py-0.5 rounded text-slate-500 dark:text-gray-400">data/cache.json</code> ' +
-  'and <code class="bg-slate-200 dark:bg-gray-800 px-1.5 py-0.5 rounded text-slate-500 dark:text-gray-400">data/sigs.json</code> — run ' +
-  '<code class="bg-slate-200 dark:bg-gray-800 px-1.5 py-0.5 rounded text-slate-500 dark:text-gray-400">make fetch-data</code>.</span>';
+  '<span class="text-xs text-slate-500 dark:text-gray-400">Requires <code class="bg-slate-200 dark:bg-gray-800 px-1.5 py-0.5 rounded text-slate-600 dark:text-gray-400">data/cache.json</code> ' +
+  'and <code class="bg-slate-200 dark:bg-gray-800 px-1.5 py-0.5 rounded text-slate-600 dark:text-gray-400">data/sigs.json</code> — run ' +
+  '<code class="bg-slate-200 dark:bg-gray-800 px-1.5 py-0.5 rounded text-slate-600 dark:text-gray-400">make fetch-data</code>.</span>';
 
 // Whether Coverage can render at all right now — mirrors the guards in loadCoverage()
 // so onCoverageSearch() can bail out instead of touching cacheData() when it's unusable.
@@ -101,7 +101,7 @@ export function renderCoverageTable(rows, baseOffset) {
     const { sigCount, maintainers, approvers } = statsForOrg(o.name);
     return `
       <tr class="coverage-row border-b border-slate-200 dark:border-gray-800/40 hover:bg-slate-200/50 dark:hover:bg-gray-800/20 transition-colors" data-idx="${i}" title="Click to see SIG breakdown">
-        <td class="px-4 py-2.5 text-slate-300 dark:text-gray-600 text-xs">${baseOffset + i + 1}</td>
+        <td class="px-4 py-2.5 text-slate-500 dark:text-gray-400 text-xs">${baseOffset + i + 1}</td>
         <td class="px-4 py-2.5">
           <div class="flex items-center gap-2">
             ${logo ? `<img src="${logo}" alt="" class="w-6 h-6 rounded object-contain shrink-0" onerror="this.style.display='none'">` : orgPlaceholder('w-6 h-6')}

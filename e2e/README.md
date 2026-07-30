@@ -25,7 +25,7 @@ npx playwright show-report
 | File | Covers |
 |------|--------|
 | `navigation.spec.mjs` | Tab switching by click and by direct hash URL, timeframe presets, browser back/forward, deep-linked modal opening (including the nonexistent-entity case) |
-| `accessibility.spec.mjs` | `@axe-core/playwright` scan (WCAG 2.0/2.1 A+AA) for every tab and every open modal type |
+| `accessibility.spec.mjs` | `@axe-core/playwright` scan (WCAG 2.0/2.1 A+AA) for every tab and every open modal type, in both light and dark theme |
 | `responsive.spec.mjs` | Layout at 3 breakpoints (375×667 / 768×1024 / 1440×900) — nav usability, no page-level horizontal overflow, key controls visible, modal width |
 | `modals.spec.mjs` | Open via row click, close via close-button/backdrop/Escape, search-then-open flow |
 

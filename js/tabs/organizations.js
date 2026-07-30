@@ -61,11 +61,11 @@ function renderOrgsPage() {
 
 function concentrationCell(orgName, orgTotal) {
   const cached = usingCache();
-  if (!cached) return `<td class="px-4 py-2.5 text-right text-xs text-slate-300 dark:text-gray-600">—</td>`;
+  if (!cached) return `<td class="px-4 py-2.5 text-right text-xs text-slate-500 dark:text-gray-400">—</td>`;
   const r = calcOrgConcentration(contributorsForOrg(orgName), orgTotal);
-  if (r.status === 'limited') return `<td class="px-4 py-2.5 text-right text-xs text-slate-300 dark:text-gray-600">—</td>`;
+  if (r.status === 'limited') return `<td class="px-4 py-2.5 text-right text-xs text-slate-500 dark:text-gray-400">—</td>`;
   const dot   = r.color === 'green' ? 'bg-green-500'  : r.color === 'yellow' ? 'bg-yellow-500'  : 'bg-red-500';
-  const label = r.color === 'green' ? 'text-green-600 dark:text-green-400' : r.color === 'yellow' ? 'text-yellow-400' : 'text-red-600 dark:text-red-400';
+  const label = r.color === 'green' ? 'text-green-700 dark:text-green-400' : r.color === 'yellow' ? 'text-yellow-700 dark:text-yellow-400' : 'text-red-600 dark:text-red-400';
   return `<td class="px-4 py-2.5 text-right">
     <span class="inline-flex items-center gap-1.5 justify-end">
       <span class="w-1.5 h-1.5 rounded-full ${dot} shrink-0"></span>
@@ -80,7 +80,7 @@ export function renderOrgsTable(rows, baseOffset, ranks) {
     const rank = ranks ? ranks[i] : baseOffset + i + 1;
     return `
       <tr class="org-row border-b border-slate-200 dark:border-gray-800/40 hover:bg-slate-200/50 dark:hover:bg-gray-800/20 transition-colors" data-idx="${i}" title="Click to see contributors & repositories">
-        <td class="px-4 py-2.5 text-slate-300 dark:text-gray-600 text-xs">${rank}</td>
+        <td class="px-4 py-2.5 text-slate-500 dark:text-gray-400 text-xs">${rank}</td>
         <td class="px-4 py-2.5">
           <div class="flex items-center gap-2">
             ${resolveOrgLogo(o) ? `<img src="${resolveOrgLogo(o)}" alt="" class="w-6 h-6 rounded object-contain shrink-0" onerror="this.style.display='none'">` : orgPlaceholder('w-6 h-6')}

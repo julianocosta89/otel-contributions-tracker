@@ -52,7 +52,7 @@ export function renderSigsList() {
     return `
       <tr class="sig-row border-b border-slate-200 dark:border-gray-800/40 hover:bg-slate-200/50 dark:hover:bg-gray-800/20 transition-colors"
           data-repo="${e.repo}" title="Click to see contributors &amp; organizations">
-        <td class="px-4 py-2.5 text-slate-300 dark:text-gray-600 text-xs">${e.rank}</td>
+        <td class="px-4 py-2.5 text-slate-500 dark:text-gray-400 text-xs">${e.rank}</td>
         <td class="px-4 py-2.5">
           <div class="flex items-center gap-2">
             <span class="text-sm font-medium text-slate-900 dark:text-gray-100">${e.repo}</span>

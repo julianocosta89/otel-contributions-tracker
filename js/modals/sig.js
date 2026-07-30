@@ -18,11 +18,11 @@ export function openSigModal(repoName) {
 
   el('sig-modal-contrib-list').innerHTML = contribs.length
     ? contribs.map((c, i) => renderPersonRow(c, i, { sigStyle: true })).join('')
-    : '<p class="text-xs text-slate-300 dark:text-gray-600 text-center py-4">No contributors in this period</p>';
+    : '<p class="text-xs text-slate-500 dark:text-gray-400 text-center py-4">No contributors in this period</p>';
 
   el('sig-modal-orgs-list').innerHTML = orgs.length
     ? orgs.map((o, i) => renderOrgRow(o, i, { sigStyle: true })).join('')
-    : '<p class="text-xs text-slate-300 dark:text-gray-600 text-center py-4">No organizations in this period</p>';
+    : '<p class="text-xs text-slate-500 dark:text-gray-400 text-center py-4">No organizations in this period</p>';
 
   const modal = el('sig-modal');
   const panel = el('sig-modal-panel');

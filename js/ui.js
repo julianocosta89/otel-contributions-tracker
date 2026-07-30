@@ -82,7 +82,7 @@ export function setPreset(preset, { updateHash = true, autoReload = true } = {})
 
   document.querySelectorAll('.preset-btn').forEach(b => {
     const on = b.dataset.preset === preset;
-    b.className = `preset-btn px-2.5 py-1 rounded-md transition-colors ${on ? 'bg-blue-600 text-white' : 'text-slate-500 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white'}`;
+    b.className = `preset-btn px-2.5 py-1 rounded-md transition-colors ${on ? 'bg-blue-600 text-white' : 'text-slate-600 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white'}`;
   });
 
   if (updateHash) setHash(S.tab, preset);

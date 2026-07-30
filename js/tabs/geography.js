@@ -32,6 +32,8 @@ export async function loadGeography() {
       </tr>`).join('');
     hide('geo-table-loading'); show('geo-table-wrap');
 
+    document.dispatchEvent(new CustomEvent('tabLoaded', { detail: 'geography' }));
+
   } catch (e) {
     showError(e.message);
     hide('geo-chart-loading'); hide('geo-table-loading');

@@ -108,6 +108,8 @@ export async function loadConcentration() {
       el('od-list-tile').style.maxHeight = el('od-factor-tile').offsetHeight + 'px';
     });
 
+    document.dispatchEvent(new CustomEvent('tabLoaded', { detail: 'concentration' }));
+
   } catch (e) {
     showError(e.message);
     hide('bc-loading'); hide('bc-list-loading'); hide('od-loading'); hide('od-list-loading');

@@ -135,10 +135,11 @@ async function init() {
   if (VALID_TABS.includes(tab)) {
     if (!applyPageDetail(tab, detail, S) && detail) PENDING_DETAIL = { tab, detail };
     applyTimeframeFromHash(timeframe, tab); // resets pages to 0 — restore page after this
-    applyPageDetail(tab, detail, S);   // re-apply after applyTimeframeFromHash's reload() reset it
+    applyPageDetail(tab, detail, S);   // re-apply after applyTimeframeFromHash's reset
     setTab(tab, { updateHash: false });
   } else {
     applyTimeframeFromHash(timeframe);
+    reload();
   }
 }
 

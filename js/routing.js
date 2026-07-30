@@ -1,6 +1,12 @@
 export const VALID_TABS    = ['overview', 'contributors', 'organizations', 'concentration', 'geography', 'sigs', 'coverage'];
 export const VALID_PRESETS = ['30d', '60d', '90d', '6m', '1y', '2y', '3y', 'all'];
 
+// Tabs whose second hash segment may be an entity-detail deep-link (opens a
+// modal once the tab loads) rather than a timeframe. Every other tab has no
+// concept of a "detail", so any second segment there must be a (possibly
+// bogus) timeframe attempt rather than a legacy entity name.
+const DETAIL_TABS = ['contributors', 'organizations', 'sigs', 'coverage'];
+
 // Returns true for valid presets, date ranges, AND things that look like
 // preset attempts (e.g. "20d", "5y") so they reach the redirect fallback
 // instead of being silently misread as entity-detail deep-links.
@@ -42,10 +48,11 @@ export function parseHash() {
   const tab = decodeURIComponent(segments[0]);
   if (segments.length === 1) return { tab };
 
-  // Check if second segment is a timeframe; if not, treat everything after tab as detail (backward compat)
+  // Check if second segment is a timeframe; if not, treat everything after tab as detail
+  // (backward compat) — but only for tabs that actually support an entity-detail deep-link.
   let timeframe = null;
   let rest;
-  if (isTimeframeSegment(segments[1])) {
+  if (isTimeframeSegment(segments[1]) || !DETAIL_TABS.includes(tab)) {
     timeframe = segments[1];
     rest = segments.slice(2);
   } else {

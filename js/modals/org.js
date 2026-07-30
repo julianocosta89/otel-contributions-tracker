@@ -156,7 +156,7 @@ function renderOrgRepos(repos, truncated, totalPRs, org, isPartial) {
 
 export function closeOrgModal() {
   const panel = el('org-modal-panel');
-  if (!panel.classList.contains('open')) return; // no-op if not the currently open modal (e.g. Escape closing another one)
+  if (el('org-modal').classList.contains('hidden')) return; // no-op if not the currently open modal (e.g. Escape closing another one)
   panel.classList.remove('open');
   document.body.style.overflow = '';
   setTimeout(() => el('org-modal').classList.add('hidden'), 200);

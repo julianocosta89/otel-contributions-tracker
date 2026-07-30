@@ -117,13 +117,13 @@ Shared HTML builder functions used by both tabs and modals.
 Pure URL helpers — no side effects, no imports from tabs or modals.
 
 Hash format: `#tab` | `#tab/timeframe` | `#tab/timeframe/detail`
-- `timeframe` is a preset key (`1y`, `90d`, …) or a custom date range (`2025-01-01..2026-01-01`)
+- `timeframe` is a preset key (`1y`, `90d`, …)
 - `detail` is a page ref (`page/N`) or a URL-encoded entity name
 
 Exports:
 - `VALID_TABS` — array of valid tab names used to validate hash fragments
 - `VALID_PRESETS` — array of valid preset keys (`30d`, `60d`, `90d`, `6m`, `1y`, `2y`, `3y`, `all`)
-- `timeframeHash(S)` — returns the URL-safe timeframe string for the current state (`S.preset` or `startDate..endDate` for custom ranges)
+- `timeframeHash(S)` — returns the URL-safe timeframe string for the current state (`S.preset`)
 - `setHash(tab, timeframe, detail)` — writes `#tab`, `#tab/timeframe`, or `#tab/timeframe/detail` to the address bar via `history.replaceState`
 - `pageDetail(pageIndex)` — converts a 0-indexed page to a `page/N` URL detail string (or `null` for page 0)
 - `parseHash()` — splits `location.hash` into `{ tab, timeframe, detail }` (all optional); backward-compatible with old `#tab/detail` hashes that omit the timeframe segment

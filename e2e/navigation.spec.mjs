@@ -42,16 +42,6 @@ test.describe('timeframe presets via hash', () => {
     });
   }
 
-  // Custom ranges aren't in cache.json, so the app falls back to calling the live
-  // LF Insights API directly from the browser — which sends no CORS headers, so
-  // the fetch is blocked in every browser. Needs a backend proxy (or upstream CORS
-  // support) before this can pass; tracked as a known gap rather than skipped silently.
-  test.fixme('a custom date range deep-link renders with no preset marked active', async ({ page }) => {
-    await gotoTab(page, 'overview', { preset: '2024-01-01..2024-06-01' });
-    const activePresets = await page.locator('.preset-btn.bg-blue-600').count();
-    expect(activePresets).toBe(0);
-  });
-
   test('an unknown timeframe silently redirects to 1y', async ({ page }) => {
     await gotoTab(page, 'overview', { preset: 'not-a-real-preset' });
     await expect(page.locator('.preset-btn[data-preset="1y"]')).toHaveClass(/bg-blue-600/);

@@ -100,14 +100,6 @@ export function applyTimeframeFromHash(timeframe, tab = S.tab) {
   if (!timeframe) { setPreset('1y', { updateHash: false, autoReload: false }); return; }
   if (VALID_PRESETS.includes(timeframe)) {
     setPreset(timeframe, { updateHash: false, autoReload: false });
-  } else if (/^\d{4}-\d{2}-\d{2}\.\.\d{4}-\d{2}-\d{2}$/.test(timeframe)) {
-    const [start, end] = timeframe.split('..');
-    S.preset            = 'custom';
-    S.filters.startDate = start;
-    S.filters.endDate   = end;
-    document.querySelectorAll('.preset-btn').forEach(b => {
-      b.className = 'preset-btn px-2.5 py-1 rounded-md text-slate-500 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white transition-colors';
-    });
   } else {
     // Unknown timeframe — silently redirect to 1y
     setPreset('1y', { updateHash: false, autoReload: false });

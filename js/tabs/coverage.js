@@ -38,6 +38,7 @@ function showCoverageEmpty(message) {
   el('coverage-search').value = '';
   el('coverage-search-clear').classList.add('hidden');
   hide('coverage-loading'); hide('coverage-table-wrap'); show('coverage-empty');
+  document.dispatchEvent(new CustomEvent('tabLoaded', { detail: 'coverage' }));
 }
 
 export async function loadCoverage() {

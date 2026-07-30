@@ -51,16 +51,16 @@ export function renderOrgConcentration(contribs, orgTotal) {
   const r = calcOrgConcentration(contribs, orgTotal);
   const target = el('org-modal-concentration');
   if (r.status === 'limited') {
-    target.innerHTML = `<span class="text-xs text-slate-400 dark:text-gray-500 italic">Not enough GitHub data to assess</span>`;
+    target.innerHTML = `<span class="text-xs text-slate-600 dark:text-gray-400 italic">Not enough GitHub data to assess</span>`;
     return;
   }
   const dot   = r.color === 'green' ? 'bg-green-500'  : r.color === 'yellow' ? 'bg-yellow-500'  : 'bg-red-500';
-  const label = r.color === 'green' ? 'text-green-600 dark:text-green-400' : r.color === 'yellow' ? 'text-yellow-400' : 'text-red-600 dark:text-red-400';
+  const label = r.color === 'green' ? 'text-green-700 dark:text-green-400' : r.color === 'yellow' ? 'text-yellow-700 dark:text-yellow-400' : 'text-red-600 dark:text-red-400';
   target.innerHTML = `
     <div class="flex items-center gap-2">
       <span class="w-2 h-2 rounded-full ${dot} shrink-0"></span>
       <span class="text-sm font-semibold ${label}">${r.label}</span>
-      <span class="text-xs text-slate-300 dark:text-gray-600 font-mono ml-auto">HHI ${num(r.hhi)}</span>
+      <span class="text-xs text-slate-500 dark:text-gray-400 font-mono ml-auto">HHI ${num(r.hhi)}</span>
     </div>
-    <div class="text-xs text-slate-400 dark:text-gray-500 mt-1">Top contributor: ${pct(r.top1Pct)} of ${S.filters.platform === 'all' ? 'all-platform' : S.filters.platform} activity</div>`;
+    <div class="text-xs text-slate-600 dark:text-gray-400 mt-1">Top contributor: ${pct(r.top1Pct)} of ${S.filters.platform === 'all' ? 'all-platform' : S.filters.platform} activity</div>`;
 }

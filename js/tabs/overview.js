@@ -73,7 +73,7 @@ export async function loadOverview() {
     hide('ov-orgs-loading'); show('ov-orgs-list');
     el('ov-orgs-list').innerHTML = topOrgs.data.map((o, i) => `
       <div class="flex items-center gap-2">
-        <span class="text-slate-300 dark:text-gray-600 text-xs w-4 shrink-0">${i + 1}</span>
+        <span class="text-slate-500 dark:text-gray-400 text-xs w-4 shrink-0">${i + 1}</span>
         ${resolveOrgLogo(o) ? `<img src="${resolveOrgLogo(o)}" alt="" class="w-5 h-5 rounded object-contain shrink-0" onerror="this.style.display='none'">` : orgPlaceholder('w-5 h-5')}
         <span class="text-sm flex-1 truncate">${o.name}</span>
         <span class="text-xs text-slate-500 dark:text-gray-400 font-mono shrink-0">${num(o.contributions)}</span>

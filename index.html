@@ -30,14 +30,14 @@
     <div class="flex items-center gap-2 flex-wrap pb-2.5">
       <!-- Date presets -->
       <div class="flex bg-slate-200 dark:bg-gray-800 rounded-lg p-0.5 gap-0.5 text-xs">
-        <button data-preset="30d"  onclick="setPreset('30d')"  class="preset-btn px-2.5 py-1 rounded-md text-slate-500 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white transition-colors">30d</button>
-        <button data-preset="60d"  onclick="setPreset('60d')"  class="preset-btn px-2.5 py-1 rounded-md text-slate-500 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white transition-colors">60d</button>
-        <button data-preset="90d"  onclick="setPreset('90d')"  class="preset-btn px-2.5 py-1 rounded-md text-slate-500 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white transition-colors">90d</button>
-        <button data-preset="6m"   onclick="setPreset('6m')"   class="preset-btn px-2.5 py-1 rounded-md text-slate-500 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white transition-colors">6m</button>
+        <button data-preset="30d"  onclick="setPreset('30d')"  class="preset-btn px-2.5 py-1 rounded-md text-slate-600 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white transition-colors">30d</button>
+        <button data-preset="60d"  onclick="setPreset('60d')"  class="preset-btn px-2.5 py-1 rounded-md text-slate-600 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white transition-colors">60d</button>
+        <button data-preset="90d"  onclick="setPreset('90d')"  class="preset-btn px-2.5 py-1 rounded-md text-slate-600 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white transition-colors">90d</button>
+        <button data-preset="6m"   onclick="setPreset('6m')"   class="preset-btn px-2.5 py-1 rounded-md text-slate-600 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white transition-colors">6m</button>
         <button data-preset="1y"   onclick="setPreset('1y')"   class="preset-btn px-2.5 py-1 rounded-md bg-blue-600 text-white">1y</button>
-        <button data-preset="2y"   onclick="setPreset('2y')"   class="preset-btn px-2.5 py-1 rounded-md text-slate-500 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white transition-colors">2y</button>
-        <button data-preset="3y"   onclick="setPreset('3y')"   class="preset-btn px-2.5 py-1 rounded-md text-slate-500 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white transition-colors">3y</button>
-        <button data-preset="all"  onclick="setPreset('all')"  class="preset-btn px-2.5 py-1 rounded-md text-slate-500 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white transition-colors">all</button>
+        <button data-preset="2y"   onclick="setPreset('2y')"   class="preset-btn px-2.5 py-1 rounded-md text-slate-600 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white transition-colors">2y</button>
+        <button data-preset="3y"   onclick="setPreset('3y')"   class="preset-btn px-2.5 py-1 rounded-md text-slate-600 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white transition-colors">3y</button>
+        <button data-preset="all"  onclick="setPreset('all')"  class="preset-btn px-2.5 py-1 rounded-md text-slate-600 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white transition-colors">all</button>
       </div>
 
       <!-- Platform -->
@@ -54,7 +54,7 @@
 
       <!-- Theme toggle -->
       <button onclick="toggleTheme()" title="Toggle light/dark mode" aria-label="Toggle light/dark mode"
-        class="ml-auto p-1.5 rounded-lg bg-slate-200 dark:bg-gray-800 border border-slate-300 dark:border-gray-700 text-slate-500 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white transition-colors shrink-0">
+        class="ml-auto p-1.5 rounded-lg bg-slate-200 dark:bg-gray-800 border border-slate-300 dark:border-gray-700 text-slate-600 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white transition-colors shrink-0">
         <svg id="icon-moon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
         </svg>
@@ -102,19 +102,19 @@
       <div class="bg-white dark:bg-gray-900 rounded-xl p-4 border border-slate-200 dark:border-gray-800">
         <p class="text-slate-500 dark:text-gray-400 text-xs mb-1">Maintainers</p>
         <p class="text-2xl font-bold" id="stat-maintainers">—</p>
-        <p class="text-xs mt-1 text-slate-300 dark:text-gray-600">Active project maintainers</p>
+        <p class="text-xs mt-1 text-slate-500 dark:text-gray-400">Active project maintainers</p>
       </div>
       <div class="bg-white dark:bg-gray-900 rounded-xl p-4 border border-slate-200 dark:border-gray-800">
         <p class="text-slate-500 dark:text-gray-400 text-xs mb-1">Reviewers</p>
         <p class="text-2xl font-bold" id="stat-reviewers">—</p>
-        <p class="text-xs mt-1 text-slate-300 dark:text-gray-600">Pull request reviewers</p>
+        <p class="text-xs mt-1 text-slate-500 dark:text-gray-400">Pull request reviewers</p>
       </div>
     </div>
 
     <div class="grid md:grid-cols-2 gap-4">
       <div class="bg-white dark:bg-gray-900 rounded-xl p-4 border border-slate-200 dark:border-gray-800">
         <h2 class="text-sm font-semibold mb-0.5">Contribution Concentration</h2>
-        <p class="text-xs text-slate-400 dark:text-gray-500 mb-3">Share of work across top vs. other contributors</p>
+        <p class="text-xs text-slate-600 dark:text-gray-400 mb-3">Share of work across top vs. other contributors</p>
         <div id="ov-conc-loading" class="flex justify-center py-10"><span class="spinner"></span></div>
         <div id="ov-conc-wrap" class="hidden">
           <canvas id="ovConcChart"></canvas>
@@ -123,7 +123,7 @@
       </div>
       <div class="bg-white dark:bg-gray-900 rounded-xl p-4 border border-slate-200 dark:border-gray-800">
         <h2 class="text-sm font-semibold mb-0.5">Top Organizations</h2>
-        <p class="text-xs text-slate-400 dark:text-gray-500 mb-3">Most active contributing companies</p>
+        <p class="text-xs text-slate-600 dark:text-gray-400 mb-3">Most active contributing companies</p>
         <div id="ov-orgs-loading" class="flex justify-center py-10"><span class="spinner"></span></div>
         <div id="ov-orgs-list" class="hidden space-y-1.5"></div>
       </div>
@@ -131,7 +131,7 @@
 
     <div class="bg-white dark:bg-gray-900 rounded-xl p-4 border border-slate-200 dark:border-gray-800">
       <h2 class="text-sm font-semibold mb-0.5">Geographic Reach
-        <span class="text-slate-400 dark:text-gray-500 font-normal text-xs ml-1">— top 10 known countries</span>
+        <span class="text-slate-600 dark:text-gray-400 font-normal text-xs ml-1">— top 10 known countries</span>
       </h2>
       <div id="ov-geo-loading" class="flex justify-center py-8"><span class="spinner"></span></div>
       <div id="ov-geo-wrap" class="hidden" style="position:relative; height:220px;">
@@ -151,16 +151,16 @@
               class="bg-slate-200 dark:bg-gray-800 border border-slate-300 dark:border-gray-700 rounded px-3 py-1.5 text-xs text-slate-700 dark:text-gray-300 focus:outline-none focus:border-blue-500 w-52 pr-7"
               oninput="onContribSearch()">
             <button id="contrib-search-clear" onclick="clearContribSearch()" aria-label="Clear search"
-              class="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 dark:text-gray-500 hover:text-slate-700 dark:text-gray-300 hidden text-sm leading-none">✕</button>
+              class="absolute right-2 top-1/2 -translate-y-1/2 text-slate-600 dark:text-gray-400 hover:text-slate-700 dark:text-gray-300 hidden text-sm leading-none">✕</button>
           </div>
-          <span id="contrib-total-label" class="text-xs text-slate-400 dark:text-gray-500 whitespace-nowrap"></span>
+          <span id="contrib-total-label" class="text-xs text-slate-600 dark:text-gray-400 whitespace-nowrap"></span>
         </div>
       </div>
       <div id="contrib-loading" class="flex justify-center py-14"><span class="spinner"></span></div>
       <div id="contrib-table-wrap" class="hidden overflow-x-auto">
         <table class="w-full">
           <thead>
-            <tr class="border-b border-slate-200 dark:border-gray-800 text-xs text-slate-400 dark:text-gray-500 uppercase tracking-wide">
+            <tr class="border-b border-slate-200 dark:border-gray-800 text-xs text-slate-600 dark:text-gray-400 uppercase tracking-wide">
               <th class="text-left px-4 py-3 w-8">#</th>
               <th class="text-left px-4 py-3">Contributor</th>
               <th class="text-right px-4 py-3">Contributions</th>
@@ -176,7 +176,7 @@
       <div class="flex items-center justify-between px-4 py-3 border-t border-slate-200 dark:border-gray-800">
         <button id="contrib-prev" onclick="changePage('contributors',-1)"
           class="px-3 py-1.5 text-xs bg-slate-200 dark:bg-gray-800 rounded hover:bg-slate-300 dark:hover:bg-gray-700 disabled:opacity-30 disabled:cursor-not-allowed transition-colors">← Prev</button>
-        <span id="contrib-page-info" class="text-xs text-slate-400 dark:text-gray-500"></span>
+        <span id="contrib-page-info" class="text-xs text-slate-600 dark:text-gray-400"></span>
         <button id="contrib-next" onclick="changePage('contributors', 1)"
           class="px-3 py-1.5 text-xs bg-slate-200 dark:bg-gray-800 rounded hover:bg-slate-300 dark:hover:bg-gray-700 disabled:opacity-30 disabled:cursor-not-allowed transition-colors">Next →</button>
       </div>
@@ -197,16 +197,16 @@
                 class="bg-slate-200 dark:bg-gray-800 border border-slate-300 dark:border-gray-700 rounded px-3 py-1.5 text-xs text-slate-700 dark:text-gray-300 focus:outline-none focus:border-blue-500 w-52 pr-7"
                 oninput="onOrgSearch()">
               <button id="org-search-clear" onclick="clearOrgSearch()" aria-label="Clear search"
-                class="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 dark:text-gray-500 hover:text-slate-700 dark:text-gray-300 hidden text-sm leading-none">✕</button>
+                class="absolute right-2 top-1/2 -translate-y-1/2 text-slate-600 dark:text-gray-400 hover:text-slate-700 dark:text-gray-300 hidden text-sm leading-none">✕</button>
             </div>
-            <span id="orgs-total-label" class="text-xs text-slate-400 dark:text-gray-500 whitespace-nowrap"></span>
+            <span id="orgs-total-label" class="text-xs text-slate-600 dark:text-gray-400 whitespace-nowrap"></span>
           </div>
         </div>
         <div id="orgs-loading" class="flex justify-center py-14"><span class="spinner"></span></div>
         <div id="orgs-table-wrap" class="hidden overflow-x-auto flex-1">
           <table class="w-full">
             <thead>
-              <tr class="border-b border-slate-200 dark:border-gray-800 text-xs text-slate-400 dark:text-gray-500 uppercase tracking-wide">
+              <tr class="border-b border-slate-200 dark:border-gray-800 text-xs text-slate-600 dark:text-gray-400 uppercase tracking-wide">
                 <th class="text-left px-4 py-3 w-8">#</th>
                 <th class="text-left px-4 py-3">Organization</th>
                 <th class="text-right px-4 py-3">Contributions</th>
@@ -221,7 +221,7 @@
         <div class="flex items-center justify-between px-4 py-3 border-t border-slate-200 dark:border-gray-800 mt-auto">
           <button id="orgs-prev" onclick="changePage('organizations',-1)"
             class="px-3 py-1.5 text-xs bg-slate-200 dark:bg-gray-800 rounded hover:bg-slate-300 dark:hover:bg-gray-700 disabled:opacity-30 disabled:cursor-not-allowed transition-colors">← Prev</button>
-          <span id="orgs-page-info" class="text-xs text-slate-400 dark:text-gray-500"></span>
+          <span id="orgs-page-info" class="text-xs text-slate-600 dark:text-gray-400"></span>
           <button id="orgs-next" onclick="changePage('organizations', 1)"
             class="px-3 py-1.5 text-xs bg-slate-200 dark:bg-gray-800 rounded hover:bg-slate-300 dark:hover:bg-gray-700 disabled:opacity-30 disabled:cursor-not-allowed transition-colors">Next →</button>
         </div>
@@ -234,17 +234,17 @@
     <div class="grid md:grid-cols-2 gap-4 items-start">
       <div id="bc-factor-tile" class="bg-white dark:bg-gray-900 rounded-xl border border-slate-200 dark:border-gray-800 p-4">
         <h2 class="text-sm font-semibold">Contributor Bus Factor</h2>
-        <p class="text-xs text-slate-400 dark:text-gray-500 mt-0.5 mb-4">How much of the project depends on a small group? High concentration in few contributors is a project health risk.</p>
+        <p class="text-xs text-slate-600 dark:text-gray-400 mt-0.5 mb-4">How much of the project depends on a small group? High concentration in few contributors is a project health risk.</p>
         <div id="bc-loading" class="flex justify-center py-10"><span class="spinner"></span></div>
         <div id="bc-content" class="hidden">
           <div class="flex items-start gap-6 mb-5">
             <div class="text-center">
               <div class="text-3xl font-bold text-blue-600 dark:text-blue-400" id="bc-top-n">—</div>
-              <div class="text-xs text-slate-400 dark:text-gray-500 mt-1">core contributors</div>
+              <div class="text-xs text-slate-600 dark:text-gray-400 mt-1">core contributors</div>
             </div>
             <div class="text-center">
-              <div class="text-3xl font-bold text-orange-400" id="bc-top-pct">—</div>
-              <div class="text-xs text-slate-400 dark:text-gray-500 mt-1">of all activity</div>
+              <div class="text-3xl font-bold text-orange-700 dark:text-orange-400" id="bc-top-pct">—</div>
+              <div class="text-xs text-slate-600 dark:text-gray-400 mt-1">of all activity</div>
             </div>
           </div>
           <canvas id="bcChart" height="200"></canvas>
@@ -252,7 +252,7 @@
       </div>
       <div id="bc-list-tile" class="bg-white dark:bg-gray-900 rounded-xl border border-slate-200 dark:border-gray-800 p-4 flex flex-col">
         <h2 class="text-sm font-semibold">Core Contributor List</h2>
-        <p class="text-xs text-slate-400 dark:text-gray-500 mt-0.5 mb-4">The small group driving most of the project's activity</p>
+        <p class="text-xs text-slate-600 dark:text-gray-400 mt-0.5 mb-4">The small group driving most of the project's activity</p>
         <div id="bc-list-loading" class="flex justify-center py-10"><span class="spinner"></span></div>
         <div id="bc-list" class="hidden space-y-1 overflow-y-auto min-h-0 flex-1 pr-1"></div>
       </div>
@@ -260,17 +260,17 @@
     <div class="grid md:grid-cols-2 gap-4 items-start">
       <div id="od-factor-tile" class="bg-white dark:bg-gray-900 rounded-xl border border-slate-200 dark:border-gray-800 p-4">
         <h2 class="text-sm font-semibold">Organization Dependency</h2>
-        <p class="text-xs text-slate-400 dark:text-gray-500 mt-0.5 mb-4">How much of the project is controlled by a few companies? Healthy projects spread contributions across many independent organizations.</p>
+        <p class="text-xs text-slate-600 dark:text-gray-400 mt-0.5 mb-4">How much of the project is controlled by a few companies? Healthy projects spread contributions across many independent organizations.</p>
         <div id="od-loading" class="flex justify-center py-10"><span class="spinner"></span></div>
         <div id="od-content" class="hidden">
           <div class="flex items-start gap-6 mb-5">
             <div class="text-center">
-              <div class="text-3xl font-bold text-purple-400" id="od-top-n">—</div>
-              <div class="text-xs text-slate-400 dark:text-gray-500 mt-1">top organizations</div>
+              <div class="text-3xl font-bold text-purple-700 dark:text-purple-400" id="od-top-n">—</div>
+              <div class="text-xs text-slate-600 dark:text-gray-400 mt-1">top organizations</div>
             </div>
             <div class="text-center">
-              <div class="text-3xl font-bold text-pink-400" id="od-top-pct">—</div>
-              <div class="text-xs text-slate-400 dark:text-gray-500 mt-1">of all activity</div>
+              <div class="text-3xl font-bold text-pink-700 dark:text-pink-400" id="od-top-pct">—</div>
+              <div class="text-xs text-slate-600 dark:text-gray-400 mt-1">of all activity</div>
             </div>
           </div>
           <canvas id="odChart" height="180"></canvas>
@@ -278,7 +278,7 @@
       </div>
       <div id="od-list-tile" class="bg-white dark:bg-gray-900 rounded-xl border border-slate-200 dark:border-gray-800 p-4 flex flex-col">
         <h2 class="text-sm font-semibold">Core Organizations List</h2>
-        <p class="text-xs text-slate-400 dark:text-gray-500 mt-0.5 mb-4">The top organizations driving most of the project's activity</p>
+        <p class="text-xs text-slate-600 dark:text-gray-400 mt-0.5 mb-4">The top organizations driving most of the project's activity</p>
         <div id="od-list-loading" class="flex justify-center py-10"><span class="spinner"></span></div>
         <div id="od-list" class="hidden space-y-1 overflow-y-auto min-h-0 flex-1 pr-1"></div>
       </div>
@@ -290,7 +290,7 @@
     <div class="grid md:grid-cols-2 gap-4">
       <div class="bg-white dark:bg-gray-900 rounded-xl border border-slate-200 dark:border-gray-800 p-4">
         <h2 class="text-sm font-semibold mb-0.5">World Map</h2>
-        <p class="text-xs text-slate-400 dark:text-gray-500 mb-3">Contributor distribution by country</p>
+        <p class="text-xs text-slate-600 dark:text-gray-400 mb-3">Contributor distribution by country</p>
         <div id="geo-chart-loading" class="flex justify-center py-10"><span class="spinner"></span></div>
         <div id="geo-chart-wrap" class="hidden" style="position:relative; height:420px;">
           <canvas id="geoChart"></canvas>
@@ -299,13 +299,13 @@
       <div class="bg-white dark:bg-gray-900 rounded-xl border border-slate-200 dark:border-gray-800 flex flex-col">
         <div class="p-4 border-b border-slate-200 dark:border-gray-800">
           <h2 class="text-sm font-semibold">All Countries</h2>
-          <p class="text-xs text-slate-400 dark:text-gray-500 mt-0.5" id="geo-country-count"></p>
+          <p class="text-xs text-slate-600 dark:text-gray-400 mt-0.5" id="geo-country-count"></p>
         </div>
         <div id="geo-table-loading" class="flex justify-center py-14"><span class="spinner"></span></div>
         <div id="geo-table-wrap" class="hidden overflow-y-auto" style="max-height:430px;" tabindex="0" role="region" aria-label="All countries">
           <table class="w-full">
             <thead class="sticky top-0 bg-white dark:bg-gray-900 z-10">
-              <tr class="border-b border-slate-200 dark:border-gray-800 text-xs text-slate-400 dark:text-gray-500 uppercase tracking-wide">
+              <tr class="border-b border-slate-200 dark:border-gray-800 text-xs text-slate-600 dark:text-gray-400 uppercase tracking-wide">
                 <th class="text-left px-4 py-3">Country</th>
                 <th class="text-right px-4 py-3">Count</th>
                 <th class="text-right px-4 py-3">Share</th>
@@ -324,7 +324,7 @@
       <div class="flex items-center justify-between p-4 border-b border-slate-200 dark:border-gray-800 flex-wrap gap-2">
         <div>
           <h2 class="text-sm font-semibold">Repositories / SIGs</h2>
-          <p class="text-xs text-slate-400 dark:text-gray-500 mt-0.5">Sorted by contributor count for the selected period</p>
+          <p class="text-xs text-slate-600 dark:text-gray-400 mt-0.5">Sorted by contributor count for the selected period</p>
         </div>
         <div class="flex items-center gap-2">
           <div class="relative">
@@ -332,20 +332,20 @@
               class="bg-slate-200 dark:bg-gray-800 border border-slate-300 dark:border-gray-700 rounded px-3 py-1.5 text-xs text-slate-700 dark:text-gray-300 focus:outline-none focus:border-blue-500 w-52 pr-7"
               oninput="onSigsSearch()">
             <button id="sigs-search-clear" onclick="clearSigsSearch()" aria-label="Clear search"
-              class="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 dark:text-gray-500 hover:text-slate-700 dark:text-gray-300 hidden text-sm leading-none">✕</button>
+              class="absolute right-2 top-1/2 -translate-y-1/2 text-slate-600 dark:text-gray-400 hover:text-slate-700 dark:text-gray-300 hidden text-sm leading-none">✕</button>
           </div>
-          <span id="sigs-total-label" class="text-xs text-slate-400 dark:text-gray-500 whitespace-nowrap"></span>
+          <span id="sigs-total-label" class="text-xs text-slate-600 dark:text-gray-400 whitespace-nowrap"></span>
         </div>
       </div>
       <div id="sigs-loading" class="hidden flex justify-center py-14"><span class="spinner"></span></div>
-      <div id="sigs-empty" class="hidden text-center py-14 text-slate-400 dark:text-gray-500 text-sm leading-relaxed">
+      <div id="sigs-empty" class="hidden text-center py-14 text-slate-600 dark:text-gray-400 text-sm leading-relaxed">
         SIG data not available.<br>
-        <span class="text-xs text-slate-300 dark:text-gray-600">Run <code class="bg-slate-200 dark:bg-gray-800 px-1.5 py-0.5 rounded text-slate-500 dark:text-gray-400">node scripts/fetch-sigs.mjs</code> to build it.</span>
+        <span class="text-xs text-slate-500 dark:text-gray-400">Run <code class="bg-slate-200 dark:bg-gray-800 px-1.5 py-0.5 rounded text-slate-600 dark:text-gray-400">node scripts/fetch-sigs.mjs</code> to build it.</span>
       </div>
       <div id="sigs-table-wrap" class="hidden overflow-x-auto">
         <table class="w-full">
           <thead>
-            <tr class="border-b border-slate-200 dark:border-gray-800 text-xs text-slate-400 dark:text-gray-500 uppercase tracking-wide">
+            <tr class="border-b border-slate-200 dark:border-gray-800 text-xs text-slate-600 dark:text-gray-400 uppercase tracking-wide">
               <th class="text-left px-4 py-3 w-8">#</th>
               <th class="text-left px-4 py-3">Repository</th>
               <th class="text-right px-4 py-3">Contributors</th>
@@ -364,7 +364,7 @@
       <div class="flex items-center justify-between p-4 border-b border-slate-200 dark:border-gray-800 flex-wrap gap-2">
         <div>
           <h2 class="text-sm font-semibold">Company Coverage</h2>
-          <p class="text-xs text-slate-400 dark:text-gray-500 mt-0.5">SIGs / repos each company's contributors are active in, for the selected period</p>
+          <p class="text-xs text-slate-600 dark:text-gray-400 mt-0.5">SIGs / repos each company's contributors are active in, for the selected period</p>
         </div>
         <div class="flex items-center gap-2">
           <div class="relative">
@@ -372,20 +372,20 @@
               class="bg-slate-200 dark:bg-gray-800 border border-slate-300 dark:border-gray-700 rounded px-3 py-1.5 text-xs text-slate-700 dark:text-gray-300 focus:outline-none focus:border-blue-500 w-52 pr-7"
               oninput="onCoverageSearch()">
             <button id="coverage-search-clear" onclick="clearCoverageSearch()" aria-label="Clear search"
-              class="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 dark:text-gray-500 hover:text-slate-700 dark:text-gray-300 hidden text-sm leading-none">✕</button>
+              class="absolute right-2 top-1/2 -translate-y-1/2 text-slate-600 dark:text-gray-400 hover:text-slate-700 dark:text-gray-300 hidden text-sm leading-none">✕</button>
           </div>
-          <span id="coverage-total-label" class="text-xs text-slate-400 dark:text-gray-500 whitespace-nowrap"></span>
+          <span id="coverage-total-label" class="text-xs text-slate-600 dark:text-gray-400 whitespace-nowrap"></span>
         </div>
       </div>
       <div id="coverage-loading" class="hidden flex justify-center py-14"><span class="spinner"></span></div>
-      <div id="coverage-empty" class="hidden text-center py-14 text-slate-400 dark:text-gray-500 text-sm leading-relaxed">
+      <div id="coverage-empty" class="hidden text-center py-14 text-slate-600 dark:text-gray-400 text-sm leading-relaxed">
         Coverage data not available.<br>
-        <span class="text-xs text-slate-300 dark:text-gray-600">Requires <code class="bg-slate-200 dark:bg-gray-800 px-1.5 py-0.5 rounded text-slate-500 dark:text-gray-400">data/cache.json</code> and <code class="bg-slate-200 dark:bg-gray-800 px-1.5 py-0.5 rounded text-slate-500 dark:text-gray-400">data/sigs.json</code> — run <code class="bg-slate-200 dark:bg-gray-800 px-1.5 py-0.5 rounded text-slate-500 dark:text-gray-400">make fetch-data</code>.</span>
+        <span class="text-xs text-slate-500 dark:text-gray-400">Requires <code class="bg-slate-200 dark:bg-gray-800 px-1.5 py-0.5 rounded text-slate-600 dark:text-gray-400">data/cache.json</code> and <code class="bg-slate-200 dark:bg-gray-800 px-1.5 py-0.5 rounded text-slate-600 dark:text-gray-400">data/sigs.json</code> — run <code class="bg-slate-200 dark:bg-gray-800 px-1.5 py-0.5 rounded text-slate-600 dark:text-gray-400">make fetch-data</code>.</span>
       </div>
       <div id="coverage-table-wrap" class="hidden overflow-x-auto flex-1">
         <table class="w-full">
           <thead>
-            <tr class="border-b border-slate-200 dark:border-gray-800 text-xs text-slate-400 dark:text-gray-500 uppercase tracking-wide">
+            <tr class="border-b border-slate-200 dark:border-gray-800 text-xs text-slate-600 dark:text-gray-400 uppercase tracking-wide">
               <th class="text-left px-4 py-3 w-8">#</th>
               <th class="text-left px-4 py-3">Company</th>
               <th class="text-right px-4 py-3">SIGs</th>
@@ -400,7 +400,7 @@
       <div class="flex items-center justify-between px-4 py-3 border-t border-slate-200 dark:border-gray-800 mt-auto">
         <button id="coverage-prev" onclick="changePage('coverage',-1)"
           class="px-3 py-1.5 text-xs bg-slate-200 dark:bg-gray-800 rounded hover:bg-slate-300 dark:hover:bg-gray-700 disabled:opacity-30 disabled:cursor-not-allowed transition-colors">← Prev</button>
-        <span id="coverage-page-info" class="text-xs text-slate-400 dark:text-gray-500"></span>
+        <span id="coverage-page-info" class="text-xs text-slate-600 dark:text-gray-400"></span>
         <button id="coverage-next" onclick="changePage('coverage', 1)"
           class="px-3 py-1.5 text-xs bg-slate-200 dark:bg-gray-800 rounded hover:bg-slate-300 dark:hover:bg-gray-700 disabled:opacity-30 disabled:cursor-not-allowed transition-colors">Next →</button>
       </div>
@@ -422,10 +422,10 @@
       <span id="org-modal-logo-ph" class="w-8 h-8 shrink-0 hidden inline-block"><svg viewBox="0 0 24 24" fill="none" class="w-full h-full"><rect width="24" height="24" rx="4" fill="#D1D5DB"/><rect x="7" y="3" width="10" height="16" fill="#4B5563"/><rect x="8.5" y="5.5" width="2.5" height="2" rx=".4" fill="#9CA3AF"/><rect x="13" y="5.5" width="2.5" height="2" rx=".4" fill="#9CA3AF"/><rect x="8.5" y="9" width="2.5" height="2" rx=".4" fill="#9CA3AF"/><rect x="13" y="9" width="2.5" height="2" rx=".4" fill="#9CA3AF"/><rect x="8.5" y="12.5" width="2.5" height="2" rx=".4" fill="#9CA3AF"/><rect x="13" y="12.5" width="2.5" height="2" rx=".4" fill="#9CA3AF"/><rect x="11" y="15.5" width="2" height="3.5" rx=".4" fill="#9CA3AF"/></svg></span>
       <div class="flex-1 min-w-0">
         <div id="org-modal-name" class="font-semibold text-sm leading-tight truncate"></div>
-        <div class="text-xs text-slate-400 dark:text-gray-500 mt-0.5">OpenTelemetry contributors</div>
+        <div class="text-xs text-slate-600 dark:text-gray-400 mt-0.5">OpenTelemetry contributors</div>
       </div>
       <button onclick="closeOrgModal()" title="Close" aria-label="Close organization details"
-        class="shrink-0 w-7 h-7 flex items-center justify-center rounded-lg text-slate-400 dark:text-gray-500 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-gray-800 transition-colors text-lg leading-none">×</button>
+        class="shrink-0 w-7 h-7 flex items-center justify-center rounded-lg text-slate-600 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-gray-800 transition-colors text-lg leading-none">×</button>
     </div>
 
     <!-- Scrollable body: grows to fill panel, contains two independently-scrollable sections -->
@@ -434,7 +434,7 @@
     <!-- Attribution source note (shown only when gitdm-split contributors exist for this org) -->
     <div id="org-modal-attribution-note" class="hidden px-4 pt-3">
       <div class="rounded-lg bg-slate-100/60 dark:bg-gray-800/50 px-3 py-2.5 text-xs text-slate-500 dark:text-gray-400 flex gap-2">
-        <span class="w-4 h-4 rounded-full border border-gray-600 flex items-center justify-center text-xs text-slate-300 dark:text-gray-600 shrink-0 mt-0.5">i</span>
+        <span class="w-4 h-4 rounded-full border border-gray-600 flex items-center justify-center text-xs text-slate-500 dark:text-gray-400 shrink-0 mt-0.5">i</span>
         <span class="leading-relaxed">The <span class="font-medium text-slate-700 dark:text-gray-300">Contributions</span> tile shows the
         <a id="org-modal-lfx-link" href="https://insights.linuxfoundation.org/project/opentelemetry/contributors" target="_blank"
           class="text-blue-600 dark:text-blue-400 hover:underline">LFX leaderboard</a> total
@@ -452,15 +452,15 @@
     <div class="px-4 pt-3 pb-2 border-b border-slate-200 dark:border-gray-800 space-y-2">
       <div class="grid grid-cols-3 gap-2">
         <div class="bg-slate-100/60 dark:bg-gray-800/50 rounded-lg p-2.5">
-          <div class="text-xs text-slate-400 dark:text-gray-500 mb-1">Contributions</div>
+          <div class="text-xs text-slate-600 dark:text-gray-400 mb-1">Contributions</div>
           <div id="org-modal-contributions" class="text-lg font-bold font-mono leading-none"></div>
         </div>
         <div class="bg-slate-100/60 dark:bg-gray-800/50 rounded-lg p-2.5">
-          <div id="org-modal-contributor-label" class="text-xs text-slate-400 dark:text-gray-500 mb-1">Contributors</div>
+          <div id="org-modal-contributor-label" class="text-xs text-slate-600 dark:text-gray-400 mb-1">Contributors</div>
           <div id="org-modal-contributor-count" class="text-lg font-bold leading-none"></div>
         </div>
         <div class="bg-slate-100/60 dark:bg-gray-800/50 rounded-lg p-2.5">
-          <div class="text-xs text-slate-400 dark:text-gray-500 mb-1">Repositories</div>
+          <div class="text-xs text-slate-600 dark:text-gray-400 mb-1">Repositories</div>
           <div id="org-modal-repo-count" class="text-lg font-bold leading-none flex items-center gap-1.5">
             <span id="org-repo-count-spinner" class="spinner" style="width:14px;height:14px;border-width:1.5px"></span>
           </div>
@@ -468,11 +468,11 @@
       </div>
       <div class="grid grid-cols-2 gap-2">
         <div class="bg-slate-100/60 dark:bg-gray-800/50 rounded-lg p-2.5">
-          <div class="text-xs text-slate-400 dark:text-gray-500 mb-1">Maintainers</div>
+          <div class="text-xs text-slate-600 dark:text-gray-400 mb-1">Maintainers</div>
           <div id="org-modal-maintainer-count" class="text-lg font-bold leading-none"></div>
         </div>
         <div class="bg-slate-100/60 dark:bg-gray-800/50 rounded-lg p-2.5">
-          <div class="text-xs text-slate-400 dark:text-gray-500 mb-1">Approvers</div>
+          <div class="text-xs text-slate-600 dark:text-gray-400 mb-1">Approvers</div>
           <div id="org-modal-approver-count" class="text-lg font-bold leading-none"></div>
         </div>
       </div>
@@ -482,9 +482,9 @@
     <div class="px-4 py-3 border-b border-slate-200 dark:border-gray-800">
       <div class="bg-slate-100/60 dark:bg-gray-800/50 rounded-lg px-3 py-2.5">
         <div class="flex items-center justify-between mb-1.5">
-          <div class="text-xs text-slate-400 dark:text-gray-500">Contribution concentration</div>
+          <div class="text-xs text-slate-600 dark:text-gray-400">Contribution concentration</div>
           <a href="docs/concentration.html" target="_blank"
-            class="w-4 h-4 rounded-full border border-gray-600 hover:border-gray-400 hover:text-slate-500 dark:text-gray-400 flex items-center justify-center text-xs text-slate-300 dark:text-gray-600 transition-colors shrink-0" title="How is this calculated?">?</a>
+            class="w-4 h-4 rounded-full border border-gray-600 hover:border-gray-400 hover:text-slate-500 dark:text-gray-400 flex items-center justify-center text-xs text-slate-500 dark:text-gray-400 transition-colors shrink-0" title="How is this calculated?">?</a>
         </div>
         <div id="org-modal-concentration"></div>
       </div>
@@ -494,22 +494,22 @@
     <div class="px-4 pt-4 pb-4 border-b border-slate-200 dark:border-gray-800 flex flex-col flex-1 min-h-0">
       <h3 class="text-sm font-semibold mb-3 shrink-0">Contributors</h3>
       <div id="org-modal-contrib-list" class="space-y-1 overflow-y-auto pr-1 flex-1 min-h-0"></div>
-      <p id="org-modal-contrib-more" class="hidden text-xs text-slate-300 dark:text-gray-600 pt-2 text-center shrink-0"></p>
+      <p id="org-modal-contrib-more" class="hidden text-xs text-slate-500 dark:text-gray-400 pt-2 text-center shrink-0"></p>
     </div>
 
     <!-- Repos section — pinned at bottom, list scrollable showing ~6 rows -->
     <div class="shrink-0 px-4 pt-4 pb-6">
       <div class="flex items-center justify-between mb-3">
         <h3 class="text-sm font-semibold">Repositories in period</h3>
-        <span id="org-modal-period-label" class="text-xs text-slate-300 dark:text-gray-600"></span>
+        <span id="org-modal-period-label" class="text-xs text-slate-500 dark:text-gray-400"></span>
       </div>
       <div class="overflow-y-auto" style="max-height:224px">
         <div id="org-modal-repos-loading" class="flex flex-col items-center justify-center py-8 gap-2">
           <span class="spinner"></span>
-          <span class="text-xs text-slate-300 dark:text-gray-600">Querying GitHub…</span>
+          <span class="text-xs text-slate-500 dark:text-gray-400">Querying GitHub…</span>
         </div>
         <div id="org-modal-repos-list" class="hidden space-y-1.5"></div>
-        <div id="org-modal-repos-error" class="hidden text-xs text-slate-400 dark:text-gray-500 text-center py-6 leading-relaxed"></div>
+        <div id="org-modal-repos-error" class="hidden text-xs text-slate-600 dark:text-gray-400 text-center py-6 leading-relaxed"></div>
       </div>
     </div>
 
@@ -530,25 +530,25 @@
       <span id="modal-avatar-ph" class="w-10 h-10 shrink-0 hidden inline-block"><svg viewBox="0 0 24 24" fill="none" class="w-full h-full"><rect width="24" height="24" rx="12" fill="#374151"/><circle cx="12" cy="9" r="3.5" fill="#9CA3AF"/><path fill-rule="evenodd" clip-rule="evenodd" d="M5 20c0-3.866 3.134-7 7-7s7 3.134 7 7H5z" fill="#9CA3AF"/></svg></span>
       <div class="flex-1 min-w-0">
         <div id="modal-name" class="font-semibold text-sm leading-tight truncate"></div>
-        <div id="modal-handles" class="text-xs text-slate-400 dark:text-gray-500 mt-0.5"></div>
+        <div id="modal-handles" class="text-xs text-slate-600 dark:text-gray-400 mt-0.5"></div>
       </div>
       <div id="modal-roles-wrap" class="hidden flex gap-1.5 flex-wrap justify-end shrink-0"></div>
       <button onclick="closeContribModal()" title="Close" aria-label="Close contributor details"
-        class="shrink-0 w-7 h-7 flex items-center justify-center rounded-lg text-slate-400 dark:text-gray-500 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-gray-800 transition-colors text-lg leading-none">×</button>
+        class="shrink-0 w-7 h-7 flex items-center justify-center rounded-lg text-slate-600 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-gray-800 transition-colors text-lg leading-none">×</button>
     </div>
 
     <!-- Stats row -->
     <div class="grid grid-cols-3 gap-2 px-4 py-3 border-b border-slate-200 dark:border-gray-800">
       <div class="bg-slate-100/60 dark:bg-gray-800/50 rounded-lg p-2.5">
-        <div class="text-xs text-slate-400 dark:text-gray-500 mb-1">Contributions</div>
+        <div class="text-xs text-slate-600 dark:text-gray-400 mb-1">Contributions</div>
         <div id="modal-contributions" class="text-lg font-bold font-mono leading-none"></div>
       </div>
       <div class="bg-slate-100/60 dark:bg-gray-800/50 rounded-lg p-2.5">
-        <div class="text-xs text-slate-400 dark:text-gray-500 mb-1">Share</div>
+        <div class="text-xs text-slate-600 dark:text-gray-400 mb-1">Share</div>
         <div id="modal-share" class="text-lg font-bold leading-none"></div>
       </div>
       <div class="bg-slate-100/60 dark:bg-gray-800/50 rounded-lg p-2.5 flex flex-col">
-        <div class="text-xs text-slate-400 dark:text-gray-500 mb-1">Company</div>
+        <div class="text-xs text-slate-600 dark:text-gray-400 mb-1">Company</div>
         <div id="modal-company" class="flex items-center min-h-[2rem]"></div>
       </div>
     </div>
@@ -557,14 +557,14 @@
     <div class="px-4 pt-4 pb-6">
       <div class="flex items-center justify-between mb-3">
         <h3 class="text-sm font-semibold">Repositories in period</h3>
-        <span id="modal-period-label" class="text-xs text-slate-300 dark:text-gray-600"></span>
+        <span id="modal-period-label" class="text-xs text-slate-500 dark:text-gray-400"></span>
       </div>
       <div id="modal-repos-loading" class="flex flex-col items-center justify-center py-10 gap-2">
         <span class="spinner"></span>
-        <span class="text-xs text-slate-300 dark:text-gray-600">Querying GitHub…</span>
+        <span class="text-xs text-slate-500 dark:text-gray-400">Querying GitHub…</span>
       </div>
       <div id="modal-repos-list" class="hidden space-y-1.5"></div>
-      <div id="modal-repos-error" class="hidden text-xs text-slate-400 dark:text-gray-500 text-center py-8 leading-relaxed"></div>
+      <div id="modal-repos-error" class="hidden text-xs text-slate-600 dark:text-gray-400 text-center py-8 leading-relaxed"></div>
     </div>
   </div>
 </div>
@@ -578,30 +578,30 @@
 
     <!-- Header -->
     <div class="sticky top-0 bg-white/95 dark:bg-gray-900/95 backdrop-blur border-b border-slate-200 dark:border-gray-800 px-4 py-3 flex items-center gap-3">
-      <svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor" class="text-slate-400 dark:text-gray-500 shrink-0">
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor" class="text-slate-600 dark:text-gray-400 shrink-0">
         <path d="M12 2C6.477 2 2 6.477 2 12c0 4.42 2.865 8.17 6.839 9.49.5.092.682-.217.682-.482 0-.237-.008-.866-.013-1.7-2.782.604-3.369-1.34-3.369-1.34-.454-1.156-1.11-1.464-1.11-1.464-.908-.62.069-.608.069-.608 1.003.07 1.531 1.03 1.531 1.03.892 1.529 2.341 1.087 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.11-4.555-4.943 0-1.091.39-1.984 1.029-2.683-.103-.253-.446-1.27.098-2.647 0 0 .84-.269 2.75 1.025A9.578 9.578 0 0 1 12 6.836c.85.004 1.705.114 2.504.336 1.909-1.294 2.747-1.025 2.747-1.025.546 1.377.202 2.394.1 2.647.64.699 1.028 1.592 1.028 2.683 0 3.842-2.339 4.687-4.566 4.935.359.309.678.919.678 1.852 0 1.336-.012 2.415-.012 2.741 0 .267.18.578.688.48C19.138 20.167 22 16.418 22 12c0-5.523-4.477-10-10-10z"/>
       </svg>
       <div class="flex-1 min-w-0">
         <a id="sig-modal-name" href="#" target="_blank"
           class="font-semibold text-sm leading-tight truncate block hover:text-blue-600 dark:text-blue-400 transition-colors"></a>
-        <div class="text-xs text-slate-400 dark:text-gray-500 mt-0.5">OpenTelemetry SIG</div>
+        <div class="text-xs text-slate-600 dark:text-gray-400 mt-0.5">OpenTelemetry SIG</div>
       </div>
       <button onclick="closeSigModal()" title="Close" aria-label="Close SIG details"
-        class="shrink-0 w-7 h-7 flex items-center justify-center rounded-lg text-slate-400 dark:text-gray-500 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-gray-800 transition-colors text-lg leading-none">×</button>
+        class="shrink-0 w-7 h-7 flex items-center justify-center rounded-lg text-slate-600 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-gray-800 transition-colors text-lg leading-none">×</button>
     </div>
 
     <!-- Stats row -->
     <div class="grid grid-cols-3 gap-2 px-4 py-3 border-b border-slate-200 dark:border-gray-800">
       <div class="bg-slate-100/60 dark:bg-gray-800/50 rounded-lg p-2.5">
-        <div class="text-xs text-slate-400 dark:text-gray-500 mb-1">Contributors</div>
+        <div class="text-xs text-slate-600 dark:text-gray-400 mb-1">Contributors</div>
         <div id="sig-modal-contributors" class="text-lg font-bold leading-none"></div>
       </div>
       <div class="bg-slate-100/60 dark:bg-gray-800/50 rounded-lg p-2.5">
-        <div class="text-xs text-slate-400 dark:text-gray-500 mb-1">Organizations</div>
+        <div class="text-xs text-slate-600 dark:text-gray-400 mb-1">Organizations</div>
         <div id="sig-modal-organizations" class="text-lg font-bold leading-none"></div>
       </div>
       <div class="bg-slate-100/60 dark:bg-gray-800/50 rounded-lg p-2.5">
-        <div class="text-xs text-slate-400 dark:text-gray-500 mb-1">Period</div>
+        <div class="text-xs text-slate-600 dark:text-gray-400 mb-1">Period</div>
         <div id="sig-modal-period" class="text-xs font-medium leading-snug mt-0.5 text-slate-700 dark:text-gray-300"></div>
       </div>
     </div>
@@ -633,24 +633,24 @@
       <span id="coverage-modal-logo-ph" class="w-8 h-8 shrink-0 hidden inline-block"><svg viewBox="0 0 24 24" fill="none" class="w-full h-full"><rect width="24" height="24" rx="4" fill="#D1D5DB"/><rect x="7" y="3" width="10" height="16" fill="#4B5563"/><rect x="8.5" y="5.5" width="2.5" height="2" rx=".4" fill="#9CA3AF"/><rect x="13" y="5.5" width="2.5" height="2" rx=".4" fill="#9CA3AF"/><rect x="8.5" y="9" width="2.5" height="2" rx=".4" fill="#9CA3AF"/><rect x="13" y="9" width="2.5" height="2" rx=".4" fill="#9CA3AF"/><rect x="8.5" y="12.5" width="2.5" height="2" rx=".4" fill="#9CA3AF"/><rect x="13" y="12.5" width="2.5" height="2" rx=".4" fill="#9CA3AF"/><rect x="11" y="15.5" width="2" height="3.5" rx=".4" fill="#9CA3AF"/></svg></span>
       <div class="flex-1 min-w-0">
         <div id="coverage-modal-name" class="font-semibold text-sm leading-tight truncate"></div>
-        <div class="text-xs text-slate-400 dark:text-gray-500 mt-0.5">Coverage across SIGs</div>
+        <div class="text-xs text-slate-600 dark:text-gray-400 mt-0.5">Coverage across SIGs</div>
       </div>
       <button onclick="closeCoverageModal()" title="Close" aria-label="Close coverage details"
-        class="shrink-0 w-7 h-7 flex items-center justify-center rounded-lg text-slate-400 dark:text-gray-500 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-gray-800 transition-colors text-lg leading-none">×</button>
+        class="shrink-0 w-7 h-7 flex items-center justify-center rounded-lg text-slate-600 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-gray-800 transition-colors text-lg leading-none">×</button>
     </div>
 
     <!-- Stats row -->
     <div class="grid grid-cols-3 gap-2 px-4 py-3 border-b border-slate-200 dark:border-gray-800">
       <div class="bg-slate-100/60 dark:bg-gray-800/50 rounded-lg p-2.5">
-        <div class="text-xs text-slate-400 dark:text-gray-500 mb-1">SIGs</div>
+        <div class="text-xs text-slate-600 dark:text-gray-400 mb-1">SIGs</div>
         <div id="coverage-modal-sig-count" class="text-lg font-bold leading-none"></div>
       </div>
       <div class="bg-slate-100/60 dark:bg-gray-800/50 rounded-lg p-2.5">
-        <div class="text-xs text-slate-400 dark:text-gray-500 mb-1">People</div>
+        <div class="text-xs text-slate-600 dark:text-gray-400 mb-1">People</div>
         <div id="coverage-modal-people-count" class="text-lg font-bold leading-none"></div>
       </div>
       <div class="bg-slate-100/60 dark:bg-gray-800/50 rounded-lg p-2.5">
-        <div class="text-xs text-slate-400 dark:text-gray-500 mb-1">Period</div>
+        <div class="text-xs text-slate-600 dark:text-gray-400 mb-1">Period</div>
         <div id="coverage-modal-period" class="text-xs font-medium leading-snug mt-0.5 text-slate-700 dark:text-gray-300"></div>
       </div>
     </div>
@@ -669,15 +669,15 @@
   <div class="flex items-start gap-3">
     <div class="text-red-600 dark:text-red-400 mt-0.5 shrink-0">⚠</div>
     <div class="flex-1">
-      <p class="text-red-300 font-medium text-xs">Request failed</p>
+      <p class="text-red-700 dark:text-red-300 font-medium text-xs">Request failed</p>
       <p id="error-msg" class="text-slate-500 dark:text-gray-400 text-xs mt-1"></p>
-      <p class="text-slate-300 dark:text-gray-600 text-xs mt-2">
+      <p class="text-slate-500 dark:text-gray-400 text-xs mt-2">
         Live API may require a session at
         <a href="https://insights.linuxfoundation.org" target="_blank" class="text-blue-600 dark:text-blue-400 underline">insights.linuxfoundation.org</a>
         due to CORS. Cached data is used as fallback.
       </p>
     </div>
-    <button onclick="hideError()" aria-label="Dismiss error" class="text-slate-300 dark:text-gray-600 hover:text-slate-900 dark:hover:text-white text-lg leading-none shrink-0">×</button>
+    <button onclick="hideError()" aria-label="Dismiss error" class="text-slate-500 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white text-lg leading-none shrink-0">×</button>
   </div>
 </div>
 

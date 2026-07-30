@@ -2,11 +2,13 @@ import { S, SIGS_CACHE } from '../state.js';
 import { el, num, show, hide } from '../utils.js';
 import { PAGE_SIZE } from '../config.js';
 import { usingCache, cacheData, loadSigsCache, sigDetailsForHandles } from '../cache.js';
-import { orgMatchesSearch, resolveOrgLogo } from '../companies.js';
+import { orgMatchesSearch, resolveOrgLogo, normCompany } from '../companies.js';
 import { orgPlaceholder } from '../render.js';
-import { contributorsForOrg } from '../attribution.js';
+import { contributorsForOrg, companyMatchesOrgNormalized } from '../attribution.js';
+import { affiliationFor } from '../affiliations.js';
 import { roleFor } from '../roles.js';
 import { updatePager } from '../ui.js';
+import { toggleSort, sortRows, isDefaultSort, updateSortIndicators } from '../sort.js';
 
 // data/sigs.json is always fetched all-platform (scripts/fetch-sigs.mjs), unlike
 // cacheData() which is filtered per-platform — combining the two under a specific
@@ -78,8 +80,7 @@ export async function loadCoverage() {
   document.dispatchEvent(new CustomEvent('tabLoaded', { detail: 'coverage' }));
 }
 
-function statsForOrg(orgName) {
-  const contribs = contributorsForOrg(orgName);
+function statsFromContribs(contribs) {
   const handles  = new Set(contribs.flatMap(c => (c.githubHandleArray || []).map(h => h.toLowerCase())));
   const sigCount = sigDetailsForHandles(handles)?.length ?? 0;
   const maintainers = contribs.filter(c => roleFor(c.githubHandleArray) === 'maintainer').length;
@@ -87,21 +88,104 @@ function statsForOrg(orgName) {
   return { sigCount, maintainers, approvers };
 }
 
-function renderCoveragePage() {
-  const page  = S.pages.coverage;
-  const slice = S.coverage.filtered.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
-  renderCoverageTable(slice, page * PAGE_SIZE);
-  updatePager('coverage', page, Math.ceil(S.coverage.filtered.length / PAGE_SIZE));
+function statsForOrg(orgName) {
+  return statsFromContribs(contributorsForOrg(orgName));
 }
 
-export function renderCoverageTable(rows, baseOffset) {
+// Sorting by SIGs/Maintainers/Approvers needs every org's counts up front (not just
+// the visible page), which means matching every contributor against every org.
+// contributorsForOrg() re-normalizes both the org name and each contributor's company
+// string on every single call; doing that once per contributor here instead — rather
+// than once per (org, contributor) pair — is what keeps this from redoing ~1200x more
+// string-normalization work than necessary across ~1200 orgs × ~5300 contributors.
+// Memoized per `orgs` array reference (stable per preset+platform), so paging/toggling
+// direction after the first computation is instant.
+const _statsCache = new WeakMap();
+
+function buildContribIndex(contribs) {
+  return contribs.map(c => {
+    if (c.attributedContributions?.length) {
+      return { c, norms: c.attributedContributions.map(a => normCompany(a.company)) };
+    }
+    const aff = affiliationFor(c.githubHandleArray);
+    return { c, norms: aff ? [normCompany(aff.company)] : [] };
+  });
+}
+
+function statsForAllOrgs(orgs, contribs) {
+  const cached = _statsCache.get(orgs);
+  if (cached) return cached;
+  const index = buildContribIndex(contribs);
+  const map = new Map();
+  for (const o of orgs) {
+    const on = normCompany(o.name);
+    const matched = index
+      .filter(({ norms }) => norms.some(cn => companyMatchesOrgNormalized(cn, on)))
+      .map(({ c }) => c);
+    map.set(o.name, statsFromContribs(matched));
+  }
+  _statsCache.set(orgs, map);
+  return map;
+}
+
+const STATS_SORT_KEYS = new Set(['sigCount', 'maintainers', 'approvers']);
+
+function coverageAccessor(statsMap) {
+  return (o, key) => {
+    switch (key) {
+      case 'name':          return o.name || '';
+      case 'contributions': return o.contributions || 0;
+      case 'sigCount':      return statsMap.get(o.name)?.sigCount ?? 0;
+      case 'maintainers':   return statsMap.get(o.name)?.maintainers ?? 0;
+      case 'approvers':     return statsMap.get(o.name)?.approvers ?? 0;
+      default:              return 0;
+    }
+  };
+}
+
+export function onCoverageSort(key) {
+  toggleSort('coverage', key);
+  S.pages.coverage = 0;
+  if (coverageAvailable()) renderCoveragePage();
+}
+
+function renderCoveragePage() {
+  const page = S.pages.coverage;
+  const { key } = S.sort.coverage;
+
+  // Only compute the full-dataset stats map when sorting actually needs it (name/
+  // contributions sort re-use the already-cheap per-row statsForOrg() at render time).
+  const statsMap = STATS_SORT_KEYS.has(key)
+    ? statsForAllOrgs(cacheData().organizations.data, cacheData().contributors.data)
+    : null;
+
+  const list = isDefaultSort('coverage')
+    ? S.coverage.filtered
+    : sortRows(S.coverage.filtered, 'coverage', coverageAccessor(statsMap ?? new Map()));
+
+  const slice = list.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
+
+  // The '#' column always shows the company's true rank (by contributions, the tab's
+  // natural order) — not its position in whatever column the table is currently
+  // sorted/searched by. #1 stays #1 regardless of reordering.
+  const allData = cacheData().organizations.data;
+  const rankMap = new Map(allData.map((o, i) => [o, i + 1]));
+  const ranks = slice.map(o => rankMap.get(o) ?? 0);
+
+  renderCoverageTable(slice, page * PAGE_SIZE, statsMap, ranks);
+  updatePager('coverage', page, Math.ceil(list.length / PAGE_SIZE));
+  updateSortIndicators('#coverage-table-wrap', 'coverage');
+}
+
+export function renderCoverageTable(rows, baseOffset, statsMap, ranks) {
   el('coverage-tbody')._rows = rows;
   el('coverage-tbody').innerHTML = rows.map((o, i) => {
     const logo = resolveOrgLogo(o);
-    const { sigCount, maintainers, approvers } = statsForOrg(o.name);
+    const { sigCount, maintainers, approvers } = statsMap?.get(o.name) ?? statsForOrg(o.name);
+    const rank = ranks ? ranks[i] : baseOffset + i + 1;
     return `
       <tr class="coverage-row border-b border-slate-200 dark:border-gray-800/40 hover:bg-slate-200/50 dark:hover:bg-gray-800/20 transition-colors" data-idx="${i}" title="Click to see SIG breakdown">
-        <td class="px-4 py-2.5 text-slate-500 dark:text-gray-400 text-xs">${baseOffset + i + 1}</td>
+        <td class="px-4 py-2.5 text-slate-500 dark:text-gray-400 text-xs">${rank}</td>
         <td class="px-4 py-2.5">
           <div class="flex items-center gap-2">
             ${logo ? `<img src="${logo}" alt="" class="w-6 h-6 rounded object-contain shrink-0" onerror="this.style.display='none'">` : orgPlaceholder('w-6 h-6')}

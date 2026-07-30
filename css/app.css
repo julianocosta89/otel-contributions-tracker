@@ -66,3 +66,22 @@ html.dark #error-toast { background-color: #111827; }
 .coverage-row { cursor: pointer; }
 #coverage-modal-panel { will-change: transform; }
 #coverage-modal-panel.open { transform: translateX(0); }
+
+/* ── Sortable table headers ─────────────────────────────────────── */
+.sort-btn {
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  font: inherit;
+  text-transform: inherit;
+  letter-spacing: inherit;
+  color: inherit;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+}
+.sort-btn:hover { color: #0f172a; }
+html.dark .sort-btn:hover { color: #f1f5f9; }
+.sort-btn:focus-visible { outline: 2px solid #3b82f6; outline-offset: 2px; border-radius: 2px; }
+.sort-arrow { font-size: 9px; }

@@ -1,6 +1,7 @@
 import { SIGS_CACHE, S } from '../state.js';
 import { el, num, show, hide } from '../utils.js';
 import { loadSigsCache } from '../cache.js';
+import { toggleSort, sortRows, updateSortIndicators } from '../sort.js';
 
 export async function loadSigs() {
   if (SIGS_CACHE !== null) {
@@ -32,21 +33,30 @@ export function renderSigsList() {
 
   const q = el('sigs-search')?.value.toLowerCase().trim() ?? '';
 
-  const allEntries = Object.entries(period)
+  const base = Object.entries(period)
     .map(([repo, data]) => ({
       repo,
       contributors: data.contributors?.total ?? 0,
       organizations: data.organizations?.total ?? 0,
     }))
-    .filter(e => e.contributors > 0)
-    .sort((a, b) => b.contributors - a.contributors)
-    .map((e, i) => ({ ...e, rank: i + 1 }));
+    .filter(e => e.contributors > 0);
+
+  // Bar width is always relative to the biggest SIG by contributor count, regardless
+  // of which column the table is currently sorted by.
+  const maxC = base.reduce((m, e) => Math.max(m, e.contributors), 1);
+
+  // The '#' column always shows the repo's true rank (by contributor count, the tab's
+  // natural order) — not its position in whatever column the table is currently
+  // sorted/searched by. #1 stays #1 regardless of reordering, so rank is assigned here,
+  // before the display sort below reorders the array.
+  [...base].sort((a, b) => b.contributors - a.contributors).forEach((e, i) => { e.rank = i + 1; });
+
+  const allEntries = sortRows(base, 'sigs', sigsAccessor);
 
   const entries = q ? allEntries.filter(e => e.repo.toLowerCase().includes(q)) : allEntries;
 
   el('sigs-total-label').textContent = q ? `${entries.length} matches` : `${entries.length} active repo${entries.length === 1 ? '' : 's'}`;
 
-  const maxC = allEntries[0]?.contributors || 1;
   el('sigs-tbody').innerHTML = entries.map((e) => {
     const barW = Math.round((e.contributors / maxC) * 100);
     return `
@@ -66,6 +76,21 @@ export function renderSigsList() {
   }).join('');
 
   hide('sigs-loading'); hide('sigs-empty'); show('sigs-table-wrap');
+  updateSortIndicators('#sigs-table-wrap', 'sigs');
+}
+
+function sigsAccessor(e, key) {
+  switch (key) {
+    case 'repo':          return e.repo;
+    case 'contributors':  return e.contributors;
+    case 'organizations': return e.organizations;
+    default:              return 0;
+  }
+}
+
+export function onSigsSort(key) {
+  toggleSort('sigs', key);
+  renderSigsList();
 }
 
 function clearSearch(inputId, onSearch) {

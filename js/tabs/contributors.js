@@ -8,6 +8,7 @@ import { roleBadge } from '../roles.js';
 import { personPlaceholder, companyCell } from '../render.js';
 import { showError } from '../error.js';
 import { updatePager } from '../ui.js';
+import { toggleSort, sortRows, isDefaultSort, updateSortIndicators } from '../sort.js';
 
 export async function loadContributors() {
   show('contrib-loading'); hide('contrib-table-wrap');
@@ -44,21 +45,44 @@ export async function loadContributors() {
   }
 }
 
-function renderContribPage() {
-  const page     = S.pages.contributors;
-  const slice    = S.contrib.filtered.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
-  const startIdx = page * PAGE_SIZE;
-  const q        = el('contributor-search').value.trim();
+// Sort accessor — 'delta' mirrors deltaCell()'s % change; contributors with no prior
+// period count as flat (0) rather than sorting to an extreme.
+function contribAccessor(c, key) {
+  switch (key) {
+    case 'name':          return c.name || '';
+    case 'contributions': return c.contributions || 0;
+    case 'delta':         return c.previousContributions ? (c.contributions - c.previousContributions) / c.previousContributions : 0;
+    case 'company':       return affiliationFor(c.githubHandleArray)?.company || '';
+    default:              return 0;
+  }
+}
 
+export function onContribSort(key) {
+  toggleSort('contributors', key);
+  S.pages.contributors = 0;
+  if (usingCache()) renderContribPage();
+}
+
+function renderContribPage() {
+  const page = S.pages.contributors;
+
+  const list = isDefaultSort('contributors') ? S.contrib.filtered : sortRows(S.contrib.filtered, 'contributors', contribAccessor);
+  const slice = list.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
+  const startIdx = page * PAGE_SIZE;
+
+  // The '#' column always shows the contributor's true leaderboard rank (by
+  // contributions, the tab's natural order) — not their position in whatever column
+  // the table is currently sorted/searched by. #1 stays #1 regardless of reordering.
   let ranks = null;
-  if (q && usingCache()) {
+  if (usingCache()) {
     const allData = cacheData().contributors.data;
     const rankMap = new Map(allData.map((c, i) => [c, i + 1]));
     ranks = slice.map(c => rankMap.get(c) ?? 0);
   }
 
   renderContribTable(slice, startIdx, ranks);
-  updatePager('contrib', page, Math.ceil(S.contrib.filtered.length / PAGE_SIZE));
+  updatePager('contrib', page, Math.ceil(list.length / PAGE_SIZE));
+  updateSortIndicators('#contrib-table-wrap', 'contributors');
 }
 
 export function renderContribTable(rows, baseOffset, ranks) {

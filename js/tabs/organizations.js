@@ -8,6 +8,7 @@ import { orgPlaceholder } from '../render.js';
 import { calcOrgConcentration, contributorsForOrg } from '../attribution.js';
 import { showError } from '../error.js';
 import { updatePager } from '../ui.js';
+import { toggleSort, sortRows, isDefaultSort, updateSortIndicators } from '../sort.js';
 
 export async function loadOrganizations() {
   show('orgs-loading'); hide('orgs-table-wrap');
@@ -43,20 +44,40 @@ export async function loadOrganizations() {
   }
 }
 
-function renderOrgsPage() {
-  const page  = S.pages.organizations;
-  const slice = S.orgs.filtered.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
-  const q     = el('org-search').value.trim();
+function orgAccessor(o, key) {
+  switch (key) {
+    case 'name':          return o.name || '';
+    case 'contributions': return o.contributions || 0;
+    case 'delta':         return o.previousContributions ? (o.contributions - o.previousContributions) / o.previousContributions : 0;
+    default:              return 0;
+  }
+}
 
+export function onOrgSort(key) {
+  toggleSort('organizations', key);
+  S.pages.organizations = 0;
+  if (usingCache()) renderOrgsPage();
+}
+
+function renderOrgsPage() {
+  const page = S.pages.organizations;
+
+  const list  = isDefaultSort('organizations') ? S.orgs.filtered : sortRows(S.orgs.filtered, 'organizations', orgAccessor);
+  const slice = list.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
+
+  // The '#' column always shows the org's true leaderboard rank (by contributions,
+  // the tab's natural order) — not its position in whatever column the table is
+  // currently sorted/searched by. #1 stays #1 regardless of reordering.
   let ranks = null;
-  if (q && usingCache()) {
+  if (usingCache()) {
     const allData = cacheData().organizations.data;
     const rankMap = new Map(allData.map((o, i) => [o, i + 1]));
     ranks = slice.map(o => rankMap.get(o) ?? 0);
   }
 
   renderOrgsTable(slice, page * PAGE_SIZE, ranks);
-  updatePager('orgs', page, Math.ceil(S.orgs.filtered.length / PAGE_SIZE));
+  updatePager('orgs', page, Math.ceil(list.length / PAGE_SIZE));
+  updateSortIndicators('#orgs-table-wrap', 'organizations');
 }
 
 function concentrationCell(orgName, orgTotal) {

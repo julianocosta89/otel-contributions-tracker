@@ -19,6 +19,7 @@ js/
   render.js        shared row/list HTML builders
   geo.js           choropleth world map
   attribution.js   org attribution + HHI concentration
+  sort.js          per-tab column sort state + row sorting
   routing.js       URL hash management
   ui.js            tab management, paging, filter controls
   main.js          entry point — init, deep-link routing, event wiring
@@ -37,7 +38,8 @@ Pure constants. No imports.
 ### `state.js`
 Single source of truth for mutable runtime state. No imports.
 
-- `S` — session state object: active tab, preset, date filters, page cursors, Chart.js instances, filtered list caches
+- `S` — session state object: active tab, preset, date filters, page cursors, Chart.js instances, filtered list caches, per-tab column sort state (`S.sort`, keyed by tab name)
+- `SORT_DEFAULTS` — the natural (server-provided) `{ key, dir }` sort per tab, used to seed `S.sort` and as the reference `sort.js`'s `isDefaultSort()` compares against
 - Loose `let` exports (`CACHE`, `AFFILIATIONS`, `GH_COMPANIES`, `ROLES`, `SIGS_CACHE`) with corresponding setter functions (`setCache`, `setAffiliations`, …). Setters are required because ES module live bindings are read-only from importing modules.
 
 ### `utils.js`
@@ -109,9 +111,17 @@ Shared HTML builder functions used by both tabs and modals.
 
 ### `attribution.js`
 - `companyMatchesOrg(companyName, orgName)` — determines whether a contributor's employer affiliation belongs to a given leaderboard org (handles acronyms, space-stripped names, aliases)
+- `companyMatchesOrgNormalized(cn, on)` — same matching rules, but takes already-`normCompany()`'d strings; `companyMatchesOrg` normalizes then delegates to this. Split out so bulk callers that need every-org × every-contributor matches (e.g. the Coverage tab's sort-by-Maintainers/Approvers) can normalize once per contributor instead of once per comparison — normCompany() is the expensive part at that O(orgs × contributors) scale
 - `contributorsForOrg(orgName)` — returns the list of contributors to attribute to an org for the current window, using `attributedContributions[]` for split contributors
 - `calcOrgConcentration(contribs, orgTotal)` — computes the HHI concentration score and returns a `{ status, hhi, top1Pct, label, color }` result
 - `renderOrgConcentration(contribs, orgTotal)` — writes the concentration indicator HTML into `#org-modal-concentration`
+
+### `sort.js`
+Generic client-side column sorting shared by every tab's table. No tab-specific knowledge — each tab module supplies its own `accessor(row, key)` and calls these against its own slice of `S.sort`.
+- `toggleSort(tab, key)` — mutates `S.sort[tab]`: clicking the already-active column flips direction; a new column picks a sensible default (ascending for name-like text columns, descending for numeric ones, since "most X" is usually what's wanted first)
+- `sortRows(rows, tab, accessor)` — returns a new stably-sorted array per the tab's current `S.sort` state (equal values keep their original relative order)
+- `isDefaultSort(tab)` — true when the tab's sort still matches `SORT_DEFAULTS` (state.js) — tabs use this to decide whether search's "true leaderboard rank" lookup still applies (it stops making sense once rows are reordered by something other than the natural order)
+- `updateSortIndicators(scopeSelector, tab)` — refreshes the ▲/▼ arrow on the active `[data-sort-key]` header button within `scopeSelector` (e.g. `#contrib-table-wrap`) after a re-render
 
 ### `routing.js`
 Pure URL helpers — no side effects, no imports from tabs or modals.
@@ -149,7 +159,7 @@ Entry point. Runs `init()` on load.
 - Registers the global Escape key listener (`closeOrgModal`, `closeContribModal`, `closeSigModal`)
 - Registers the `hashchange` listener for in-session navigation
 - Manages the role-badge fixed-position tooltip (`mouseover`/`mouseout`)
-- `Object.assign(window, { ... })` — exposes 16 functions needed by inline `onclick`/`oninput` handlers in `index.html`
+- `Object.assign(window, { ... })` — exposes the functions needed by inline `onclick`/`oninput` handlers in `index.html`, including each tab's `on<Tab>Sort(key)` handler for sortable column headers
 
 ## Dependency notes
 

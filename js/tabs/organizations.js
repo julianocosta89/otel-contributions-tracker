@@ -33,8 +33,11 @@ export async function loadOrganizations() {
       S.orgs.filtered = page.data;
       S.orgs.total    = page.meta.total;
       el('orgs-total-label').textContent = `${num(page.meta.total)} total`;
-      renderOrgsTable(page.data, offset);
+      // Each page reload (e.g. via changePage()) re-fetches raw API order — re-apply
+      // whatever sort is active instead of losing it the moment the page changes.
+      renderOrgsTable(sortedOrgList(), offset);
       updatePager('orgs', S.pages.organizations, Math.ceil(page.meta.total / PAGE_SIZE));
+      updateSortIndicators('#orgs-table-wrap', 'organizations');
     }
     document.dispatchEvent(new CustomEvent('tabLoaded', { detail: 'organizations' }));
 

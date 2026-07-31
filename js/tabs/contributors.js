@@ -35,8 +35,11 @@ export async function loadContributors() {
       S.contrib.filtered = data.data;
       S.contrib.total    = data.meta.total;
       el('contrib-total-label').textContent = `${num(data.meta.total)} total`;
-      renderContribTable(data.data, offset);
+      // Each page reload (e.g. via changePage()) re-fetches raw API order — re-apply
+      // whatever sort is active instead of losing it the moment the page changes.
+      renderContribTable(sortedContribList(), offset);
       updatePager('contrib', S.pages.contributors, Math.ceil(data.meta.total / PAGE_SIZE));
+      updateSortIndicators('#contrib-table-wrap', 'contributors');
     }
     document.dispatchEvent(new CustomEvent('tabLoaded', { detail: 'contributors' }));
   } catch (e) {
@@ -66,8 +69,8 @@ function contribAccessor(c, key) {
   }
 }
 
-function sortedContribList() {
-  return isDefaultSort('contributors') ? S.contrib.filtered : sortRows(S.contrib.filtered, 'contributors', contribAccessor);
+function sortedContribList(list = S.contrib.filtered) {
+  return isDefaultSort('contributors') ? list : sortRows(list, 'contributors', contribAccessor);
 }
 
 export function onContribSort(key) {
@@ -181,7 +184,8 @@ export function onContribSearch() {
           c.name?.toLowerCase().includes(q) ||
           (c.githubHandleArray || []).some(h => h.toLowerCase().includes(q)))
       : S.contrib.filtered;
-    renderContribTable(filtered, 0);
+    renderContribTable(sortedContribList(filtered), 0);
+    updateSortIndicators('#contrib-table-wrap', 'contributors');
     el('contrib-page-info').textContent = q ? `${filtered.length} matches on this page` : '';
   }
 }

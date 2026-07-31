@@ -5,7 +5,7 @@ import { usingCache, cacheData } from '../cache.js';
 import { liveApi } from '../api.js';
 import { affiliationFor, affiliationsInWindow } from '../affiliations.js';
 import { roleBadge } from '../roles.js';
-import { personPlaceholder, companyCell } from '../render.js';
+import { personPlaceholder, companyCell, primaryCompanyName } from '../render.js';
 import { showError } from '../error.js';
 import { updatePager } from '../ui.js';
 import { toggleSort, sortRows, isDefaultSort, updateSortIndicators } from '../sort.js';
@@ -46,27 +46,47 @@ export async function loadContributors() {
 }
 
 // Sort accessor — 'delta' mirrors deltaCell()'s % change; contributors with no prior
-// period count as flat (0) rather than sorting to an extreme.
+// period count as flat (0) rather than sorting to an extreme. 'company' mirrors
+// exactly what companyCell() renders (via primaryCompanyName()) rather than always
+// the contributor's present-day affiliation, so split-affiliation rows sort by the
+// same company text shown on screen.
 function contribAccessor(c, key) {
   switch (key) {
     case 'name':          return c.name || '';
     case 'contributions': return c.contributions || 0;
     case 'delta':         return c.previousContributions ? (c.contributions - c.previousContributions) / c.previousContributions : 0;
-    case 'company':       return affiliationFor(c.githubHandleArray)?.company || '';
+    case 'company': {
+      const affiliation = affiliationFor(c.githubHandleArray);
+      const ranges = c.attributedContributions?.length > 1
+        ? null
+        : affiliationsInWindow(c.githubHandleArray, S.filters.startDate, S.filters.endDate);
+      return primaryCompanyName(c, affiliation, ranges);
+    }
     default:              return 0;
   }
 }
 
+function sortedContribList() {
+  return isDefaultSort('contributors') ? S.contrib.filtered : sortRows(S.contrib.filtered, 'contributors', contribAccessor);
+}
+
 export function onContribSort(key) {
   toggleSort('contributors', key);
-  S.pages.contributors = 0;
-  if (usingCache()) renderContribPage();
+  if (usingCache()) {
+    S.pages.contributors = 0;
+    renderContribPage();
+  } else {
+    // Live API: only the current page is loaded (no full dataset to rank/page against),
+    // so just reorder what's already on screen instead of silently no-op'ing.
+    renderContribTable(sortedContribList(), S.pages.contributors * PAGE_SIZE);
+    updateSortIndicators('#contrib-table-wrap', 'contributors');
+  }
 }
 
 function renderContribPage() {
   const page = S.pages.contributors;
 
-  const list = isDefaultSort('contributors') ? S.contrib.filtered : sortRows(S.contrib.filtered, 'contributors', contribAccessor);
+  const list = sortedContribList();
   const slice = list.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
   const startIdx = page * PAGE_SIZE;
 

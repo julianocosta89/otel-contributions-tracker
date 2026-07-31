@@ -142,6 +142,18 @@ export function renderOrgRow(o, i, opts = {}) {
       </div>`;
 }
 
+// The company name companyCell() shows as "current" for a contributor — the last
+// (most recent) entry when contributions are split across employers within the
+// period, otherwise the active affiliation. Exported so sort-by-company
+// (js/tabs/contributors.js) matches what's actually displayed, rather than always
+// using the contributor's present-day affiliation (which can differ from the last
+// entry in a date-windowed `ranges` fallback for periods that end in the past).
+export function primaryCompanyName(c, affiliation, ranges) {
+  if (!affiliation) return '';
+  const attrs = c.attributedContributions?.length > 1 ? c.attributedContributions : ranges;
+  return attrs?.length > 1 ? attrs[attrs.length - 1].company : affiliation.company;
+}
+
 // Renders the company cell for a contributor row.
 // For split contributors (attributedContributions.length > 1), stacks each company
 // with a compact date label showing when the company change occurred.

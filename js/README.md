@@ -102,6 +102,7 @@ Shared HTML builder functions used by both tabs and modals.
 - `renderReposList({ repos, unit, barColor, listElId, note })` — renders a list of repository links with a contribution/PR count label
 - `renderActiveDivider(threshold)` — a thin-line divider with a caption ("Less than N contributions · inactive (<2/mo)") marking the boundary between active and occasional contributors in a contributions-sorted list
 - `companyCell(c, affiliation, gitdmUrl, ranges)` — renders the company cell for a contributor table row, including multi-employer split stacking with date labels. `ranges` (from `affiliationsInWindow`) is the fallback source of stacking data for periods with no `attributedContributions` (e.g. the `all` preset)
+- `primaryCompanyName(c, affiliation, ranges)` — the plain-text company name `companyCell()` shows as "current" (the last stacked entry for a split contributor, otherwise the active affiliation). Exported so the Contributors tab's sort-by-Company (`js/tabs/contributors.js`) matches what's actually displayed instead of always the contributor's present-day affiliation, which can diverge from the last entry in a date-windowed `ranges` fallback
 - `personPlaceholder(cls)` / `orgPlaceholder(cls)` — fallback SVG avatars when no image is available
 
 ### `geo.js`

@@ -53,16 +53,27 @@ function orgAccessor(o, key) {
   }
 }
 
+function sortedOrgList() {
+  return isDefaultSort('organizations') ? S.orgs.filtered : sortRows(S.orgs.filtered, 'organizations', orgAccessor);
+}
+
 export function onOrgSort(key) {
   toggleSort('organizations', key);
-  S.pages.organizations = 0;
-  if (usingCache()) renderOrgsPage();
+  if (usingCache()) {
+    S.pages.organizations = 0;
+    renderOrgsPage();
+  } else {
+    // Live API: only the current page is loaded (no full dataset to rank/page against),
+    // so just reorder what's already on screen instead of silently no-op'ing.
+    renderOrgsTable(sortedOrgList(), S.pages.organizations * PAGE_SIZE);
+    updateSortIndicators('#orgs-table-wrap', 'organizations');
+  }
 }
 
 function renderOrgsPage() {
   const page = S.pages.organizations;
 
-  const list  = isDefaultSort('organizations') ? S.orgs.filtered : sortRows(S.orgs.filtered, 'organizations', orgAccessor);
+  const list  = sortedOrgList();
   const slice = list.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
 
   // The '#' column always shows the org's true leaderboard rank (by contributions,

@@ -48,26 +48,8 @@ jobs:
       # workflow is the only thing keeping data/cache.json from going stale — the
       # site has no live-API fallback (CORS blocks it on this deployment, so that
       # path was removed rather than left silently broken), so it depends entirely
-      # on this cache being kept current. Reports on every run (not just failures)
-      # so the Datadog monitor always has a fresh data point to evaluate — a metric
-      # that only ever gets sent on failure can't tell "still failing" apart from
-      # "hasn't run in a while", and would never show a recovery.
-      - name: Report refresh status to Datadog
-        if: always()
-        continue-on-error: true   # a Datadog API hiccup (or a not-yet-configured secret) shouldn't fail an otherwise-successful refresh
-        env:
-          DD_API_KEY: ${{ secrets.DD_API_KEY }}
-        run: |
-          STATUS_VALUE=0
-          if [ "${{ job.status }}" != "success" ]; then STATUS_VALUE=1; fi
-          curl -sS --fail-with-body -X POST "https://api.datadoghq.eu/api/v2/series" \
-            -H "Content-Type: application/json" \
-            -H "DD-API-KEY: ${DD_API_KEY}" \
-            -d "{
-              \"series\": [{
-                \"metric\": \"otel_contributions_tracker.refresh_data.status\",
-                \"type\": 3,
-                \"points\": [{ \"timestamp\": $(date +%s), \"value\": ${STATUS_VALUE} }],
-                \"tags\": [\"repository:${{ github.repository }}\", \"workflow:refresh-data\"]
-              }]
-            }"
+      # on this cache being kept current. No failure-reporting step lives here:
+      # the Datadog GitHub App is installed on this repo, so every run of this
+      # workflow already shows up in Datadog CI Visibility (@ci.pipeline.name:
+      # "Refresh contribution data") without any workflow-side instrumentation —
+      # the monitor watching for @ci.status:error lives entirely in Datadog.

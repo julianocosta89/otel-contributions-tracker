@@ -43,3 +43,13 @@ jobs:
             git pull --rebase origin main
             git push
           fi
+
+      # A failure here is easy to miss (only visible on the Actions tab), and this
+      # workflow is the only thing keeping data/cache.json from going stale — the
+      # site has no live-API fallback (CORS blocks it on this deployment, so that
+      # path was removed rather than left silently broken), so it depends entirely
+      # on this cache being kept current. No failure-reporting step lives here:
+      # the Datadog GitHub App is installed on this repo, so every run of this
+      # workflow already shows up in Datadog CI Visibility (@ci.pipeline.name:
+      # "Refresh contribution data") without any workflow-side instrumentation —
+      # the monitor watching for @ci.status:error lives entirely in Datadog.

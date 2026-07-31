@@ -88,6 +88,11 @@
 
   <!-- ── OVERVIEW TAB ─────────────────────────────────────────────── -->
   <div id="tab-overview" class="tab-panel space-y-4" role="tabpanel" aria-labelledby="tab-btn-overview">
+    <div id="overview-empty" class="hidden bg-white dark:bg-gray-900 rounded-xl p-10 border border-slate-200 dark:border-gray-800 text-center text-slate-600 dark:text-gray-400 text-sm leading-relaxed">
+      Data not available.<br>
+      <span class="text-xs text-slate-500 dark:text-gray-400">Requires <code class="bg-slate-200 dark:bg-gray-800 px-1.5 py-0.5 rounded text-slate-600 dark:text-gray-400">data/cache.json</code> — run <code class="bg-slate-200 dark:bg-gray-800 px-1.5 py-0.5 rounded text-slate-600 dark:text-gray-400">make fetch-data</code>.</span>
+    </div>
+    <div id="overview-content" class="hidden space-y-4">
     <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
       <div class="bg-white dark:bg-gray-900 rounded-xl p-4 border border-slate-200 dark:border-gray-800">
         <p class="text-slate-500 dark:text-gray-400 text-xs mb-1">Total Contributors</p>
@@ -138,6 +143,7 @@
         <canvas id="ovGeoChart"></canvas>
       </div>
     </div>
+    </div>
   </div>
 
   <!-- ── CONTRIBUTORS TAB ──────────────────────────────────────────── -->
@@ -157,16 +163,20 @@
         </div>
       </div>
       <div id="contrib-loading" class="flex justify-center py-14"><span class="spinner"></span></div>
+      <div id="contrib-empty" class="hidden text-center py-14 text-slate-600 dark:text-gray-400 text-sm leading-relaxed">
+        Data not available.<br>
+        <span class="text-xs text-slate-500 dark:text-gray-400">Requires <code class="bg-slate-200 dark:bg-gray-800 px-1.5 py-0.5 rounded text-slate-600 dark:text-gray-400">data/cache.json</code> — run <code class="bg-slate-200 dark:bg-gray-800 px-1.5 py-0.5 rounded text-slate-600 dark:text-gray-400">make fetch-data</code>.</span>
+      </div>
       <div id="contrib-table-wrap" class="hidden overflow-x-auto">
         <table class="w-full">
           <thead>
             <tr class="border-b border-slate-200 dark:border-gray-800 text-xs text-slate-600 dark:text-gray-400 uppercase tracking-wide">
               <th class="text-left px-4 py-3 w-8">#</th>
-              <th class="text-left px-4 py-3">Contributor</th>
-              <th class="text-right px-4 py-3">Contributions</th>
-              <th class="text-right px-4 py-3" title="Change vs same-length period immediately before">vs prev</th>
+              <th class="text-left px-4 py-3"><button type="button" class="sort-btn" data-sort-key="name" onclick="onContribSort('name')">Contributor<span class="sort-arrow"></span></button></th>
+              <th class="text-right px-4 py-3"><button type="button" class="sort-btn" data-sort-key="contributions" onclick="onContribSort('contributions')">Contributions<span class="sort-arrow"></span></button></th>
+              <th class="text-right px-4 py-3" title="Change vs same-length period immediately before"><button type="button" class="sort-btn" data-sort-key="delta" onclick="onContribSort('delta')">vs prev<span class="sort-arrow"></span></button></th>
               <th class="text-right px-4 py-3">Share</th>
-              <th class="text-left px-4 py-3">Company</th>
+              <th class="text-left px-4 py-3"><button type="button" class="sort-btn" data-sort-key="company" onclick="onContribSort('company')">Company<span class="sort-arrow"></span></button></th>
               <th class="text-left px-4 py-3">Roles</th>
             </tr>
           </thead>
@@ -203,14 +213,18 @@
           </div>
         </div>
         <div id="orgs-loading" class="flex justify-center py-14"><span class="spinner"></span></div>
+        <div id="orgs-empty" class="hidden text-center py-14 text-slate-600 dark:text-gray-400 text-sm leading-relaxed">
+          Data not available.<br>
+          <span class="text-xs text-slate-500 dark:text-gray-400">Requires <code class="bg-slate-200 dark:bg-gray-800 px-1.5 py-0.5 rounded text-slate-600 dark:text-gray-400">data/cache.json</code> — run <code class="bg-slate-200 dark:bg-gray-800 px-1.5 py-0.5 rounded text-slate-600 dark:text-gray-400">make fetch-data</code>.</span>
+        </div>
         <div id="orgs-table-wrap" class="hidden overflow-x-auto flex-1">
           <table class="w-full">
             <thead>
               <tr class="border-b border-slate-200 dark:border-gray-800 text-xs text-slate-600 dark:text-gray-400 uppercase tracking-wide">
                 <th class="text-left px-4 py-3 w-8">#</th>
-                <th class="text-left px-4 py-3">Organization</th>
-                <th class="text-right px-4 py-3">Contributions</th>
-                <th class="text-right px-4 py-3" title="Change vs same-length period immediately before">vs prev</th>
+                <th class="text-left px-4 py-3"><button type="button" class="sort-btn" data-sort-key="name" onclick="onOrgSort('name')">Organization<span class="sort-arrow"></span></button></th>
+                <th class="text-right px-4 py-3"><button type="button" class="sort-btn" data-sort-key="contributions" onclick="onOrgSort('contributions')">Contributions<span class="sort-arrow"></span></button></th>
+                <th class="text-right px-4 py-3" title="Change vs same-length period immediately before"><button type="button" class="sort-btn" data-sort-key="delta" onclick="onOrgSort('delta')">vs prev<span class="sort-arrow"></span></button></th>
                 <th class="text-right px-4 py-3">Share</th>
                 <th class="text-right px-4 py-3">Concentration</th>
               </tr>
@@ -231,6 +245,11 @@
 
   <!-- ── CONCENTRATION TAB ─────────────────────────────────────────── -->
   <div id="tab-concentration" class="tab-panel hidden space-y-4" role="tabpanel" aria-labelledby="tab-btn-concentration">
+    <div id="concentration-empty" class="hidden bg-white dark:bg-gray-900 rounded-xl p-10 border border-slate-200 dark:border-gray-800 text-center text-slate-600 dark:text-gray-400 text-sm leading-relaxed">
+      Data not available.<br>
+      <span class="text-xs text-slate-500 dark:text-gray-400">Requires <code class="bg-slate-200 dark:bg-gray-800 px-1.5 py-0.5 rounded text-slate-600 dark:text-gray-400">data/cache.json</code> — run <code class="bg-slate-200 dark:bg-gray-800 px-1.5 py-0.5 rounded text-slate-600 dark:text-gray-400">make fetch-data</code>.</span>
+    </div>
+    <div id="concentration-content" class="hidden space-y-4">
     <div class="grid md:grid-cols-2 gap-4 items-start">
       <div id="bc-factor-tile" class="bg-white dark:bg-gray-900 rounded-xl border border-slate-200 dark:border-gray-800 p-4">
         <h2 class="text-sm font-semibold">Contributor Bus Factor</h2>
@@ -283,11 +302,16 @@
         <div id="od-list" class="hidden space-y-1 overflow-y-auto min-h-0 flex-1 pr-1"></div>
       </div>
     </div>
+    </div>
   </div>
 
   <!-- ── GEOGRAPHY TAB ─────────────────────────────────────────────── -->
   <div id="tab-geography" class="tab-panel hidden" role="tabpanel" aria-labelledby="tab-btn-geography">
-    <div class="grid md:grid-cols-2 gap-4">
+    <div id="geo-empty" class="hidden bg-white dark:bg-gray-900 rounded-xl p-10 border border-slate-200 dark:border-gray-800 text-center text-slate-600 dark:text-gray-400 text-sm leading-relaxed">
+      Data not available.<br>
+      <span class="text-xs text-slate-500 dark:text-gray-400">Requires <code class="bg-slate-200 dark:bg-gray-800 px-1.5 py-0.5 rounded text-slate-600 dark:text-gray-400">data/cache.json</code> — run <code class="bg-slate-200 dark:bg-gray-800 px-1.5 py-0.5 rounded text-slate-600 dark:text-gray-400">make fetch-data</code>.</span>
+    </div>
+    <div id="geo-content" class="hidden grid md:grid-cols-2 gap-4">
       <div class="bg-white dark:bg-gray-900 rounded-xl border border-slate-200 dark:border-gray-800 p-4">
         <h2 class="text-sm font-semibold mb-0.5">World Map</h2>
         <p class="text-xs text-slate-600 dark:text-gray-400 mb-3">Contributor distribution by country</p>
@@ -306,8 +330,8 @@
           <table class="w-full">
             <thead class="sticky top-0 bg-white dark:bg-gray-900 z-10">
               <tr class="border-b border-slate-200 dark:border-gray-800 text-xs text-slate-600 dark:text-gray-400 uppercase tracking-wide">
-                <th class="text-left px-4 py-3">Country</th>
-                <th class="text-right px-4 py-3">Count</th>
+                <th class="text-left px-4 py-3"><button type="button" class="sort-btn" data-sort-key="name" onclick="onGeoSort('name')">Country<span class="sort-arrow"></span></button></th>
+                <th class="text-right px-4 py-3"><button type="button" class="sort-btn" data-sort-key="count" onclick="onGeoSort('count')">Count<span class="sort-arrow"></span></button></th>
                 <th class="text-right px-4 py-3">Share</th>
               </tr>
             </thead>
@@ -347,9 +371,9 @@
           <thead>
             <tr class="border-b border-slate-200 dark:border-gray-800 text-xs text-slate-600 dark:text-gray-400 uppercase tracking-wide">
               <th class="text-left px-4 py-3 w-8">#</th>
-              <th class="text-left px-4 py-3">Repository</th>
-              <th class="text-right px-4 py-3">Contributors</th>
-              <th class="text-right px-4 py-3">Organizations</th>
+              <th class="text-left px-4 py-3"><button type="button" class="sort-btn" data-sort-key="repo" onclick="onSigsSort('repo')">Repository<span class="sort-arrow"></span></button></th>
+              <th class="text-right px-4 py-3"><button type="button" class="sort-btn" data-sort-key="contributors" onclick="onSigsSort('contributors')">Contributors<span class="sort-arrow"></span></button></th>
+              <th class="text-right px-4 py-3"><button type="button" class="sort-btn" data-sort-key="organizations" onclick="onSigsSort('organizations')">Organizations<span class="sort-arrow"></span></button></th>
             </tr>
           </thead>
           <tbody id="sigs-tbody"></tbody>
@@ -387,11 +411,11 @@
           <thead>
             <tr class="border-b border-slate-200 dark:border-gray-800 text-xs text-slate-600 dark:text-gray-400 uppercase tracking-wide">
               <th class="text-left px-4 py-3 w-8">#</th>
-              <th class="text-left px-4 py-3">Company</th>
-              <th class="text-right px-4 py-3">SIGs</th>
-              <th class="text-right px-4 py-3">Maintainers</th>
-              <th class="text-right px-4 py-3">Approvers</th>
-              <th class="text-right px-4 py-3">Contributions</th>
+              <th class="text-left px-4 py-3"><button type="button" class="sort-btn" data-sort-key="name" onclick="onCoverageSort('name')">Company<span class="sort-arrow"></span></button></th>
+              <th class="text-right px-4 py-3"><button type="button" class="sort-btn" data-sort-key="sigCount" onclick="onCoverageSort('sigCount')">SIGs<span class="sort-arrow"></span></button></th>
+              <th class="text-right px-4 py-3"><button type="button" class="sort-btn" data-sort-key="maintainers" onclick="onCoverageSort('maintainers')">Maintainers<span class="sort-arrow"></span></button></th>
+              <th class="text-right px-4 py-3"><button type="button" class="sort-btn" data-sort-key="approvers" onclick="onCoverageSort('approvers')">Approvers<span class="sort-arrow"></span></button></th>
+              <th class="text-right px-4 py-3"><button type="button" class="sort-btn" data-sort-key="contributions" onclick="onCoverageSort('contributions')">Contributions<span class="sort-arrow"></span></button></th>
             </tr>
           </thead>
           <tbody id="coverage-tbody"></tbody>
@@ -669,13 +693,9 @@
   <div class="flex items-start gap-3">
     <div class="text-red-600 dark:text-red-400 mt-0.5 shrink-0">⚠</div>
     <div class="flex-1">
-      <p class="text-red-700 dark:text-red-300 font-medium text-xs">Request failed</p>
+      <p class="text-red-700 dark:text-red-300 font-medium text-xs">Something went wrong</p>
       <p id="error-msg" class="text-slate-500 dark:text-gray-400 text-xs mt-1"></p>
-      <p class="text-slate-500 dark:text-gray-400 text-xs mt-2">
-        Live API may require a session at
-        <a href="https://insights.linuxfoundation.org" target="_blank" class="text-blue-600 dark:text-blue-400 underline">insights.linuxfoundation.org</a>
-        due to CORS. Cached data is used as fallback.
-      </p>
+      <p class="text-slate-500 dark:text-gray-400 text-xs mt-2">Try reloading the page. If this keeps happening, please open an issue.</p>
     </div>
     <button onclick="hideError()" aria-label="Dismiss error" class="text-slate-500 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white text-lg leading-none shrink-0">×</button>
   </div>

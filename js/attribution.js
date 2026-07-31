@@ -4,9 +4,13 @@ import { normCompany, wordMatch, resolveAlias } from './companies.js';
 import { affiliationFor } from './affiliations.js';
 import { cacheData } from './cache.js';
 
-export function companyMatchesOrg(companyName, orgName) {
-  const cn = normCompany(companyName);
-  const on = normCompany(orgName);
+// Same matching rules as companyMatchesOrg(), but takes already-normCompany'd strings.
+// Split out so bulk callers (e.g. the Coverage tab's sort-by-Maintainers/Approvers,
+// which needs match results for every org × every contributor) can normCompany() each
+// side once up front instead of re-normalizing the same org name on every contributor
+// comparison — that redundant normalization is what makes the naive O(orgs × contributors)
+// loop slow at this dataset's size (~1200 orgs × ~5300 contributors).
+export function companyMatchesOrgNormalized(cn, on) {
   if (cn === on) return true;
   // Whole-word substring match, min 4 chars (e.g. "Grafana Labs" in "Raintank … Grafana Labs")
   if (wordMatch(on, cn) || wordMatch(cn, on)) return true;
@@ -15,6 +19,10 @@ export function companyMatchesOrg(companyName, orgName) {
   // Alias comparison (handles acronyms / rebrands, e.g. CNCF, Elasticsearch → Elastic)
   // Resolved transitively so any two spellings in an alias group match each other.
   return resolveAlias(cn) === resolveAlias(on);
+}
+
+export function companyMatchesOrg(companyName, orgName) {
+  return companyMatchesOrgNormalized(normCompany(companyName), normCompany(orgName));
 }
 
 export function contributorsForOrg(orgName) {

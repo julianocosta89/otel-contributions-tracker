@@ -10,10 +10,11 @@ import { openContribModal, closeContribModal } from './modals/contributor.js';
 import { openOrgModal, closeOrgModal } from './modals/org.js';
 import { openSigModal, closeSigModal } from './modals/sig.js';
 import { openCoverageModal, closeCoverageModal } from './modals/coverage.js';
-import { onContribSearch, clearContribSearch } from './tabs/contributors.js';
-import { onOrgSearch, clearOrgSearch } from './tabs/organizations.js';
-import { onSigsSearch, clearSigsSearch } from './tabs/sigs.js';
-import { onCoverageSearch, clearCoverageSearch } from './tabs/coverage.js';
+import { onContribSearch, clearContribSearch, onContribSort } from './tabs/contributors.js';
+import { onOrgSearch, clearOrgSearch, onOrgSort } from './tabs/organizations.js';
+import { onSigsSearch, clearSigsSearch, onSigsSort } from './tabs/sigs.js';
+import { onCoverageSearch, clearCoverageSearch, onCoverageSort } from './tabs/coverage.js';
+import { onGeoSort } from './tabs/geography.js';
 import { usingCache, cacheData } from './cache.js';
 
 // ── Deep link: resolve pending modal detail once tab data has loaded ──
@@ -151,5 +152,6 @@ Object.assign(window, {
   onContribSearch, clearContribSearch, changePage,
   onOrgSearch, clearOrgSearch, onSigsSearch, clearSigsSearch,
   onCoverageSearch, clearCoverageSearch,
+  onContribSort, onOrgSort, onSigsSort, onCoverageSort, onGeoSort,
   closeOrgModal, closeContribModal, closeSigModal, closeCoverageModal, hideError,
 });

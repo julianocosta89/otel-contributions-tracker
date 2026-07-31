@@ -30,7 +30,7 @@ export async function loadCache() {
     setCache(data);
     showCacheDateTag(data.fetchedAt);
   } catch {
-    // cache not available — use live API
+    // CACHE stays null — usingCache() returns false and every tab shows its empty state
   }
 }
 

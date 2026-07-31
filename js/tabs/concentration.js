@@ -2,29 +2,26 @@ import { S } from '../state.js';
 import { el, num, pct, show, hide, destroyChart } from '../utils.js';
 import { C } from '../theme.js';
 import { usingCache, cacheData } from '../cache.js';
-import { liveApi } from '../api.js';
 import { renderPersonRow, renderOrgRow } from '../render.js';
 import { showError } from '../error.js';
 
 export async function loadConcentration() {
+  if (!usingCache()) {
+    hide('concentration-content'); show('concentration-empty');
+    document.dispatchEvent(new CustomEvent('tabLoaded', { detail: 'concentration' }));
+    return;
+  }
+  hide('concentration-empty'); show('concentration-content');
+
   show('bc-loading');  hide('bc-content');
   show('bc-list-loading'); hide('bc-list');
   show('od-loading');  hide('od-content');
   show('od-list-loading'); hide('od-list');
 
   try {
-    const cached = usingCache();
-    const data   = cached ? cacheData() : null;
-    let conc, orgDep;
-    if (cached) {
-      conc   = data.contributorDependency;
-      orgDep = data.organizationDependency;
-    } else {
-      [conc, orgDep] = await Promise.all([
-        liveApi('contributors/contributor-dependency'),
-        liveApi('contributors/organization-dependency'),
-      ]);
-    }
+    const data = cacheData();
+    const conc   = data.contributorDependency;
+    const orgDep = data.organizationDependency;
 
     // Contributor bus factor
     el('bc-top-n').textContent   = conc.topContributors.count;
@@ -53,13 +50,7 @@ export async function loadConcentration() {
       },
     });
 
-    let coreList;
-    if (cached) {
-      coreList = (data.contributors?.data || []).slice(0, conc.topContributors.count);
-    } else {
-      const lb = await liveApi('contributors/contributor-leaderboard', { offset: 0, limit: conc.topContributors.count });
-      coreList = lb.data || conc.list || [];
-    }
+    const coreList = (data.contributors?.data || []).slice(0, conc.topContributors.count);
     hide('bc-list-loading'); show('bc-list');
     el('bc-list').innerHTML = coreList.map((c, i) => renderPersonRow(c, i, { sigStyle: true })).join('');
     requestAnimationFrame(() => {
@@ -95,13 +86,7 @@ export async function loadConcentration() {
       },
     });
 
-    let coreOrgList;
-    if (cached) {
-      coreOrgList = (data.organizations?.data || []).slice(0, top.count);
-    } else {
-      const lb = await liveApi('contributors/organization-leaderboard', { offset: 0, limit: top.count });
-      coreOrgList = lb.data || orgDep.list || [];
-    }
+    const coreOrgList = (data.organizations?.data || []).slice(0, top.count);
     hide('od-list-loading'); show('od-list');
     el('od-list').innerHTML = coreOrgList.map((o, i) => renderOrgRow(o, i, { sigStyle: true })).join('');
     requestAnimationFrame(() => {

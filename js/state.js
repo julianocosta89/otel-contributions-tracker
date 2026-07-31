@@ -13,6 +13,17 @@ export function setSigsCache(v)    { SIGS_CACHE = v; }
 export let _sigsLoadPromise = null;
 export function setSigsLoadPromise(v) { _sigsLoadPromise = v; }
 
+// Natural (server-provided) sort order per tab — the starting point before any
+// column-header click reorders a table. sort.js's isDefaultSort() compares against
+// this to decide whether search-time "true leaderboard rank" lookups still apply.
+export const SORT_DEFAULTS = {
+  contributors:  { key: 'contributions', dir: 'desc' },
+  organizations: { key: 'contributions', dir: 'desc' },
+  coverage:      { key: 'contributions', dir: 'desc' },
+  sigs:          { key: 'contributors',  dir: 'desc' },
+  geography:     { key: 'count',         dir: 'desc' },
+};
+
 export const S = {
   tab:    'overview',
   preset: '1y',
@@ -23,4 +34,6 @@ export const S = {
   contrib:  { filtered: [], total: 0 },
   orgs:     { filtered: [], total: 0 },
   coverage: { filtered: [], total: 0 },
+  // per-tab column sort state — see js/sort.js
+  sort: Object.fromEntries(Object.entries(SORT_DEFAULTS).map(([k, v]) => [k, { ...v }])),
 };

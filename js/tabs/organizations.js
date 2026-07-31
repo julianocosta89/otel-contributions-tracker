@@ -2,39 +2,37 @@ import { S } from '../state.js';
 import { el, num, pct, show, hide, deltaCell } from '../utils.js';
 import { PAGE_SIZE } from '../config.js';
 import { usingCache, cacheData } from '../cache.js';
-import { liveApi } from '../api.js';
 import { orgMatchesSearch, resolveOrgLogo } from '../companies.js';
 import { orgPlaceholder } from '../render.js';
 import { calcOrgConcentration, contributorsForOrg } from '../attribution.js';
 import { showError } from '../error.js';
 import { updatePager } from '../ui.js';
+import { toggleSort, sortRows, isDefaultSort, updateSortIndicators } from '../sort.js';
 
 export async function loadOrganizations() {
+  if (!usingCache()) {
+    hide('orgs-loading'); hide('orgs-table-wrap'); show('orgs-empty');
+    el('orgs-total-label').textContent = '';
+    el('orgs-page-info').textContent = '';
+    el('orgs-prev').disabled = true;
+    el('orgs-next').disabled = true;
+    document.dispatchEvent(new CustomEvent('tabLoaded', { detail: 'organizations' }));
+    return;
+  }
+  hide('orgs-empty');
   show('orgs-loading'); hide('orgs-table-wrap');
 
   try {
-    const cached = usingCache();
-    const data   = cached ? cacheData() : null;
-    if (cached) {
-      const all = data.organizations.data;
-      S.orgs.total = data.organizations.total;
-      const q = el('org-search').value.toLowerCase().trim();
-      S.orgs.filtered = q
-        ? all.filter(o => orgMatchesSearch(o.name, q))
-        : all;
-      el('orgs-total-label').textContent = q
-        ? `${S.orgs.filtered.length} matches`
-        : `${num(S.orgs.total)} total`;
-      renderOrgsPage();
-    } else {
-      const offset = S.pages.organizations * PAGE_SIZE;
-      const page   = await liveApi('contributors/organization-leaderboard', { offset, limit: PAGE_SIZE });
-      S.orgs.filtered = page.data;
-      S.orgs.total    = page.meta.total;
-      el('orgs-total-label').textContent = `${num(page.meta.total)} total`;
-      renderOrgsTable(page.data, offset);
-      updatePager('orgs', S.pages.organizations, Math.ceil(page.meta.total / PAGE_SIZE));
-    }
+    const all = cacheData().organizations.data;
+    S.orgs.total = cacheData().organizations.total;
+    const q = el('org-search').value.toLowerCase().trim();
+    S.orgs.filtered = q
+      ? all.filter(o => orgMatchesSearch(o.name, q))
+      : all;
+    el('orgs-total-label').textContent = q
+      ? `${S.orgs.filtered.length} matches`
+      : `${num(S.orgs.total)} total`;
+    renderOrgsPage();
     document.dispatchEvent(new CustomEvent('tabLoaded', { detail: 'organizations' }));
 
   } catch (e) {
@@ -43,20 +41,42 @@ export async function loadOrganizations() {
   }
 }
 
-function renderOrgsPage() {
-  const page  = S.pages.organizations;
-  const slice = S.orgs.filtered.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
-  const q     = el('org-search').value.trim();
-
-  let ranks = null;
-  if (q && usingCache()) {
-    const allData = cacheData().organizations.data;
-    const rankMap = new Map(allData.map((o, i) => [o, i + 1]));
-    ranks = slice.map(o => rankMap.get(o) ?? 0);
+function orgAccessor(o, key) {
+  switch (key) {
+    case 'name':          return o.name || '';
+    case 'contributions': return o.contributions || 0;
+    case 'delta':         return o.previousContributions ? (o.contributions - o.previousContributions) / o.previousContributions : 0;
+    default:              return 0;
   }
+}
+
+function sortedOrgList() {
+  return isDefaultSort('organizations') ? S.orgs.filtered : sortRows(S.orgs.filtered, 'organizations', orgAccessor);
+}
+
+export function onOrgSort(key) {
+  if (!usingCache()) return; // nothing loaded to sort
+  toggleSort('organizations', key);
+  S.pages.organizations = 0;
+  renderOrgsPage();
+}
+
+function renderOrgsPage() {
+  const page = S.pages.organizations;
+
+  const list  = sortedOrgList();
+  const slice = list.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
+
+  // The '#' column always shows the org's true leaderboard rank (by contributions,
+  // the tab's natural order) — not its position in whatever column the table is
+  // currently sorted/searched by. #1 stays #1 regardless of reordering.
+  const allData = cacheData().organizations.data;
+  const rankMap = new Map(allData.map((o, i) => [o, i + 1]));
+  const ranks = slice.map(o => rankMap.get(o) ?? 0);
 
   renderOrgsTable(slice, page * PAGE_SIZE, ranks);
-  updatePager('orgs', page, Math.ceil(S.orgs.filtered.length / PAGE_SIZE));
+  updatePager('orgs', page, Math.ceil(list.length / PAGE_SIZE));
+  updateSortIndicators('#orgs-table-wrap', 'organizations');
 }
 
 function concentrationCell(orgName, orgTotal) {
@@ -105,17 +125,15 @@ function clearSearch(inputId, onSearch) {
 }
 
 export function onOrgSearch() {
-  const cached = usingCache();
-  const data   = cached ? cacheData() : null;
+  if (!usingCache()) return; // search box stays visible in the empty state; no-op instead of touching cacheData()
+  const data = cacheData();
   const q = el('org-search').value.toLowerCase().trim();
   el('org-search-clear').classList.toggle('hidden', !q);
   S.pages.organizations = 0;
-  if (cached) {
-    const all = data.organizations.data;
-    S.orgs.filtered = q ? all.filter(o => orgMatchesSearch(o.name, q)) : all;
-    el('orgs-total-label').textContent = q ? `${S.orgs.filtered.length} matches` : `${num(S.orgs.total)} total`;
-    renderOrgsPage();
-  }
+  const all = data.organizations.data;
+  S.orgs.filtered = q ? all.filter(o => orgMatchesSearch(o.name, q)) : all;
+  el('orgs-total-label').textContent = q ? `${S.orgs.filtered.length} matches` : `${num(S.orgs.total)} total`;
+  renderOrgsPage();
 }
 
 export const clearOrgSearch = () => clearSearch('org-search', onOrgSearch);

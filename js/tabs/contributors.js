@@ -2,7 +2,6 @@ import { S } from '../state.js';
 import { el, num, pct, show, hide, deltaCell } from '../utils.js';
 import { PAGE_SIZE } from '../config.js';
 import { usingCache, cacheData } from '../cache.js';
-import { liveApi } from '../api.js';
 import { affiliationFor, affiliationsInWindow } from '../affiliations.js';
 import { roleBadge } from '../roles.js';
 import { personPlaceholder, companyCell, primaryCompanyName } from '../render.js';
@@ -11,36 +10,31 @@ import { updatePager } from '../ui.js';
 import { toggleSort, sortRows, isDefaultSort, updateSortIndicators } from '../sort.js';
 
 export async function loadContributors() {
+  if (!usingCache()) {
+    hide('contrib-loading'); hide('contrib-table-wrap'); show('contrib-empty');
+    el('contrib-total-label').textContent = '';
+    el('contrib-page-info').textContent = '';
+    el('contrib-prev').disabled = true;
+    el('contrib-next').disabled = true;
+    document.dispatchEvent(new CustomEvent('tabLoaded', { detail: 'contributors' }));
+    return;
+  }
+  hide('contrib-empty');
   show('contrib-loading'); hide('contrib-table-wrap');
 
   try {
-    const cached = usingCache();
-    const data   = cached ? cacheData() : null;
-    if (cached) {
-      const all = data.contributors.data;
-      S.contrib.total = data.contributors.total;
-      const q = el('contributor-search').value.toLowerCase().trim();
-      S.contrib.filtered = q
-        ? all.filter(c =>
-            c.name?.toLowerCase().includes(q) ||
-            (c.githubHandleArray || []).some(h => h.toLowerCase().includes(q)))
-        : all;
-      el('contrib-total-label').textContent = q
-        ? `${S.contrib.filtered.length} matches`
-        : `${num(S.contrib.total)} total`;
-      renderContribPage();
-    } else {
-      const offset = S.pages.contributors * PAGE_SIZE;
-      const data   = await liveApi('contributors/contributor-leaderboard', { offset, limit: PAGE_SIZE });
-      S.contrib.filtered = data.data;
-      S.contrib.total    = data.meta.total;
-      el('contrib-total-label').textContent = `${num(data.meta.total)} total`;
-      // Each page reload (e.g. via changePage()) re-fetches raw API order — re-apply
-      // whatever sort is active instead of losing it the moment the page changes.
-      renderContribTable(sortedContribList(), offset);
-      updatePager('contrib', S.pages.contributors, Math.ceil(data.meta.total / PAGE_SIZE));
-      updateSortIndicators('#contrib-table-wrap', 'contributors');
-    }
+    const all = cacheData().contributors.data;
+    S.contrib.total = cacheData().contributors.total;
+    const q = el('contributor-search').value.toLowerCase().trim();
+    S.contrib.filtered = q
+      ? all.filter(c =>
+          c.name?.toLowerCase().includes(q) ||
+          (c.githubHandleArray || []).some(h => h.toLowerCase().includes(q)))
+      : all;
+    el('contrib-total-label').textContent = q
+      ? `${S.contrib.filtered.length} matches`
+      : `${num(S.contrib.total)} total`;
+    renderContribPage();
     document.dispatchEvent(new CustomEvent('tabLoaded', { detail: 'contributors' }));
   } catch (e) {
     showError(e.message);
@@ -69,21 +63,15 @@ function contribAccessor(c, key) {
   }
 }
 
-function sortedContribList(list = S.contrib.filtered) {
-  return isDefaultSort('contributors') ? list : sortRows(list, 'contributors', contribAccessor);
+function sortedContribList() {
+  return isDefaultSort('contributors') ? S.contrib.filtered : sortRows(S.contrib.filtered, 'contributors', contribAccessor);
 }
 
 export function onContribSort(key) {
+  if (!usingCache()) return; // nothing loaded to sort
   toggleSort('contributors', key);
-  if (usingCache()) {
-    S.pages.contributors = 0;
-    renderContribPage();
-  } else {
-    // Live API: only the current page is loaded (no full dataset to rank/page against),
-    // so just reorder what's already on screen instead of silently no-op'ing.
-    renderContribTable(sortedContribList(), S.pages.contributors * PAGE_SIZE);
-    updateSortIndicators('#contrib-table-wrap', 'contributors');
-  }
+  S.pages.contributors = 0;
+  renderContribPage();
 }
 
 function renderContribPage() {
@@ -96,12 +84,9 @@ function renderContribPage() {
   // The '#' column always shows the contributor's true leaderboard rank (by
   // contributions, the tab's natural order) — not their position in whatever column
   // the table is currently sorted/searched by. #1 stays #1 regardless of reordering.
-  let ranks = null;
-  if (usingCache()) {
-    const allData = cacheData().contributors.data;
-    const rankMap = new Map(allData.map((c, i) => [c, i + 1]));
-    ranks = slice.map(c => rankMap.get(c) ?? 0);
-  }
+  const allData = cacheData().contributors.data;
+  const rankMap = new Map(allData.map((c, i) => [c, i + 1]));
+  const ranks = slice.map(c => rankMap.get(c) ?? 0);
 
   renderContribTable(slice, startIdx, ranks);
   updatePager('contrib', page, Math.ceil(list.length / PAGE_SIZE));
@@ -160,32 +145,19 @@ function clearSearch(inputId, onSearch) {
 export const clearContribSearch = () => clearSearch('contributor-search', onContribSearch);
 
 export function onContribSearch() {
-  const cached = usingCache();
-  const data   = cached ? cacheData() : null;
+  if (!usingCache()) return; // search box stays visible in the empty state; no-op instead of touching cacheData()
+  const data = cacheData();
   const q = el('contributor-search').value.toLowerCase().trim();
   el('contrib-search-clear').classList.toggle('hidden', !q);
   S.pages.contributors = 0;
 
-  if (cached) {
-    // Search across ALL cached contributors instantly
-    S.contrib.filtered = q
-      ? data.contributors.data.filter(c =>
-          c.name?.toLowerCase().includes(q) ||
-          (c.githubHandleArray || []).some(h => h.toLowerCase().includes(q)))
-      : data.contributors.data;
-    el('contrib-total-label').textContent = q
-      ? `${S.contrib.filtered.length} matches`
-      : `${num(S.contrib.total)} total`;
-    renderContribPage();
-  } else {
-    // Live API: only search current page
-    const filtered = q
-      ? S.contrib.filtered.filter(c =>
-          c.name?.toLowerCase().includes(q) ||
-          (c.githubHandleArray || []).some(h => h.toLowerCase().includes(q)))
-      : S.contrib.filtered;
-    renderContribTable(sortedContribList(filtered), 0);
-    updateSortIndicators('#contrib-table-wrap', 'contributors');
-    el('contrib-page-info').textContent = q ? `${filtered.length} matches on this page` : '';
-  }
+  S.contrib.filtered = q
+    ? data.contributors.data.filter(c =>
+        c.name?.toLowerCase().includes(q) ||
+        (c.githubHandleArray || []).some(h => h.toLowerCase().includes(q)))
+    : data.contributors.data;
+  el('contrib-total-label').textContent = q
+    ? `${S.contrib.filtered.length} matches`
+    : `${num(S.contrib.total)} total`;
+  renderContribPage();
 }

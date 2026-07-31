@@ -2,31 +2,25 @@ import { S } from '../state.js';
 import { el, num, pct, changeBadge, show, hide, destroyChart } from '../utils.js';
 import { C } from '../theme.js';
 import { usingCache, cacheData } from '../cache.js';
-import { liveApi } from '../api.js';
 import { orgPlaceholder } from '../render.js';
 import { resolveOrgLogo } from '../companies.js';
 import { renderChoropleth } from '../geo.js';
 import { showError } from '../error.js';
 
 export async function loadOverview() {
-  try {
-    const cached = usingCache();
-    const data   = cached ? cacheData() : null;
-    let contrib, orgs, conc, geo;
+  if (!usingCache()) {
+    hide('overview-content'); show('overview-empty');
+    document.dispatchEvent(new CustomEvent('tabLoaded', { detail: 'overview' }));
+    return;
+  }
+  hide('overview-empty'); show('overview-content');
 
-    if (cached) {
-      contrib = data.activeContributors;
-      orgs    = data.activeOrganizations;
-      conc    = data.contributorDependency;
-      geo     = data.geographicalDistribution;
-    } else {
-      [contrib, orgs, conc, geo] = await Promise.all([
-        liveApi('contributors/active-contributors'),
-        liveApi('contributors/active-organizations'),
-        liveApi('contributors/contributor-dependency'),
-        liveApi('contributors/geographical-distribution'),
-      ]);
-    }
+  try {
+    const data = cacheData();
+    const contrib = data.activeContributors;
+    const orgs    = data.activeOrganizations;
+    const conc    = data.contributorDependency;
+    const geo     = data.geographicalDistribution;
 
     // Stat cards
     el('stat-contributors').textContent      = num(contrib.summary.current);
@@ -63,15 +57,9 @@ export async function loadOverview() {
       `while ${num(conc.otherContributors.count)} others share the remaining ${pct(otherPct)}.`;
 
     // Top orgs list
-    let topOrgs;
-    if (cached) {
-      topOrgs = { data: data.organizations.data.slice(0, 15) };
-    } else {
-      topOrgs = await liveApi('contributors/organization-leaderboard', { offset: 0, limit: 15 });
-    }
-    const maxC = topOrgs.data[0]?.contributions || 1;
+    const topOrgs = data.organizations.data.slice(0, 15);
     hide('ov-orgs-loading'); show('ov-orgs-list');
-    el('ov-orgs-list').innerHTML = topOrgs.data.map((o, i) => `
+    el('ov-orgs-list').innerHTML = topOrgs.map((o, i) => `
       <div class="flex items-center gap-2">
         <span class="text-slate-500 dark:text-gray-400 text-xs w-4 shrink-0">${i + 1}</span>
         ${resolveOrgLogo(o) ? `<img src="${resolveOrgLogo(o)}" alt="" class="w-5 h-5 rounded object-contain shrink-0" onerror="this.style.display='none'">` : orgPlaceholder('w-5 h-5')}

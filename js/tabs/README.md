@@ -11,33 +11,33 @@ document.dispatchEvent(new CustomEvent('tabLoaded', { detail: '<tab-name>' }));
 ## Modules
 
 ### `overview.js`
-Populates the Overview tab: four stat cards (contributors, orgs, maintainers, reviewers), the contribution-concentration doughnut chart, the top-15 org list, and the mini choropleth map.
+Populates the Overview tab: four stat cards (contributors, orgs, maintainers, reviewers), the contribution-concentration doughnut chart, the top-15 org list, and the mini choropleth map. Renders from `data/cache.json` only — see `js/README.md`'s "No live-data fallback" section — and shows `#overview-empty` instead when `usingCache()` is false.
 
 Exports: `loadOverview`
 
 ### `contributors.js`
-Contributor leaderboard with avatar, GitHub handles, contribution count, Δ vs. prior period, share %, company (with multi-employer split support), and role badges. Supports client-side full-dataset search when cache is active; falls back to page-scoped search against the live API.
+Contributor leaderboard with avatar, GitHub handles, contribution count, Δ vs. prior period, share %, company (with multi-employer split support), and role badges. Renders from `data/cache.json` only; `loadContributors()` shows `#contrib-empty` instead when `usingCache()` is false, and `onContribSort()`/`onContribSearch()` no-op rather than touching `cacheData()` in that state (the search box and sortable headers stay visible and interactive-looking, matching the Coverage/SIGs tabs' existing empty-state convention).
 
-Column headers for Contributor (name), Contributions, vs prev (Δ%), and Company are sortable — click toggles ascending/descending via `onContribSort(key)` (`js/sort.js`). The `#` column always shows the contributor's true leaderboard rank (their position in `cacheData().contributors.data`, which is contributions-sorted) regardless of the table's current sort or search filter — #1 stays #1 whether you sort alphabetically or search for a name; only the column *order* changes. That true-rank lookup needs the full dataset, so it's cache-only; in the live-API fallback (no `data/cache.json`), `onContribSort()` still reorders whichever page is currently loaded — it just can't compute a rank against data it doesn't have, so the `#` column falls back to position-on-page there. The `company` sort key uses `primaryCompanyName()` (`render.js`) rather than `affiliationFor()` directly, so a split-affiliation contributor sorts by the exact same company text `companyCell()` renders (the last stacked entry), not their present-day affiliation, which can differ from that when the row is showing a date-windowed history.
+Column headers for Contributor (name), Contributions, vs prev (Δ%), and Company are sortable — click toggles ascending/descending via `onContribSort(key)` (`js/sort.js`). The `#` column always shows the contributor's true leaderboard rank (their position in `cacheData().contributors.data`, which is contributions-sorted) regardless of the table's current sort or search filter — #1 stays #1 whether you sort alphabetically or search for a name; only the column *order* changes. The `company` sort key uses `primaryCompanyName()` (`render.js`) rather than `affiliationFor()` directly, so a split-affiliation contributor sorts by the exact same company text `companyCell()` renders (the last stacked entry), not their present-day affiliation, which can differ from that when the row is showing a date-windowed history.
 
-`sortedContribList()` (an internal helper, defaulting to `S.contrib.filtered` but accepting an explicit list) is the single place the active sort gets applied, and every render path in this module — the initial load, `onContribSort()`, `onContribSearch()`, and a page change via `changePage()` (which re-runs `loadContributors()` from scratch) — routes through it. That last one matters in the live-API fallback: each page change re-fetches raw API order from scratch, so without re-applying the sort there too, a sort chosen on page 1 would silently revert the moment you paged to page 2, even though the header still showed it as active.
+`sortedContribList()` (an internal helper) is the single place the active sort gets applied; every render path in this module — the initial load, `onContribSort()`, and `onContribSearch()` — routes through it.
 
 Exports: `loadContributors`, `renderContribTable`, `onContribSearch`, `clearContribSearch`, `onContribSort`
 
 ### `organizations.js`
-Organization leaderboard with logo, contribution count, Δ vs. prior period, share %, and an HHI-based concentration indicator. Same cache/live duality as the contributors tab.
+Organization leaderboard with logo, contribution count, Δ vs. prior period, share %, and an HHI-based concentration indicator. Same cache-only behavior as the Contributors tab: `loadOrganizations()` shows `#orgs-empty` instead when `usingCache()` is false, and `onOrgSort()`/`onOrgSearch()` no-op in that state.
 
-Organization (name), Contributions, and vs prev are sortable (`onOrgSort(key)`); Share and Concentration aren't — Share is always the same order as Contributions (it's a fixed ratio of it), and Concentration would need an HHI computed for every org up front rather than just the visible page. Same as the Contributors tab: the `#` column always shows true leaderboard rank (by Contributions) when cache is active, and every render path — including a live-API page change via `changePage()`, which re-fetches raw API order from scratch — routes through `sortedOrgList()` so the active sort survives pagination instead of silently reverting.
+Organization (name), Contributions, and vs prev are sortable (`onOrgSort(key)`); Share and Concentration aren't — Share is always the same order as Contributions (it's a fixed ratio of it), and Concentration would need an HHI computed for every org up front rather than just the visible page. Same as the Contributors tab: the `#` column always shows true leaderboard rank (by Contributions), and every render path routes through `sortedOrgList()` so the active sort survives pagination and search.
 
 Exports: `loadOrganizations`, `renderOrgsTable`, `onOrgSearch`, `clearOrgSearch`, `onOrgSort`
 
 ### `concentration.js`
-Renders the two side-by-side tiles: **Contributor Bus Factor** (doughnut chart + scrollable core-contributor list) and **Organization Dependency** (doughnut chart + scrollable core-org list).
+Renders the two side-by-side tiles: **Contributor Bus Factor** (doughnut chart + scrollable core-contributor list) and **Organization Dependency** (doughnut chart + scrollable core-org list). Renders from `data/cache.json` only; shows a single combined `#concentration-empty` state covering both tiles when `usingCache()` is false.
 
 Exports: `loadConcentration`
 
 ### `geography.js`
-Renders the full-page choropleth world map and a country table. Delegates map rendering to `js/geo.js`.
+Renders the full-page choropleth world map and a country table. Delegates map rendering to `js/geo.js`. Renders from `data/cache.json` only; shows `#geo-empty` instead when `usingCache()` is false.
 
 Country (name) and Count are sortable (`onGeoSort(key)`); Share isn't shown as its own sort option since it's a fixed ratio of Count and would always produce the same order. The full country list is cached in a module-level variable (`_geoAll`) on load so a sort click just re-renders the table locally — it doesn't touch the map, which looks countries up by ISO code and so doesn't care about array order.
 

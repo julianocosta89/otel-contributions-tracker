@@ -81,7 +81,7 @@ Each organization record contains: `logo`, `name`, `contributions`, `percentage`
 
 **`filterCombos[preset][platform]`** — same shape as a `periods[preset]` entry, but scoped to a single platform. Populated for all preset × platform combinations so the UI can switch platforms without making live API calls.
 
-**`sources`** — per-period and per-platform freshness metadata. `fetchedAt` at the top of the file records the script run time; `sources` records the freshness of each cached slice. A `cached-fallback` status means a refresh failed for that slice and the script reused an older cached copy instead of silently replacing it with empty or partial data.
+**`sources`** — per-period and per-platform freshness metadata. `fetchedAt` at the top of the file records the script run time; `sources` records the freshness of each cached slice. A `cached-fallback` status means a refresh failed for that slice and the script reused an older cached copy instead of silently replacing it with empty or partial data. If a slice has neither a fresh fetch nor an older cached copy to fall back to, `fetch-data.mjs` doesn't write `cache.json` at all that run — it exits non-zero and leaves the previously-committed file untouched, so a bad run can never regress a working `cache.json` to a broken one. `.github/workflows/refresh-data.yml` opens/updates a GitHub issue if this happens.
 
 ---
 
@@ -214,7 +214,7 @@ If neither source covers the contributor, no company is shown.
 ## How the app uses these files
 
 - On load, `cache.json` is fetched and used to populate the default view (1-year window, all platforms, all activity types).
-- When the user selects a specific platform, the app reads from `cache.json`'s `filterCombos` section instead of making a live API call.
-- When the user selects a non-default filter that is not covered by `filterCombos` (e.g., a custom date range or activity type), the app falls back to live LF Insights API requests.
+- When the user selects a specific platform, the app reads from `cache.json`'s `filterCombos` section, which is populated for every preset × platform combination — there's no UI for a custom date range or activity type, so every reachable filter combination is covered.
+- There is no live-API fallback: this deployment has no CORS configuration for the LF Insights API, so a browser-side fallback call could never actually succeed — it would just replace a missing-cache error with a confusing network error. If `cache.json` fails to load, or somehow doesn't cover the active preset/platform, every tab shows a plain "data not available" empty state instead of attempting one. See `js/README.md`'s "No live-data fallback" section.
 - `sigs.json` is loaded on demand when the user opens the per-repository breakdown.
 - `affiliations.json`, `github-companies.json`, and `roles.json` are loaded once and held in memory to annotate contributors throughout the session.

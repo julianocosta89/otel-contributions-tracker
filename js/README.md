@@ -6,7 +6,7 @@ ES modules that power the web app. Loaded via `<script type="module" src="js/mai
 
 ```
 js/
-  config.js        constants (API_BASE, PAGE_SIZE, COLORS)
+  config.js        constants (PAGE_SIZE, COLORS)
   state.js         mutable globals + S object
   utils.js         formatting helpers + DOM shortcuts
   theme.js         dark/light mode + chart colour palette
@@ -15,7 +15,7 @@ js/
   affiliations.js  gitdm affiliation lookup + loading
   roles.js         GitHub team role badges
   cache.js         data loading, caching, and repo helpers
-  api.js           live API calls + GitHub PR fetches
+  api.js           GitHub PR fetches (repo modal breakdowns)
   render.js        shared row/list HTML builders
   geo.js           choropleth world map
   attribution.js   org attribution + HHI concentration
@@ -31,7 +31,6 @@ js/
 
 ### `config.js`
 Pure constants. No imports.
-- `API_BASE` — LF Insights endpoint prefix
 - `PAGE_SIZE` — rows per page (25)
 - `COLORS` — chart palette
 
@@ -82,16 +81,15 @@ Everything related to matching contributor affiliations to leaderboard org names
 - `ROLE_STYLE` — Tailwind class strings per role, keyed by role name
 
 ### `cache.js`
-- `usingCache()` — true when the active preset + platform combo is available in `data/cache.json`
+- `usingCache()` — true when the active preset + platform combo is available in `data/cache.json`. There is no live-API fallback when it's false (see "No live-data fallback" below) — every tab shows an empty state instead
 - `cacheData()` — returns the cached data object for the active filters
-- `loadCache()` — fetches `data/cache.json` at startup; populates the `cached <date>` header tag; silent failure if unavailable
+- `loadCache()` — fetches `data/cache.json` at startup; populates the `cached <date>` header tag; silent failure if unavailable (`CACHE` stays `null`, so `usingCache()` returns `false` everywhere)
 - `loadSigsCache()` — singleton fetch of `data/sigs.json`; stores result in `SIGS_CACHE`
 - `reposFromCache(handles)` / `orgReposFromCache(contributors)` — look up repository contribution counts from the already-loaded SIG cache for a contributor or org's full contributor list
 - `sigDetailsForHandles(normalizedHandles)` — like the above but returns full per-repo contributor rows (not just counts); `reposFromSigsCache()` is a thin wrapper that strips it down to `{ name, url, count }`. Powers the Coverage tab/modal's per-SIG people breakdown
 
 ### `api.js`
-- `liveApi(path, extra)` — wraps `fetch` against `API_BASE` with the active query string
-- `buildQS(extra)` — assembles the shared query string from current filter state
+GitHub Issues Search API calls only — see "No live-data fallback" below for why there's no LF Insights client here.
 - `fetchContribRepos(handles, startDate, endDate, token?)` — GitHub Issues Search API: finds PRs authored by a contributor in the `open-telemetry` org within the date range, grouped by repository. Optional `token` adds an `Authorization` header (used by `scripts/send-monthly-report.mjs` for a higher rate limit; browser call sites omit it)
 - `fetchOrgRepos(contributors, org, startDate, endDate, token?)` — calls `fetchContribRepos` for each contributor in parallel then merges the results. Returns `failedCount` (number of contributors whose search request failed, e.g. rate limiting) alongside `repos`/`totalPRs`/`truncated`; browser call sites ignore it, `scripts/send-monthly-report.mjs` surfaces it as a warning
 
@@ -161,6 +159,12 @@ Entry point. Runs `init()` on load.
 - Registers the `hashchange` listener for in-session navigation
 - Manages the role-badge fixed-position tooltip (`mouseover`/`mouseout`)
 - `Object.assign(window, { ... })` — exposes the functions needed by inline `onclick`/`oninput` handlers in `index.html`, including each tab's `on<Tab>Sort(key)` handler for sortable column headers
+
+## No live-data fallback
+
+Every tab's `load*()` renders from `data/cache.json` only. There used to be a "live API" fallback (a direct browser call to the LF Insights widget API) for whenever `usingCache()` was false, but this deployment has no CORS configuration on that endpoint — the fallback could never actually succeed here, it just replaced one failure (missing cache) with a different, more confusing one (a network error whose message blamed CORS). It was removed: `usingCache()` now gates each tab between its normal render and an empty state (`#<tab>-empty` in `index.html`, same visual pattern as the pre-existing Coverage/SIGs empty states), and `js/api.js` only contains the unrelated GitHub Issues Search calls used for repo-breakdown modals (which _do_ support anonymous CORS).
+
+This means `data/cache.json` being present and covering the active preset/platform is now a hard requirement for the app to show anything at all — see `.github/workflows/refresh-data.yml`'s failure-alerting step and `scripts/fetch-data.mjs`'s refusal to write an incomplete cache (`data/README.md`) for how that's kept reliable.
 
 ## Dependency notes
 

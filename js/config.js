@@ -1,5 +1,3 @@
-export const API_BASE  = 'https://insights.linuxfoundation.org/api/widget';
-export const PROJECT   = 'opentelemetry';
 export const PAGE_SIZE = 25;
 export const COLORS    = [
   '#3b82f6','#8b5cf6','#10b981','#f59e0b','#ef4444',

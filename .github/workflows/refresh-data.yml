@@ -7,6 +7,7 @@ on:
 
 permissions:
   contents: write
+  issues: write   # lets the failure step below open/comment on an issue
 
 concurrency:
   group: otel-data-refresh-${{ github.ref }}
@@ -42,4 +43,26 @@ jobs:
             git commit -m "data: refresh contributions $(date -u '+%Y-%m-%d')"
             git pull --rebase origin main
             git push
+          fi
+
+      # A failure here is easy to miss (only visible on the Actions tab), and this
+      # workflow is the only thing keeping data/cache.json from going stale — the
+      # site has no live-API fallback (CORS blocks it on this deployment, so that
+      # path was removed rather than left silently broken), so it depends entirely
+      # on this cache being kept current. One issue per failure streak: if it's
+      # already open, comment instead of opening a duplicate for every failed run.
+      - name: Open or update an issue on failure
+        if: failure()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          TITLE="Scheduled data refresh is failing"
+          BODY="The [data refresh run]($RUN_URL) failed on $(date -u '+%Y-%m-%d'). \`data/cache.json\` was not updated — the site is still serving the last successfully-fetched data, but it'll get increasingly stale if this keeps failing. See the run logs for details."
+          EXISTING=$(gh issue list --repo "$REPO" --state open --search "in:title \"$TITLE\"" --json number,title --jq ".[] | select(.title == \"$TITLE\") | .number" | head -n1)
+          if [ -n "$EXISTING" ]; then
+            gh issue comment "$EXISTING" --repo "$REPO" --body "$BODY"
+          else
+            gh issue create --repo "$REPO" --title "$TITLE" --body "$BODY"
           fi

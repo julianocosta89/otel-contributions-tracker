@@ -2,7 +2,6 @@ import { S } from '../state.js';
 import { el, num, pct, show, hide, deltaCell } from '../utils.js';
 import { PAGE_SIZE } from '../config.js';
 import { usingCache, cacheData } from '../cache.js';
-import { liveApi } from '../api.js';
 import { orgMatchesSearch, resolveOrgLogo } from '../companies.js';
 import { orgPlaceholder } from '../render.js';
 import { calcOrgConcentration, contributorsForOrg } from '../attribution.js';
@@ -11,34 +10,29 @@ import { updatePager } from '../ui.js';
 import { toggleSort, sortRows, isDefaultSort, updateSortIndicators } from '../sort.js';
 
 export async function loadOrganizations() {
+  if (!usingCache()) {
+    hide('orgs-loading'); hide('orgs-table-wrap'); show('orgs-empty');
+    el('orgs-total-label').textContent = '';
+    el('orgs-page-info').textContent = '';
+    el('orgs-prev').disabled = true;
+    el('orgs-next').disabled = true;
+    document.dispatchEvent(new CustomEvent('tabLoaded', { detail: 'organizations' }));
+    return;
+  }
+  hide('orgs-empty');
   show('orgs-loading'); hide('orgs-table-wrap');
 
   try {
-    const cached = usingCache();
-    const data   = cached ? cacheData() : null;
-    if (cached) {
-      const all = data.organizations.data;
-      S.orgs.total = data.organizations.total;
-      const q = el('org-search').value.toLowerCase().trim();
-      S.orgs.filtered = q
-        ? all.filter(o => orgMatchesSearch(o.name, q))
-        : all;
-      el('orgs-total-label').textContent = q
-        ? `${S.orgs.filtered.length} matches`
-        : `${num(S.orgs.total)} total`;
-      renderOrgsPage();
-    } else {
-      const offset = S.pages.organizations * PAGE_SIZE;
-      const page   = await liveApi('contributors/organization-leaderboard', { offset, limit: PAGE_SIZE });
-      S.orgs.filtered = page.data;
-      S.orgs.total    = page.meta.total;
-      el('orgs-total-label').textContent = `${num(page.meta.total)} total`;
-      // Each page reload (e.g. via changePage()) re-fetches raw API order — re-apply
-      // whatever sort is active instead of losing it the moment the page changes.
-      renderOrgsTable(sortedOrgList(), offset);
-      updatePager('orgs', S.pages.organizations, Math.ceil(page.meta.total / PAGE_SIZE));
-      updateSortIndicators('#orgs-table-wrap', 'organizations');
-    }
+    const all = cacheData().organizations.data;
+    S.orgs.total = cacheData().organizations.total;
+    const q = el('org-search').value.toLowerCase().trim();
+    S.orgs.filtered = q
+      ? all.filter(o => orgMatchesSearch(o.name, q))
+      : all;
+    el('orgs-total-label').textContent = q
+      ? `${S.orgs.filtered.length} matches`
+      : `${num(S.orgs.total)} total`;
+    renderOrgsPage();
     document.dispatchEvent(new CustomEvent('tabLoaded', { detail: 'organizations' }));
 
   } catch (e) {
@@ -61,16 +55,10 @@ function sortedOrgList() {
 }
 
 export function onOrgSort(key) {
+  if (!usingCache()) return; // nothing loaded to sort
   toggleSort('organizations', key);
-  if (usingCache()) {
-    S.pages.organizations = 0;
-    renderOrgsPage();
-  } else {
-    // Live API: only the current page is loaded (no full dataset to rank/page against),
-    // so just reorder what's already on screen instead of silently no-op'ing.
-    renderOrgsTable(sortedOrgList(), S.pages.organizations * PAGE_SIZE);
-    updateSortIndicators('#orgs-table-wrap', 'organizations');
-  }
+  S.pages.organizations = 0;
+  renderOrgsPage();
 }
 
 function renderOrgsPage() {
@@ -82,12 +70,9 @@ function renderOrgsPage() {
   // The '#' column always shows the org's true leaderboard rank (by contributions,
   // the tab's natural order) — not its position in whatever column the table is
   // currently sorted/searched by. #1 stays #1 regardless of reordering.
-  let ranks = null;
-  if (usingCache()) {
-    const allData = cacheData().organizations.data;
-    const rankMap = new Map(allData.map((o, i) => [o, i + 1]));
-    ranks = slice.map(o => rankMap.get(o) ?? 0);
-  }
+  const allData = cacheData().organizations.data;
+  const rankMap = new Map(allData.map((o, i) => [o, i + 1]));
+  const ranks = slice.map(o => rankMap.get(o) ?? 0);
 
   renderOrgsTable(slice, page * PAGE_SIZE, ranks);
   updatePager('orgs', page, Math.ceil(list.length / PAGE_SIZE));
@@ -140,17 +125,15 @@ function clearSearch(inputId, onSearch) {
 }
 
 export function onOrgSearch() {
-  const cached = usingCache();
-  const data   = cached ? cacheData() : null;
+  if (!usingCache()) return; // search box stays visible in the empty state; no-op instead of touching cacheData()
+  const data = cacheData();
   const q = el('org-search').value.toLowerCase().trim();
   el('org-search-clear').classList.toggle('hidden', !q);
   S.pages.organizations = 0;
-  if (cached) {
-    const all = data.organizations.data;
-    S.orgs.filtered = q ? all.filter(o => orgMatchesSearch(o.name, q)) : all;
-    el('orgs-total-label').textContent = q ? `${S.orgs.filtered.length} matches` : `${num(S.orgs.total)} total`;
-    renderOrgsPage();
-  }
+  const all = data.organizations.data;
+  S.orgs.filtered = q ? all.filter(o => orgMatchesSearch(o.name, q)) : all;
+  el('orgs-total-label').textContent = q ? `${S.orgs.filtered.length} matches` : `${num(S.orgs.total)} total`;
+  renderOrgsPage();
 }
 
 export const clearOrgSearch = () => clearSearch('org-search', onOrgSearch);

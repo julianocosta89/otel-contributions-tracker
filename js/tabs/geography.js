@@ -1,6 +1,5 @@
 import { el, num, show, hide } from '../utils.js';
 import { usingCache, cacheData } from '../cache.js';
-import { liveApi } from '../api.js';
 import { renderChoropleth } from '../geo.js';
 import { showError } from '../error.js';
 import { toggleSort, sortRows, updateSortIndicators } from '../sort.js';
@@ -11,16 +10,19 @@ import { toggleSort, sortRows, updateSortIndicators } from '../sort.js';
 let _geoAll = [];
 
 export async function loadGeography() {
+  if (!usingCache()) {
+    hide('geo-chart-loading'); hide('geo-chart-wrap');
+    hide('geo-table-loading'); hide('geo-table-wrap');
+    show('geo-empty');
+    document.dispatchEvent(new CustomEvent('tabLoaded', { detail: 'geography' }));
+    return;
+  }
+  hide('geo-empty');
   show('geo-chart-loading'); hide('geo-chart-wrap');
   show('geo-table-loading'); hide('geo-table-wrap');
 
   try {
-    const cached = usingCache();
-    const data   = cached ? cacheData() : null;
-    const geo  = cached
-      ? data.geographicalDistribution
-      : await liveApi('contributors/geographical-distribution');
-
+    const geo = cacheData().geographicalDistribution;
     _geoAll = geo.data || [];
 
     el('geo-country-count').textContent = `${_geoAll.length} regions reported`;

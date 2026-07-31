@@ -88,6 +88,11 @@
 
   <!-- ── OVERVIEW TAB ─────────────────────────────────────────────── -->
   <div id="tab-overview" class="tab-panel space-y-4" role="tabpanel" aria-labelledby="tab-btn-overview">
+    <div id="overview-empty" class="hidden bg-white dark:bg-gray-900 rounded-xl p-10 border border-slate-200 dark:border-gray-800 text-center text-slate-600 dark:text-gray-400 text-sm leading-relaxed">
+      Data not available.<br>
+      <span class="text-xs text-slate-500 dark:text-gray-400">Requires <code class="bg-slate-200 dark:bg-gray-800 px-1.5 py-0.5 rounded text-slate-600 dark:text-gray-400">data/cache.json</code> — run <code class="bg-slate-200 dark:bg-gray-800 px-1.5 py-0.5 rounded text-slate-600 dark:text-gray-400">make fetch-data</code>.</span>
+    </div>
+    <div id="overview-content" class="hidden space-y-4">
     <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
       <div class="bg-white dark:bg-gray-900 rounded-xl p-4 border border-slate-200 dark:border-gray-800">
         <p class="text-slate-500 dark:text-gray-400 text-xs mb-1">Total Contributors</p>
@@ -138,6 +143,7 @@
         <canvas id="ovGeoChart"></canvas>
       </div>
     </div>
+    </div>
   </div>
 
   <!-- ── CONTRIBUTORS TAB ──────────────────────────────────────────── -->
@@ -157,6 +163,10 @@
         </div>
       </div>
       <div id="contrib-loading" class="flex justify-center py-14"><span class="spinner"></span></div>
+      <div id="contrib-empty" class="hidden text-center py-14 text-slate-600 dark:text-gray-400 text-sm leading-relaxed">
+        Data not available.<br>
+        <span class="text-xs text-slate-500 dark:text-gray-400">Requires <code class="bg-slate-200 dark:bg-gray-800 px-1.5 py-0.5 rounded text-slate-600 dark:text-gray-400">data/cache.json</code> — run <code class="bg-slate-200 dark:bg-gray-800 px-1.5 py-0.5 rounded text-slate-600 dark:text-gray-400">make fetch-data</code>.</span>
+      </div>
       <div id="contrib-table-wrap" class="hidden overflow-x-auto">
         <table class="w-full">
           <thead>
@@ -203,6 +213,10 @@
           </div>
         </div>
         <div id="orgs-loading" class="flex justify-center py-14"><span class="spinner"></span></div>
+        <div id="orgs-empty" class="hidden text-center py-14 text-slate-600 dark:text-gray-400 text-sm leading-relaxed">
+          Data not available.<br>
+          <span class="text-xs text-slate-500 dark:text-gray-400">Requires <code class="bg-slate-200 dark:bg-gray-800 px-1.5 py-0.5 rounded text-slate-600 dark:text-gray-400">data/cache.json</code> — run <code class="bg-slate-200 dark:bg-gray-800 px-1.5 py-0.5 rounded text-slate-600 dark:text-gray-400">make fetch-data</code>.</span>
+        </div>
         <div id="orgs-table-wrap" class="hidden overflow-x-auto flex-1">
           <table class="w-full">
             <thead>
@@ -231,6 +245,11 @@
 
   <!-- ── CONCENTRATION TAB ─────────────────────────────────────────── -->
   <div id="tab-concentration" class="tab-panel hidden space-y-4" role="tabpanel" aria-labelledby="tab-btn-concentration">
+    <div id="concentration-empty" class="hidden bg-white dark:bg-gray-900 rounded-xl p-10 border border-slate-200 dark:border-gray-800 text-center text-slate-600 dark:text-gray-400 text-sm leading-relaxed">
+      Data not available.<br>
+      <span class="text-xs text-slate-500 dark:text-gray-400">Requires <code class="bg-slate-200 dark:bg-gray-800 px-1.5 py-0.5 rounded text-slate-600 dark:text-gray-400">data/cache.json</code> — run <code class="bg-slate-200 dark:bg-gray-800 px-1.5 py-0.5 rounded text-slate-600 dark:text-gray-400">make fetch-data</code>.</span>
+    </div>
+    <div id="concentration-content" class="hidden space-y-4">
     <div class="grid md:grid-cols-2 gap-4 items-start">
       <div id="bc-factor-tile" class="bg-white dark:bg-gray-900 rounded-xl border border-slate-200 dark:border-gray-800 p-4">
         <h2 class="text-sm font-semibold">Contributor Bus Factor</h2>
@@ -283,10 +302,15 @@
         <div id="od-list" class="hidden space-y-1 overflow-y-auto min-h-0 flex-1 pr-1"></div>
       </div>
     </div>
+    </div>
   </div>
 
   <!-- ── GEOGRAPHY TAB ─────────────────────────────────────────────── -->
   <div id="tab-geography" class="tab-panel hidden" role="tabpanel" aria-labelledby="tab-btn-geography">
+    <div id="geo-empty" class="hidden bg-white dark:bg-gray-900 rounded-xl p-10 border border-slate-200 dark:border-gray-800 text-center text-slate-600 dark:text-gray-400 text-sm leading-relaxed">
+      Data not available.<br>
+      <span class="text-xs text-slate-500 dark:text-gray-400">Requires <code class="bg-slate-200 dark:bg-gray-800 px-1.5 py-0.5 rounded text-slate-600 dark:text-gray-400">data/cache.json</code> — run <code class="bg-slate-200 dark:bg-gray-800 px-1.5 py-0.5 rounded text-slate-600 dark:text-gray-400">make fetch-data</code>.</span>
+    </div>
     <div class="grid md:grid-cols-2 gap-4">
       <div class="bg-white dark:bg-gray-900 rounded-xl border border-slate-200 dark:border-gray-800 p-4">
         <h2 class="text-sm font-semibold mb-0.5">World Map</h2>
@@ -669,13 +693,9 @@
   <div class="flex items-start gap-3">
     <div class="text-red-600 dark:text-red-400 mt-0.5 shrink-0">⚠</div>
     <div class="flex-1">
-      <p class="text-red-700 dark:text-red-300 font-medium text-xs">Request failed</p>
+      <p class="text-red-700 dark:text-red-300 font-medium text-xs">Something went wrong</p>
       <p id="error-msg" class="text-slate-500 dark:text-gray-400 text-xs mt-1"></p>
-      <p class="text-slate-500 dark:text-gray-400 text-xs mt-2">
-        Live API may require a session at
-        <a href="https://insights.linuxfoundation.org" target="_blank" class="text-blue-600 dark:text-blue-400 underline">insights.linuxfoundation.org</a>
-        due to CORS. Cached data is used as fallback.
-      </p>
+      <p class="text-slate-500 dark:text-gray-400 text-xs mt-2">Try reloading the page. If this keeps happening, please open an issue.</p>
     </div>
     <button onclick="hideError()" aria-label="Dismiss error" class="text-slate-500 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white text-lg leading-none shrink-0">×</button>
   </div>

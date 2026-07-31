@@ -1,21 +1,3 @@
-import { API_BASE, PROJECT } from './config.js';
-import { S } from './state.js';
-
-export function buildQS(extra = {}) {
-  return new URLSearchParams({
-    project: PROJECT,
-    startDate: S.filters.startDate, endDate: S.filters.endDate,
-    platform: S.filters.platform, activityType: 'all',
-    ...extra,
-  }).toString();
-}
-
-export async function liveApi(path, extra = {}) {
-  const res = await fetch(`${API_BASE}/${path}?${buildQS(extra)}`);
-  if (!res.ok) throw new Error(`HTTP ${res.status} — ${path}`);
-  return res.json();
-}
-
 export async function fetchContribRepos(handles, startDate, endDate, token) {
   const handle = handles[0]; // primary handle
   const dateFilter = `${startDate}..${endDate}`;

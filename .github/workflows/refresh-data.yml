@@ -7,7 +7,6 @@ on:
 
 permissions:
   contents: write
-  issues: write   # lets the failure step below open/comment on an issue
 
 concurrency:
   group: otel-data-refresh-${{ github.ref }}
@@ -49,20 +48,26 @@ jobs:
       # workflow is the only thing keeping data/cache.json from going stale — the
       # site has no live-API fallback (CORS blocks it on this deployment, so that
       # path was removed rather than left silently broken), so it depends entirely
-      # on this cache being kept current. One issue per failure streak: if it's
-      # already open, comment instead of opening a duplicate for every failed run.
-      - name: Open or update an issue on failure
-        if: failure()
+      # on this cache being kept current. Reports on every run (not just failures)
+      # so the Datadog monitor always has a fresh data point to evaluate — a metric
+      # that only ever gets sent on failure can't tell "still failing" apart from
+      # "hasn't run in a while", and would never show a recovery.
+      - name: Report refresh status to Datadog
+        if: always()
+        continue-on-error: true   # a Datadog API hiccup (or a not-yet-configured secret) shouldn't fail an otherwise-successful refresh
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          REPO: ${{ github.repository }}
-          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          DD_API_KEY: ${{ secrets.DD_API_KEY }}
         run: |
-          TITLE="Scheduled data refresh is failing"
-          BODY="The [data refresh run]($RUN_URL) failed on $(date -u '+%Y-%m-%d'). \`data/cache.json\` was not updated — the site is still serving the last successfully-fetched data, but it'll get increasingly stale if this keeps failing. See the run logs for details."
-          EXISTING=$(gh issue list --repo "$REPO" --state open --search "in:title \"$TITLE\"" --json number,title --jq ".[] | select(.title == \"$TITLE\") | .number" | head -n1)
-          if [ -n "$EXISTING" ]; then
-            gh issue comment "$EXISTING" --repo "$REPO" --body "$BODY"
-          else
-            gh issue create --repo "$REPO" --title "$TITLE" --body "$BODY"
-          fi
+          STATUS_VALUE=0
+          if [ "${{ job.status }}" != "success" ]; then STATUS_VALUE=1; fi
+          curl -sS --fail-with-body -X POST "https://api.datadoghq.eu/api/v2/series" \
+            -H "Content-Type: application/json" \
+            -H "DD-API-KEY: ${DD_API_KEY}" \
+            -d "{
+              \"series\": [{
+                \"metric\": \"otel_contributions_tracker.refresh_data.status\",
+                \"type\": 3,
+                \"points\": [{ \"timestamp\": $(date +%s), \"value\": ${STATUS_VALUE} }],
+                \"tags\": [\"repository:${{ github.repository }}\", \"workflow:refresh-data\"]
+              }]
+            }"

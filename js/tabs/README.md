@@ -37,7 +37,7 @@ Renders the two side-by-side tiles: **Contributor Bus Factor** (doughnut chart +
 Exports: `loadConcentration`
 
 ### `geography.js`
-Renders the full-page choropleth world map and a country table. Delegates map rendering to `js/geo.js`. Renders from `data/cache.json` only; shows `#geo-empty` instead when `usingCache()` is false.
+Renders the full-page choropleth world map and a country table. Delegates map rendering to `js/geo.js`. Renders from `data/cache.json` only; hides the `#geo-content` grid (both the World Map and All Countries cards) and shows `#geo-empty` instead when `usingCache()` is false, the same hide-the-whole-grid pattern used by `#overview-content`/`#overview-empty` and `#concentration-content`/`#concentration-empty`.
 
 Country (name) and Count are sortable (`onGeoSort(key)`); Share isn't shown as its own sort option since it's a fixed ratio of Count and would always produce the same order. The full country list is cached in a module-level variable (`_geoAll`) on load so a sort click just re-renders the table locally — it doesn't touch the map, which looks countries up by ISO code and so doesn't care about array order.
 

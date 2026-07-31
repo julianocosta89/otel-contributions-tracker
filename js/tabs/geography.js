@@ -11,13 +11,11 @@ let _geoAll = [];
 
 export async function loadGeography() {
   if (!usingCache()) {
-    hide('geo-chart-loading'); hide('geo-chart-wrap');
-    hide('geo-table-loading'); hide('geo-table-wrap');
-    show('geo-empty');
+    hide('geo-content'); show('geo-empty');
     document.dispatchEvent(new CustomEvent('tabLoaded', { detail: 'geography' }));
     return;
   }
-  hide('geo-empty');
+  hide('geo-empty'); show('geo-content');
   show('geo-chart-loading'); hide('geo-chart-wrap');
   show('geo-table-loading'); hide('geo-table-wrap');
 

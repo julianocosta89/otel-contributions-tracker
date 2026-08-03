@@ -13,7 +13,7 @@ import { openCoverageModal, closeCoverageModal } from './modals/coverage.js';
 import { onContribSearch, clearContribSearch, onContribSort } from './tabs/contributors.js';
 import { onOrgSearch, clearOrgSearch, onOrgSort } from './tabs/organizations.js';
 import { onSigsSearch, clearSigsSearch, onSigsSort } from './tabs/sigs.js';
-import { onCoverageSearch, clearCoverageSearch, onCoverageSort } from './tabs/coverage.js';
+import { onCoverageSearch, clearCoverageSearch, onCoverageSort, coverageAvailable } from './tabs/coverage.js';
 import { onGeoSort } from './tabs/geography.js';
 import { usingCache, cacheData } from './cache.js';
 
@@ -37,6 +37,11 @@ function resolvePendingDetail(tab) {
     );
     if (c) openContribModal(c);
   } else if (tab === 'coverage') {
+    // Guards against a #coverage/... deep-link (e.g. the org modal's Repositories link,
+    // or browser back/forward) resolving under a platform Coverage itself can't render —
+    // loadCoverage() would show the tab's own empty state, so the modal shouldn't pop open
+    // over it with data drawn from a mismatched scope (see coverageAvailable()'s comment).
+    if (!coverageAvailable()) return;
     const data = usingCache() ? cacheData()?.organizations?.data : S.coverage.filtered;
     const org = (data || []).find(o => o.name?.toLowerCase() === detail.toLowerCase());
     if (org) openCoverageModal(org);

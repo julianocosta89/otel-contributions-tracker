@@ -442,11 +442,13 @@
 
     <!-- Header -->
     <div class="sticky top-0 bg-white/95 dark:bg-gray-900/95 backdrop-blur border-b border-slate-200 dark:border-gray-800 px-4 py-3 flex items-center gap-3">
+      <button id="org-modal-back" title="Back to coverage" aria-label="Back to coverage details"
+        class="hidden shrink-0 w-7 h-7 flex items-center justify-center rounded-lg text-slate-600 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-gray-800 transition-colors text-lg leading-none">←</button>
       <img id="org-modal-logo" src="" alt="" class="w-8 h-8 rounded object-contain shrink-0" onerror="this.style.display='none'">
       <span id="org-modal-logo-ph" class="w-8 h-8 shrink-0 hidden inline-block"><svg viewBox="0 0 24 24" fill="none" class="w-full h-full"><rect width="24" height="24" rx="4" fill="#D1D5DB"/><rect x="7" y="3" width="10" height="16" fill="#4B5563"/><rect x="8.5" y="5.5" width="2.5" height="2" rx=".4" fill="#9CA3AF"/><rect x="13" y="5.5" width="2.5" height="2" rx=".4" fill="#9CA3AF"/><rect x="8.5" y="9" width="2.5" height="2" rx=".4" fill="#9CA3AF"/><rect x="13" y="9" width="2.5" height="2" rx=".4" fill="#9CA3AF"/><rect x="8.5" y="12.5" width="2.5" height="2" rx=".4" fill="#9CA3AF"/><rect x="13" y="12.5" width="2.5" height="2" rx=".4" fill="#9CA3AF"/><rect x="11" y="15.5" width="2" height="3.5" rx=".4" fill="#9CA3AF"/></svg></span>
       <div class="flex-1 min-w-0">
         <div id="org-modal-name" class="font-semibold text-sm leading-tight truncate"></div>
-        <div class="text-xs text-slate-600 dark:text-gray-400 mt-0.5">OpenTelemetry contributors</div>
+        <div class="text-xs text-slate-600 dark:text-gray-400 mt-0.5">OpenTelemetry contributors · <span id="org-modal-period-label"></span></div>
       </div>
       <button onclick="closeOrgModal()" title="Close" aria-label="Close organization details"
         class="shrink-0 w-7 h-7 flex items-center justify-center rounded-lg text-slate-600 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-gray-800 transition-colors text-lg leading-none">×</button>
@@ -515,26 +517,10 @@
     </div>
 
     <!-- Contributors list — grows to fill remaining space, scrolls independently -->
-    <div class="px-4 pt-4 pb-4 border-b border-slate-200 dark:border-gray-800 flex flex-col flex-1 min-h-0">
+    <div class="px-4 pt-4 pb-4 flex flex-col flex-1 min-h-0">
       <h3 class="text-sm font-semibold mb-3 shrink-0">Contributors</h3>
       <div id="org-modal-contrib-list" class="space-y-1 overflow-y-auto pr-1 flex-1 min-h-0"></div>
       <p id="org-modal-contrib-more" class="hidden text-xs text-slate-500 dark:text-gray-400 pt-2 text-center shrink-0"></p>
-    </div>
-
-    <!-- Repos section — pinned at bottom, list scrollable showing ~6 rows -->
-    <div class="shrink-0 px-4 pt-4 pb-6">
-      <div class="flex items-center justify-between mb-3">
-        <h3 class="text-sm font-semibold">Repositories in period</h3>
-        <span id="org-modal-period-label" class="text-xs text-slate-500 dark:text-gray-400"></span>
-      </div>
-      <div class="overflow-y-auto" style="max-height:224px">
-        <div id="org-modal-repos-loading" class="flex flex-col items-center justify-center py-8 gap-2">
-          <span class="spinner"></span>
-          <span class="text-xs text-slate-500 dark:text-gray-400">Querying GitHub…</span>
-        </div>
-        <div id="org-modal-repos-list" class="hidden space-y-1.5"></div>
-        <div id="org-modal-repos-error" class="hidden text-xs text-slate-600 dark:text-gray-400 text-center py-6 leading-relaxed"></div>
-      </div>
     </div>
 
     </div><!-- end scrollable body -->
@@ -653,6 +639,8 @@
 
     <!-- Header -->
     <div class="sticky top-0 bg-white/95 dark:bg-gray-900/95 backdrop-blur border-b border-slate-200 dark:border-gray-800 px-4 py-3 flex items-center gap-3">
+      <button id="coverage-modal-back" title="Back to organization" aria-label="Back to organization details"
+        class="hidden shrink-0 w-7 h-7 flex items-center justify-center rounded-lg text-slate-600 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-gray-800 transition-colors text-lg leading-none">←</button>
       <img id="coverage-modal-logo" src="" alt="" class="w-8 h-8 rounded object-contain shrink-0" onerror="this.style.display='none'">
       <span id="coverage-modal-logo-ph" class="w-8 h-8 shrink-0 hidden inline-block"><svg viewBox="0 0 24 24" fill="none" class="w-full h-full"><rect width="24" height="24" rx="4" fill="#D1D5DB"/><rect x="7" y="3" width="10" height="16" fill="#4B5563"/><rect x="8.5" y="5.5" width="2.5" height="2" rx=".4" fill="#9CA3AF"/><rect x="13" y="5.5" width="2.5" height="2" rx=".4" fill="#9CA3AF"/><rect x="8.5" y="9" width="2.5" height="2" rx=".4" fill="#9CA3AF"/><rect x="13" y="9" width="2.5" height="2" rx=".4" fill="#9CA3AF"/><rect x="8.5" y="12.5" width="2.5" height="2" rx=".4" fill="#9CA3AF"/><rect x="13" y="12.5" width="2.5" height="2" rx=".4" fill="#9CA3AF"/><rect x="11" y="15.5" width="2" height="3.5" rx=".4" fill="#9CA3AF"/></svg></span>
       <div class="flex-1 min-w-0">

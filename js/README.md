@@ -37,14 +37,14 @@ Pure constants. No imports.
 ### `state.js`
 Single source of truth for mutable runtime state. No imports.
 
-- `S` — session state object: active tab, preset, date filters, page cursors, Chart.js instances, filtered list caches, per-tab column sort state (`S.sort`, keyed by tab name)
+- `S` — session state object: active tab, preset, date filters, page cursors, Chart.js instances, filtered list caches, per-tab column sort state (`S.sort`, keyed by tab name), a transient cross-modal breadcrumb (`S.nav.backTo`, see `js/modals/org.js` and `js/modals/coverage.js`)
 - `SORT_DEFAULTS` — the natural (server-provided) `{ key, dir }` sort per tab, used to seed `S.sort` and as the reference `sort.js`'s `isDefaultSort()` compares against
 - Loose `let` exports (`CACHE`, `AFFILIATIONS`, `GH_COMPANIES`, `ROLES`, `SIGS_CACHE`) with corresponding setter functions (`setCache`, `setAffiliations`, …). Setters are required because ES module live bindings are read-only from importing modules.
 
 ### `utils.js`
 No-side-effect helpers used across the codebase.
 - **Formatting** — `num` (locale number), `pct` (percentage string), `fmtDate`, `today`, `daysAgo`, `shortYearMonth`
-- **DOM** — `el(id)`, `show(id)`, `hide(id)`
+- **DOM** — `el(id)`, `show(id)`, `hide(id)`, `renderStatLinkButton({ count, ariaLabel, onClick })` — builds a stat-tile "N →" `<button>` element (not an HTML string) for the org/coverage modals' cross-links, so an org name containing quotes can't break out of the `aria-label` attribute the way string-interpolated `innerHTML` would
 - **Table** — `changeBadge` (coloured Δ% HTML), `deltaCell` (table `<td>` for Δ vs prior period)
 - **Charts** — `destroyChart(id)` — destroys and removes a Chart.js instance from `S.charts`
 - **Active contributors** — `activeThreshold(preset)` — returns the minimum contributions (≥2/month, scaled to the preset's span) to count as "active" for `30d`/`60d`/`90d`/`6m`/`1y`; returns `null` for longer presets (`2y`, `3y`, `all`) where the split isn't meaningful
@@ -85,7 +85,7 @@ Everything related to matching contributor affiliations to leaderboard org names
 - `cacheData()` — returns the cached data object for the active filters
 - `loadCache()` — fetches `data/cache.json` at startup; populates the `cached <date>` header tag; silent failure if unavailable (`CACHE` stays `null`, so `usingCache()` returns `false` everywhere)
 - `loadSigsCache()` — singleton fetch of `data/sigs.json`; stores result in `SIGS_CACHE`
-- `reposFromCache(handles)` / `orgReposFromCache(contributors)` — look up repository contribution counts from the already-loaded SIG cache for a contributor or org's full contributor list
+- `reposFromCache(handles)` — look up repository contribution counts from the already-loaded SIG cache for a contributor
 - `sigDetailsForHandles(normalizedHandles)` — like the above but returns full per-repo contributor rows (not just counts); `reposFromSigsCache()` is a thin wrapper that strips it down to `{ name, url, count }`. Powers the Coverage tab/modal's per-SIG people breakdown
 
 ### `api.js`
@@ -153,7 +153,7 @@ Tab orchestration and filter controls. Imports all six tab loaders.
 ### `main.js`
 Entry point. Runs `init()` on load.
 - `init()` — applies saved theme, awaits `loadCache()` + `loadAffiliations()` in parallel, then parses the hash, applies the requested timeframe (defaulting to `1y` when omitted), restores page/detail state, and switches to the requested tab
-- `resolvePendingDetail(tab)` — when a deep-link `#tab/detail` was present at startup, opens the correct modal once the tab's data has finished loading. Triggered by the `tabLoaded` custom event dispatched from each tab loader
+- `resolvePendingDetail(tab)` — when a deep-link `#tab/detail` was present at startup, opens the correct modal once the tab's data has finished loading. Triggered by the `tabLoaded` custom event dispatched from each tab loader. The `coverage` branch additionally checks `coverageAvailable()` (`tabs/coverage.js`) before opening — `tabLoaded` fires even when `loadCoverage()` rendered its empty state (unsupported platform / no cache), so without this a stale or cross-modal-linked `#coverage/...` hash could pop the modal open over that empty state using mismatched-scope data
 - Registers delegated click handlers for `.contrib-row`, `.org-row`, `.sig-row`
 - Registers the global Escape key listener (`closeOrgModal`, `closeContribModal`, `closeSigModal`)
 - Registers the `hashchange` listener for in-session navigation

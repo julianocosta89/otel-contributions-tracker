@@ -36,4 +36,10 @@ export const S = {
   coverage: { filtered: [], total: 0 },
   // per-tab column sort state — see js/sort.js
   sort: Object.fromEntries(Object.entries(SORT_DEFAULTS).map(([k, v]) => [k, { ...v }])),
+  // Transient cross-modal navigation intent — set immediately before a hash change that
+  // should carry a "come back here" breadcrumb: { tab: the modal's tab the user came from,
+  // name: the org name }. Consumed (read once, then cleared) by the destination modal's open
+  // function, which shows its own "← back" link only when tab+name both match. See the
+  // Repositories/People stat-tile links in org.js/coverage.js.
+  nav: { backTo: null },
 };

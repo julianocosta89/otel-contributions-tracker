@@ -77,10 +77,3 @@ export function reposFromSigsCache(normalizedHandles) {
 export function reposFromCache(handles) {
   return reposFromSigsCache(new Set(handles.map(h => h.toLowerCase())));
 }
-
-export function orgReposFromCache(contributors) {
-  const handles = new Set(
-    contributors.flatMap(c => (c.githubHandleArray || []).map(h => h.toLowerCase()))
-  );
-  return reposFromSigsCache(handles);
-}

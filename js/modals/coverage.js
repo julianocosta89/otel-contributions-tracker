@@ -1,5 +1,5 @@
 import { S } from '../state.js';
-import { el, num, show, hide } from '../utils.js';
+import { el, num, show, hide, renderStatLinkButton } from '../utils.js';
 import { resolveOrgLogo } from '../companies.js';
 import { sigDetailsForHandles } from '../cache.js';
 import { contributorsForOrg } from '../attribution.js';
@@ -38,12 +38,43 @@ export function openCoverageModal(org) {
   const handles  = new Set(contribs.flatMap(c => (c.githubHandleArray || []).map(h => h.toLowerCase())));
   const repos    = sigDetailsForHandles(handles) ?? [];
 
-  el('coverage-modal-sig-count').textContent    = repos.length || '0';
-  el('coverage-modal-people-count').textContent = contribs.length || '0';
+  el('coverage-modal-sig-count').textContent = repos.length || '0';
+
+  // People count links out to the Organizations modal's full contributor/role breakdown for
+  // this org — same tab-switching approach as the Repositories link in org.js (hash-navigate
+  // rather than call openOrgModal() directly, so the underlying tab actually switches too).
+  // Always available here: reaching this modal at all already implies cache-backed data for
+  // "All platforms" (Coverage's own gate — see coverageAvailable() in tabs/coverage.js, which
+  // main.js's resolvePendingDetail() also checks before opening this modal from a hash detail).
+  el('coverage-modal-people-count').replaceChildren(renderStatLinkButton({
+    count: num(contribs.length) || '0',
+    ariaLabel: `View organization details for ${org.name}`,
+    onClick: () => {
+      S.nav.backTo = { tab: 'coverage', name: org.name };
+      closeCoverageModal();
+      location.hash = `#organizations/${timeframeHash(S)}/${encodeURIComponent(org.name)}`;
+    },
+  }));
 
   el('coverage-modal-list').innerHTML = repos.length
     ? repos.map(renderSigEntry).join('')
     : '<p class="text-xs text-slate-500 dark:text-gray-400 text-center py-4">No SIG activity found for this period</p>';
+
+  // Consumed once: only set when this open was reached via the org modal's repo-count
+  // link (org.js), so a direct Coverage-tab row click never shows a stale back target.
+  const backTo = S.nav.backTo;
+  S.nav.backTo = null;
+  const backEl = el('coverage-modal-back');
+  if (backTo?.tab === 'organizations' && backTo.name.toLowerCase() === org.name.toLowerCase()) {
+    show('coverage-modal-back');
+    backEl.onclick = () => {
+      closeCoverageModal();
+      location.hash = `#organizations/${timeframeHash(S)}/${encodeURIComponent(org.name)}`;
+    };
+  } else {
+    hide('coverage-modal-back');
+    backEl.onclick = null;
+  }
 
   panel.scrollTop = 0;
   el('coverage-modal').classList.remove('hidden');

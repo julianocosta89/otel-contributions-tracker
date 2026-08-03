@@ -41,3 +41,25 @@ export function destroyChart(id) {
 // enough that the split stops being a meaningful signal.
 const ACTIVE_PRESET_MONTHS = { '30d': 1, '60d': 2, '90d': 3, '6m': 6, '1y': 12 };
 export const activeThreshold = preset => ACTIVE_PRESET_MONTHS[preset] ? ACTIVE_PRESET_MONTHS[preset] * 2 : null;
+
+// Builds a stat-tile "N →" link as a real <button> (focusable, Enter/Space-activatable)
+// rather than an innerHTML string — org/company names are committed data, not user input,
+// but some do contain quotes (e.g. `Ювелирная сеть "585"`), which would otherwise break out
+// of an interpolated aria-label attribute and produce malformed/truncated markup. Building
+// the element and assigning the label via setAttribute (rather than string-interpolating
+// into markup) sidesteps HTML parsing entirely, so no escaping is needed regardless of what
+// characters the name contains.
+export function renderStatLinkButton({ count, ariaLabel, onClick }) {
+  const btn = document.createElement('button');
+  btn.type = 'button';
+  btn.className = 'inline-flex items-center gap-1.5 p-0 border-0 bg-transparent font-bold cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 transition-colors';
+  btn.setAttribute('aria-label', ariaLabel);
+  btn.append(`${count} `);
+  const arrow = document.createElement('span');
+  arrow.setAttribute('aria-hidden', 'true');
+  arrow.className = 'text-sm font-normal';
+  arrow.textContent = '→';
+  btn.append(arrow);
+  btn.onclick = onClick;
+  return btn;
+}

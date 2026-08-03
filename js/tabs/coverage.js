@@ -26,7 +26,10 @@ const EMPTY_NO_DATA =
 
 // Whether Coverage can render at all right now — mirrors the guards in loadCoverage()
 // so onCoverageSearch() can bail out instead of touching cacheData() when it's unusable.
-function coverageAvailable() {
+// Also used by main.js's resolvePendingDetail() to gate opening the coverage modal from a
+// hash deep-link — without it, a #coverage/... URL under a non-"all" platform could still
+// pop the modal open even though the Coverage tab itself renders its empty state for it.
+export function coverageAvailable() {
   return S.filters.platform === 'all' && usingCache() && !!SIGS_CACHE?.periods;
 }
 

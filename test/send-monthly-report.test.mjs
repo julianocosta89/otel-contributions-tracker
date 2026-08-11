@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { monthWindow, monthLabel, computeGrowth, escapeHtml, dayAfter } from '../scripts/send-monthly-report.mjs';
+import { monthWindow, monthLabel, computeGrowth, escapeHtml, dayAfter, contributorKey } from '../scripts/send-monthly-report.mjs';
 
 // ── monthWindow ──────────────────────────────────────────────────────────────
 
@@ -113,4 +113,20 @@ test('escapeHtml: leaves plain text untouched', () => {
 
 test('escapeHtml: coerces non-string input', () => {
   assert.equal(escapeHtml(42), '42');
+});
+
+// ── contributorKey ───────────────────────────────────────────────────────────
+
+test('contributorKey: joins a single handle', () => {
+  assert.equal(contributorKey({ githubHandleArray: ['trask'] }), 'trask');
+});
+
+test('contributorKey: sorts multiple handles so order in the source data does not matter', () => {
+  assert.equal(contributorKey({ githubHandleArray: ['zed', 'alice'] }), 'alice,zed');
+  assert.equal(contributorKey({ githubHandleArray: ['alice', 'zed'] }), 'alice,zed');
+});
+
+test('contributorKey: empty for a contributor with no handles', () => {
+  assert.equal(contributorKey({ githubHandleArray: [] }), '');
+  assert.equal(contributorKey({}), '');
 });

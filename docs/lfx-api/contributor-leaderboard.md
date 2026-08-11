@@ -22,6 +22,8 @@ Ranked list of individual contributors by contribution volume. Without date filt
 | `offset` | number | Record offset for pagination (default: `0`). |
 | `granularity` | string | Time granularity — does not change data shape, affects aggregation. |
 | `repos` | string[] | Restrict to specific repository URLs. |
+| `includeCodeContributions` | boolean | Include git commit activity (default: `true`). |
+| `includeCollaborations` | boolean | Include PR review/comment activity (default: `false`). |
 
 **Response**
 
@@ -50,6 +52,8 @@ Ranked list of individual contributors by contribution volume. Without date filt
 - `roles` values observed: `"maintainer"`, `"contributor"`, `"reviewer"`.
 - `githubHandleArray` may contain multiple handles when a contributor has used different GitHub accounts.
 - Date filtering reduces `meta.total` to the active contributor set in that window (e.g., 4,470 for all of 2025).
+- `includeCodeContributions` and `includeCollaborations` are additive — enabling both returns the sum of code and collaboration activity, both counted in `contributions`. Setting both to `false` returns an empty result set (`meta.total: 0`).
+- Omitting both params is equivalent to `includeCodeContributions=true&includeCollaborations=false` — verified on `opentelemetry-collector-contrib` (2025-01-01–2025-06-01): omitted and explicit-false-collaborations both returned `meta.total: 635` with identical per-contributor counts, while `includeCollaborations=true` raised the total to `meta.total: 1225` and increased individual `contributions` values (e.g. Antoine Toulme 3447 → 3900).
 
 **Pagination** — increment `offset` by `limit` until `offset >= meta.total`.
 

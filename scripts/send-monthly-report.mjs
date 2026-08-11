@@ -5,8 +5,8 @@
  * Queries LF Insights for the previous full calendar month, attributes
  * contributions to Datadog Inc. using the same gitdm/GitHub-profile
  * affiliation logic the web app uses, and emails a summary: MoM growth,
- * active contributors, contribution concentration, top contributors,
- * leadership-role count, and repository coverage.
+ * every active contributor (with their own MoM contribution change),
+ * contribution concentration, leadership-role count, and repository coverage.
  *
  * A small snapshot (data/reports/datadog-monthly-report.json) is written
  * after each successful send so the next run can compute month-over-month
@@ -39,7 +39,7 @@ const SNAPSHOT_PATH    = `${SNAPSHOT_DIR}/datadog-monthly-report.json`;
 const RESEND_ENDPOINT  = 'https://api.resend.com/emails';
 const LEADERSHIP_ROLES = new Set(['maintainer', 'approver', 'triager']);
 const TOP_N            = 5;
-const ACTIVE_THRESHOLD = 2; // matches js/utils.js activeThreshold('30d')
+const ACTIVE_THRESHOLD = 10; // matches js/utils.js activeThreshold('30d')
 
 const DRY_RUN        = process.argv.includes('--dry-run');
 const monthArg       = process.argv.find(a => a.startsWith('--month='));
@@ -146,6 +146,13 @@ function datadogContributionsFor(c) {
   return (aff && companyMatchesOrg(aff.company, TARGET_ORG)) ? c.contributions : 0;
 }
 
+// Stable identity for a contributor across months, used as the snapshot map key
+// for per-contributor month-over-month variation. A contributor's handle array
+// from LFX is more stable than their display name (which can be edited).
+export function contributorKey(c) {
+  return (c.githubHandleArray || []).slice().sort().join(',');
+}
+
 // ── Snapshot persistence ──────────────────────────────────────────────────
 
 function loadSnapshot() {
@@ -174,6 +181,15 @@ function activeDeltaText(activeDelta) {
   return `${sign}${activeDelta} vs last month`;
 }
 
+// Compact form of growthText() for a per-contributor table row.
+function contributorGrowthText(growth) {
+  if (growth.status === 'no-baseline') return '—';
+  if (growth.status === 'flat')        return '0%';
+  if (growth.status === 'new')         return 'new';
+  const sign = growth.value > 0 ? '+' : '';
+  return `${sign}${pct(growth.value)}`;
+}
+
 function concentrationText(concentration) {
   if (concentration.status === 'limited') return 'Not enough GitHub data to assess this month.';
   return `${concentration.label} (HHI ${num(concentration.hhi)}) — top contributor is ${pct(concentration.top1Pct)} of Datadog's activity.`;
@@ -190,9 +206,9 @@ function renderTextSummary(r) {
     `Leadership roles (maintainer/approver/triager): ${num(r.leadershipCount)}`,
     `Repositories contributed to: ${num(r.repoCount)}${r.truncated ? ' (partial — GitHub search truncated)' : ''}${r.failedCount ? ` (⚠ ${r.failedCount} contributor lookup(s) failed — incomplete)` : ''}`,
     '',
-    'Top contributors:',
-    ...(r.topContributors.length
-      ? r.topContributors.map((c, i) => `  ${i + 1}. ${c.name} (${c.githubHandleArray.join(', ')}) — ${num(c.contributions)}`)
+    'Active contributors:',
+    ...(r.activeContributorsList.length
+      ? r.activeContributorsList.map((c, i) => `  ${i + 1}. ${c.name} (${c.githubHandleArray.join(', ')}) — ${num(c.contributions)} (${contributorGrowthText(c.growth)})`)
       : ['  (none matched)']),
     '',
     'Top repositories:',
@@ -221,14 +237,17 @@ function renderEmailHtml(r) {
       <td style="padding:8px 12px;font-size:14px;font-weight:600;color:#0f172a;">${value}</td>
     </tr>`;
 
-  const contributorRows = r.topContributors.length
-    ? r.topContributors.map((c, i) => `
+  const contributorGrowthColor = growth => growth.status !== 'ok' ? '#64748b' : growth.value > 0 ? '#16a34a' : growth.value < 0 ? '#dc2626' : '#64748b';
+
+  const contributorRows = r.activeContributorsList.length
+    ? r.activeContributorsList.map((c, i) => `
       <tr>
         <td style="padding:6px 12px;color:#64748b;font-size:13px;">${i + 1}</td>
         <td style="padding:6px 12px;font-size:14px;">${escapeHtml(c.name)} <span style="color:#94a3b8;">(${escapeHtml(c.githubHandleArray.join(', '))})</span></td>
         <td style="padding:6px 12px;font-size:14px;text-align:right;">${num(c.contributions)}</td>
+        <td style="padding:6px 12px;font-size:14px;text-align:right;color:${contributorGrowthColor(c.growth)};">${contributorGrowthText(c.growth)}</td>
       </tr>`).join('')
-    : `<tr><td colspan="3" style="padding:6px 12px;color:#94a3b8;font-style:italic;">No contributors matched this month.</td></tr>`;
+    : `<tr><td colspan="4" style="padding:6px 12px;color:#94a3b8;font-style:italic;">No active contributors this month.</td></tr>`;
 
   const repoRows = r.topRepos.length
     ? r.topRepos.map((repo, i) => `
@@ -262,7 +281,7 @@ function renderEmailHtml(r) {
     </tr>
     <tr>
       <td style="padding:20px 24px 4px;">
-        <h2 style="margin:0 0 8px;font-size:14px;color:#0f172a;">Top contributors</h2>
+        <h2 style="margin:0 0 8px;font-size:14px;color:#0f172a;">Active contributors</h2>
         <table role="presentation" width="100%" style="border-collapse:collapse;">${contributorRows}</table>
       </td>
     </tr>
@@ -353,9 +372,21 @@ async function main() {
   const summedTotal  = datadogContribs.reduce((s, c) => s + c.contributions, 0);
   const orgTotal     = orgEntry ? orgEntry.contributions : summedTotal;
 
-  const activeContributors = datadogContribs.filter(c => c.contributions >= ACTIVE_THRESHOLD).length;
+  const snapshot = loadSnapshot();
+  // A missing snapshot file means no prior month was ever recorded (no-baseline for
+  // everyone below); a snapshot that simply has no entry for this contributor means
+  // they contributed 0 last month (new), so the two cases need different fallbacks.
+  const prevContributors = snapshot?.contributors ?? null;
+
+  const activeContribs     = datadogContribs.filter(c => c.contributions >= ACTIVE_THRESHOLD);
+  const activeContributors = activeContribs.length;
+  const activeContributorsList = activeContribs.map(c => ({
+    name: c.name,
+    githubHandleArray: c.githubHandleArray,
+    contributions: c.contributions,
+    growth: computeGrowth(c.contributions, prevContributors ? (prevContributors[contributorKey(c)] ?? 0) : null),
+  }));
   const concentration      = calcOrgConcentration(datadogContribs, orgTotal);
-  const topContributors    = datadogContribs.slice(0, TOP_N);
   const leadershipCount    = datadogContribs.filter(c => LEADERSHIP_ROLES.has(roleFor(c.githubHandleArray))).length;
 
   console.log('Fetching repository activity via GitHub Search API…');
@@ -363,13 +394,12 @@ async function main() {
   if (failedCount > 0) console.warn(`  ⚠ ${failedCount} contributor(s)' repo search failed — repo count/top repos are incomplete this month.`);
   const topRepos = repos.slice(0, TOP_N);
 
-  const snapshot     = loadSnapshot();
   const growth       = computeGrowth(orgTotal, snapshot?.totalContributions ?? null);
   const activeDelta  = snapshot ? activeContributors - snapshot.activeContributors : null;
 
   const report = {
     monthKey, monthLabel: label, startDate, endDate,
-    orgTotal, activeContributors, concentration, topContributors,
+    orgTotal, activeContributors, activeContributorsList, concentration,
     leadershipCount, repoCount: repos.length, topRepos, truncated, failedCount,
     growth, activeDelta,
   };
@@ -381,7 +411,12 @@ async function main() {
 
   console.log('Sending email via Resend…');
   await sendEmail(renderEmailHtml(report), label);
-  saveSnapshot({ month: monthKey, totalContributions: orgTotal, activeContributors, generatedAt: new Date().toISOString() });
+  const contributorsSnapshot = {};
+  for (const c of datadogContribs) contributorsSnapshot[contributorKey(c)] = c.contributions;
+  saveSnapshot({
+    month: monthKey, totalContributions: orgTotal, activeContributors,
+    contributors: contributorsSnapshot, generatedAt: new Date().toISOString(),
+  });
   console.log('Report sent and snapshot updated.');
 }
 

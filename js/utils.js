@@ -36,11 +36,11 @@ export function destroyChart(id) {
   if (S.charts[id]) { S.charts[id].destroy(); delete S.charts[id]; }
 }
 
-// Active-contributor threshold: >=2 contributions/month, scaled to the preset's span.
-// Only defined for timeframes up to 1y — beyond that, sustaining 2/mo for years is rare
+// Active-contributor threshold: >=10 contributions/month, scaled to the preset's span.
+// Only defined for timeframes up to 1y — beyond that, sustaining 10/mo for years is rare
 // enough that the split stops being a meaningful signal.
 const ACTIVE_PRESET_MONTHS = { '30d': 1, '60d': 2, '90d': 3, '6m': 6, '1y': 12 };
-export const activeThreshold = preset => ACTIVE_PRESET_MONTHS[preset] ? ACTIVE_PRESET_MONTHS[preset] * 2 : null;
+export const activeThreshold = preset => ACTIVE_PRESET_MONTHS[preset] ? ACTIVE_PRESET_MONTHS[preset] * 10 : null;
 
 // Builds a stat-tile "N →" link as a real <button> (focusable, Enter/Space-activatable)
 // rather than an innerHTML string — org/company names are committed data, not user input,

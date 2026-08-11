@@ -22,6 +22,8 @@ Ranked list of organizations by contribution volume. Without date filters, retur
 | `offset` | number | Record offset for pagination (default: `0`). |
 | `granularity` | string | Time granularity — does not change data shape, affects aggregation. |
 | `repos` | string[] | Restrict to specific repository URLs. |
+| `includeCodeContributions` | boolean | Include git commit activity (default: `true`). |
+| `includeCollaborations` | boolean | Include PR review/comment activity (default: `false`). |
 
 **Response**
 
@@ -50,6 +52,7 @@ Ranked list of organizations by contribution volume. Without date filters, retur
 - `contributions` is a weighted activity count across all activity types.
 - `website` may be an empty string.
 - Date filtering reduces `meta.total` to the set of organizations active in that window (e.g., 1,111 for all of 2025).
+- `includeCodeContributions` and `includeCollaborations` are additive, and omitting both is equivalent to `includeCodeContributions=true&includeCollaborations=false` — same behavior as documented in [contributor-leaderboard.md](contributor-leaderboard.md), verified here too: on `opentelemetry-collector-contrib` (2025-01-01–2025-06-01), omitted params gave `meta.total: 180` orgs with Splunk at 5,070 contributions, while `includeCollaborations=true` raised it to `meta.total: 334` orgs with Splunk at 5,881.
 
 **Pagination** — increment `offset` by `limit` until `offset >= meta.total`.
 

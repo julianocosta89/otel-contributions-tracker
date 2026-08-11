@@ -136,7 +136,9 @@ Sends a monthly Datadog Inc. contribution report email via Resend and writes `da
 
 **Pipeline:** queries LF Insights directly for the previous full calendar month (not a rolling preset), reuses `enrichWithAttribution()` from `enrich-attribution.mjs` so contributors who changed employers mid-month are split accurately, then attributes contributions to Datadog Inc. using the same fuzzy company-matching (`companyMatchesOrg`) and role lookup (`roleFor`) the web app uses. Repository coverage comes from the GitHub Search API (`fetchOrgRepos`/`fetchContribRepos` from `js/api.js`, extended with an optional auth token for Node use).
 
-**Snapshot:** `data/reports/datadog-monthly-report.json` stores the prior month's `{ month, totalContributions, activeContributors }` so month-over-month deltas don't require re-querying two months of data on every run. It is only overwritten after a successful email send, so a failed run doesn't corrupt the baseline used for the next comparison.
+The email lists every active Datadog contributor (`>= ACTIVE_THRESHOLD`/mo, matching `js/utils.js`'s `activeThreshold('30d')`), each with their own contribution count and % change vs. the prior month — not just a top-N slice.
+
+**Snapshot:** `data/reports/datadog-monthly-report.json` stores the prior month's `{ month, totalContributions, activeContributors, contributors }` — `contributors` maps each contributor's stable handle-array key (`contributorKey()`) to their contribution count that month — so month-over-month deltas (org-wide and per-contributor) don't require re-querying two months of data on every run. It is only overwritten after a successful email send, so a failed run doesn't corrupt the baseline used for the next comparison.
 
 **Auth:** `RESEND_API_KEY`, `REPORT_FROM`, `REPORT_TO` (all required unless `--dry-run`). `GITHUB_TOKEN` is optional but raises the GitHub Search API rate limit for the repo lookup.
 

@@ -108,7 +108,7 @@ export function renderActiveDivider(threshold) {
   return `
         <div class="flex items-center gap-2 py-1">
           <div class="flex-1 h-px bg-slate-300 dark:bg-gray-700"></div>
-          <span class="text-[10px] uppercase tracking-wide text-slate-600 dark:text-gray-400 shrink-0">Less than ${num(threshold)} contributions &middot; inactive (&lt;2/mo)</span>
+          <span class="text-[10px] uppercase tracking-wide text-slate-600 dark:text-gray-400 shrink-0">Less than ${num(threshold)} contributions &middot; inactive (&lt;10/mo)</span>
           <div class="flex-1 h-px bg-slate-300 dark:bg-gray-700"></div>
         </div>`;
 }

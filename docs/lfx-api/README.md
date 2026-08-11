@@ -33,6 +33,8 @@ All endpoints return JSON. No authentication is required for read-only endpoints
 | `offset` | number | Zero-based record offset (contributor/org leaderboard endpoints). |
 | `page` | number | Zero-based page number (project list, global leaderboard). |
 | `pageSize` | number | Records per page (project list, global leaderboard). |
+| `includeCodeContributions` | boolean | Include git commit activity (default: `true`). Additive with `includeCollaborations`; both `false` returns an empty result set. |
+| `includeCollaborations` | boolean | Include PR review/comment activity (default: `false`, so it's excluded unless requested). |
 
 ---
 

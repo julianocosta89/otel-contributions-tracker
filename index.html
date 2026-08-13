@@ -454,8 +454,9 @@
         class="shrink-0 w-7 h-7 flex items-center justify-center rounded-lg text-slate-600 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-gray-800 transition-colors text-lg leading-none">×</button>
     </div>
 
-    <!-- Scrollable body: grows to fill panel, contains two independently-scrollable sections -->
-    <div class="flex-1 flex flex-col min-h-0 overflow-hidden">
+    <!-- Scrollable body: entire panel body scrolls as one unit so the stats tiles
+         don't trap the contributors list below the fold on small screens -->
+    <div class="flex-1 overflow-y-auto min-h-0">
 
     <!-- Attribution source note (shown only when gitdm-split contributors exist for this org) -->
     <div id="org-modal-attribution-note" class="hidden px-4 pt-3">
@@ -516,11 +517,11 @@
       </div>
     </div>
 
-    <!-- Contributors list — grows to fill remaining space, scrolls independently -->
-    <div class="px-4 pt-4 pb-4 flex flex-col flex-1 min-h-0">
-      <h3 class="text-sm font-semibold mb-3 shrink-0">Contributors</h3>
-      <div id="org-modal-contrib-list" class="space-y-1 overflow-y-auto pr-1 flex-1 min-h-0"></div>
-      <p id="org-modal-contrib-more" class="hidden text-xs text-slate-500 dark:text-gray-400 pt-2 text-center shrink-0"></p>
+    <!-- Contributors list — flows naturally within the single scrolling body -->
+    <div class="px-4 pt-4 pb-4">
+      <h3 class="text-sm font-semibold mb-3">Contributors</h3>
+      <div id="org-modal-contrib-list" class="space-y-1 pr-1"></div>
+      <p id="org-modal-contrib-more" class="hidden text-xs text-slate-500 dark:text-gray-400 pt-2 text-center"></p>
     </div>
 
     </div><!-- end scrollable body -->

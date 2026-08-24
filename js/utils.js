@@ -72,7 +72,6 @@ export function computeDependency(items) {
     topCount,
     topPercentage,
     otherCount: sorted.length - topCount,
-    otherPercentage: 100 - topPercentage,
   };
 }
 

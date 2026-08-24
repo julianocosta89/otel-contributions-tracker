@@ -74,7 +74,6 @@ html.dark #error-toast { background-color: #111827; }
   left: 0;
   top: 1.5rem;
   z-index: 50;
-  transition: visibility 0s;
 }
 .sigs-health-info:hover .sigs-health-tooltip,
 .sigs-health-info:focus-within .sigs-health-tooltip {

@@ -1,5 +1,5 @@
 import { SIGS_CACHE, S } from '../state.js';
-import { el, num, show, hide } from '../utils.js';
+import { el, num, show, hide, computeDependency, dependencyColor } from '../utils.js';
 import { loadSigsCache } from '../cache.js';
 import { toggleSort, sortRows, updateSortIndicators } from '../sort.js';
 
@@ -59,12 +59,28 @@ export function renderSigsList() {
 
   el('sigs-tbody').innerHTML = entries.map((e) => {
     const barW = Math.round((e.contributors / maxC) * 100);
+
+    // Compute contributor & org dependency for the health color bar.
+    // Take the worse of the two colors — if either contributors or orgs are
+    // highly concentrated, the SIG is at risk.
+    const repoData = period[e.repo];
+    const contribDep = computeDependency(repoData?.contributors?.data);
+    const orgDep = computeDependency(repoData?.organizations?.data);
+    const contribColor = dependencyColor(contribDep?.topPercentage, contribDep?.topCount);
+    const orgColor = dependencyColor(orgDep?.topPercentage, orgDep?.topCount);
+    const color = contribColor === 'red' || orgColor === 'red' ? 'red'
+      : contribColor === 'yellow' || orgColor === 'yellow' ? 'yellow'
+      : (contribColor || orgColor);
+    const barColor = color === 'green' ? 'bg-green-500' : color === 'yellow' ? 'bg-yellow-500' : color === 'red' ? 'bg-red-500' : 'bg-slate-300 dark:bg-gray-700';
+    const healthLabel = color === 'green' ? 'Well distributed' : color === 'yellow' ? 'Moderate concentration' : color === 'red' ? 'High concentration' : 'No data';
+
     return `
       <tr class="sig-row border-b border-slate-200 dark:border-gray-800/40 hover:bg-slate-200/50 dark:hover:bg-gray-800/20 transition-colors"
           data-repo="${e.repo}" title="Click to see contributors &amp; organizations">
         <td class="px-4 py-2.5 text-slate-500 dark:text-gray-400 text-xs">${e.rank}</td>
         <td class="px-4 py-2.5">
           <div class="flex items-center gap-2">
+            <span class="w-1 h-4 rounded-full ${barColor} shrink-0" title="${healthLabel}"></span>
             <span class="text-sm font-medium text-slate-900 dark:text-gray-100">${e.repo}</span>
           </div>
         </td>

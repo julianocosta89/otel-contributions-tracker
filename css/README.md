@@ -15,4 +15,5 @@ Extracted from the original inline `<style>` block in `index.html`. Tailwind CSS
 | `#*-modal-panel` / `.open` | Slide-in transition for the three right-panel modals (contributor, org, SIG) |
 | `.role-badge-wrap` / `.role-tooltip*` | Fixed-position tooltip that escapes `overflow: hidden` containers |
 | `input[type="date"]`, `select`, `option` | Explicit colors needed because Tailwind's `dark:` variants don't reach inside native form controls |
+| `.sigs-health-tooltip` | Hover/focus tooltip for the SIG health legend ("?" icon in the SIGs section header) |
 | `#error-toast` | Background colour override for the error notification |

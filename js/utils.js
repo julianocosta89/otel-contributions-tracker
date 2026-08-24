@@ -49,6 +49,50 @@ export const activeThreshold = preset => ACTIVE_PRESET_MONTHS[preset] ? ACTIVE_P
 // the element and assigning the label via setAttribute (rather than string-interpolating
 // into markup) sidesteps HTML parsing entirely, so no escaping is needed regardless of what
 // characters the name contains.
+
+// Compute contributor/organization dependency metrics locally from leaderboard data.
+// Mirrors the LFX contributor-dependency / organization-dependency endpoints:
+// finds the minimum number of top entries whose cumulative share reaches 51%,
+// then reports that count and their actual percentage of total contributions.
+// See: https://insights.linuxfoundation.org/docs/metrics/contributors/#contributor-dependency
+export function computeDependency(items) {
+  if (!items || !items.length) return null;
+  const sorted = [...items].sort((a, b) => b.contributions - a.contributions);
+  const total = sorted.reduce((s, c) => s + c.contributions, 0);
+  if (total === 0) return null;
+  let cumulative = 0;
+  let topCount = 0;
+  for (const item of sorted) {
+    cumulative += item.contributions;
+    topCount++;
+    if (cumulative / total >= 0.51) break;
+  }
+  const topPercentage = (cumulative / total) * 100;
+  return {
+    topCount,
+    topPercentage,
+    otherCount: sorted.length - topCount,
+  };
+}
+
+// Health color based on dependency metrics (topPercentage + topCount).
+// Green: < 51% (well distributed), Yellow: 51-80% (moderate), Red: > 80% (concentrated).
+// Additionally, a very small top count is always a risk regardless of percentage:
+//   - topCount ≤ 2 → at least yellow (bus-factor risk)
+//   - topCount ≤ 1 → red (single point of failure)
+export function dependencyColor(topPercentage, topCount) {
+  if (topPercentage == null) return null;
+  let color;
+  if (topPercentage < 51) color = 'green';
+  else if (topPercentage < 80) color = 'yellow';
+  else color = 'red';
+  // Factor in absolute top count — few contributors/orgs holding the majority
+  // is a structural risk even when the percentage is just under a threshold.
+  if (topCount <= 1) color = 'red';
+  else if (topCount <= 2 && color === 'green') color = 'yellow';
+  return color;
+}
+
 export function renderStatLinkButton({ count, ariaLabel, onClick }) {
   const btn = document.createElement('button');
   btn.type = 'button';

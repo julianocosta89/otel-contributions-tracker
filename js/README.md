@@ -48,6 +48,7 @@ No-side-effect helpers used across the codebase.
 - **Table** — `changeBadge` (coloured Δ% HTML), `deltaCell` (table `<td>` for Δ vs prior period)
 - **Charts** — `destroyChart(id)` — destroys and removes a Chart.js instance from `S.charts`
 - **Active contributors** — `activeThreshold(preset)` — returns the minimum contributions (≥10/month, scaled to the preset's span) to count as "active" for `30d`/`60d`/`90d`/`6m`/`1y`; returns `null` for longer presets (`2y`, `3y`, `all`) where the split isn't meaningful
+- **Dependency / health** — `computeDependency(items)` — mirrors the LFX contributor-dependency / organization-dependency endpoints: sorts a leaderboard by contributions, finds the minimum number of top entries whose cumulative share reaches 51%, and returns `{ topCount, topPercentage, otherCount, otherPercentage }` (or `null` for empty/zero-total data). `dependencyColor(topPercentage, topCount)` — classifies a dependency result into a health colour: green (< 51%, well distributed), yellow (51–80%, moderate concentration), or red (> 80%, high concentration), with bus-factor adjustments (topCount ≤ 1 → red, topCount ≤ 2 → at least yellow). Used by the SIGs tab's health bar (`tabs/sigs.js`) and the SIG modal's dependency tiles (`modals/sig.js`)
 
 ### `theme.js`
 - `isDark()` — reads `html.dark` class

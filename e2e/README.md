@@ -28,6 +28,7 @@ npx playwright show-report
 | `accessibility.spec.mjs` | `@axe-core/playwright` scan (WCAG 2.0/2.1 A+AA) for every tab and every open modal type, in both light and dark theme |
 | `responsive.spec.mjs` | Layout at 3 breakpoints (375×667 / 768×1024 / 1440×900) — nav usability, no page-level horizontal overflow, key controls visible, modal width |
 | `modals.spec.mjs` | Open via row click, close via close-button/backdrop/Escape, search-then-open flow |
+| `sigs-health-tooltip.spec.mjs` | SIGs health legend tooltip visibility on hover and legend content |
 
 Shared code lives in `helpers.mjs` (the `TABS`/`MODALS`/`PRESETS` lists — the single source of truth both `navigation.spec.mjs` and `accessibility.spec.mjs` loop over) and `fixtures.mjs` (navigation + axe helpers).
 

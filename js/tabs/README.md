@@ -48,6 +48,8 @@ Loads `data/sigs.json` on first use (singleton fetch) and renders the SIG/reposi
 
 Repository (name), Contributors, and Organizations are all independently sortable (`onSigsSort(key)`) — unlike Contributions/Share elsewhere, a repo's contributor count and organization count don't move in lockstep, so both are useful sort keys. Each entry's `rank` (used for the `#` column) is assigned once, by contributor count (the tab's natural order), before the display sort reorders the array for rendering — so #1 stays the repo with the most contributors no matter which column the table is currently sorted by.
 
+Each row displays a coloured health bar (green / yellow / red) next to the repo name, computed from the worse of the contributor and org dependency metrics (`computeDependency()` + `dependencyColor()` in `utils.js`). A legend tooltip ("?" icon in the section header) explains the three colour tiers. The bar's `title` attribute carries the health label for hover/tooltip access.
+
 Exports: `loadSigs`, `renderSigsList`, `onSigsSearch`, `clearSigsSearch`, `onSigsSort`
 
 ### `coverage.js`

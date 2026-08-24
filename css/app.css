@@ -67,6 +67,20 @@ html.dark #error-toast { background-color: #111827; }
 #coverage-modal-panel { will-change: transform; }
 #coverage-modal-panel.open { transform: translateX(0); }
 
+/* ── SIG health legend tooltip ─────────────────────────────────── */
+.sigs-health-tooltip {
+  visibility: hidden;
+  position: absolute;
+  left: 0;
+  top: 1.5rem;
+  z-index: 50;
+  transition: visibility 0s;
+}
+.sigs-health-info:hover .sigs-health-tooltip,
+.sigs-health-info:focus-within .sigs-health-tooltip {
+  visibility: visible;
+}
+
 /* ── Sortable table headers ─────────────────────────────────────── */
 .sort-btn {
   background: none;

@@ -39,6 +39,8 @@ Opens when a row in the SIGs tab is clicked. Shows the repository name (linked t
 
 All data comes from the already-loaded `SIGS_CACHE`; no additional network requests are made.
 
+In addition to the Contributors, Organizations, and Period stat tiles, the modal shows two dependency tiles — **Top Contributors** and **Org Dependency** — each computed locally from the per-repo leaderboard data via `computeDependency()` (`utils.js`). Each tile displays the minimum number of top entries accounting for ≥ 51% of contributions, their percentage share, and the count of remaining contributors/orgs.
+
 Exports: `openSigModal`, `closeSigModal`
 
 ### `coverage.js`

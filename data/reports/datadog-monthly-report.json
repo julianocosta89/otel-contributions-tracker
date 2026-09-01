@@ -1,6 +1,32 @@
 {
-  "month": "2026-07",
-  "totalContributions": 2236,
-  "activeContributors": 23,
-  "generatedAt": "2026-08-01T09:46:48.534Z"
+  "month": "2026-08",
+  "totalContributions": 2081,
+  "activeContributors": 13,
+  "contributors": {
+    "songy23": 766,
+    "darccio,imdario": 448,
+    "julianocosta89": 352,
+    "mx-psi": 250,
+    "scottgerring": 134,
+    "agagniere": 44,
+    "hannahkm": 22,
+    "cyrille-leclerc": 18,
+    "Lewis-E": 15,
+    "jade-guiton-dd": 15,
+    "nsavoire": 14,
+    "kakkoyun": 13,
+    "kangyili": 12,
+    "dineshg13": 6,
+    "liustanley": 6,
+    "ivoanjo": 3,
+    "Gandem": 3,
+    "zacharycmontoya": 3,
+    "bantonsson": 1,
+    "domodwyer": 1,
+    "mquentin": 1,
+    "peschinskiy": 1,
+    "pierreprinetti": 1,
+    "felixge": 1
+  },
+  "generatedAt": "2026-09-01T12:49:10.933Z"
 }

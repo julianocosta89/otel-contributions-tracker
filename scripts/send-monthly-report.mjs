@@ -37,6 +37,7 @@ const TARGET_ORG       = 'Datadog Inc.';
 const SNAPSHOT_DIR     = 'data/reports';
 const SNAPSHOT_PATH    = `${SNAPSHOT_DIR}/datadog-monthly-report.json`;
 const RESEND_ENDPOINT  = 'https://api.resend.com/emails';
+const TRACKER_URL      = 'https://otelcontribtracker.jcosta.dev/#organizations/30d/Datadog%2C%20Inc.';
 const LEADERSHIP_ROLES = new Set(['maintainer', 'approver', 'triager']);
 const TOP_N            = 5;
 const ACTIVE_THRESHOLD = 10; // matches js/utils.js activeThreshold('30d')
@@ -289,6 +290,11 @@ function renderEmailHtml(r) {
       <td style="padding:12px 24px 24px;">
         <h2 style="margin:0 0 8px;font-size:14px;color:#0f172a;">Top repositories</h2>
         <table role="presentation" width="100%" style="border-collapse:collapse;">${repoRows}</table>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding:0 24px 20px;">
+        <p style="margin:0;color:#64748b;font-size:13px;">Dig deeper into contributor details, company breakdowns and trends on the <a href="${TRACKER_URL}" style="color:#2563eb;">OTel × Datadog contributions tracker</a>.</p>
       </td>
     </tr>
   </table>

@@ -1,7 +1,7 @@
 import { S } from '../state.js';
 import { el, num, show, hide, activeThreshold, renderStatLinkButton } from '../utils.js';
 import { resolveOrgLogo } from '../companies.js';
-import { roleFor } from '../roles.js';
+import { roleFor, ROLE_STYLE } from '../roles.js';
 import { loadSigsCache, sigDetailsForHandles, usingCache } from '../cache.js';
 import { renderPersonRow, renderActiveDivider } from '../render.js';
 import { contributorsForOrg, renderOrgConcentration } from '../attribution.js';
@@ -12,6 +12,85 @@ import { setHash, pageDetail, timeframeHash } from '../routing.js';
 // for a different org, or reopened for the same one) can tell it's no longer the active one
 // and bail instead of overwriting whatever the newer call already rendered.
 let _openSeq = 0;
+
+// ——— Role-filtered contributor list ———
+// The Maintainers / Approvers stat tiles are buttons: clicking one filters the
+// contributor list below to exactly the people behind that tile's count (highest
+// role org-wide — someone who is a maintainer somewhere never also shows up under
+// Approvers, matching the tile numbers). Filter state is modal-local: it resets on
+// every (re)open and never touches the URL hash, so deep links and Back stay stable.
+let _ctx = null;        // { org, contribs, threshold } for the currently-open modal
+let _roleFilter = null; // null = all contributors; 'maintainer' | 'approver' = filtered
+
+const ROLE_TILE_IDS = { maintainer: 'org-modal-maintainer-tile', approver: 'org-modal-approver-tile' };
+
+function setRoleFilter(role) {
+  _roleFilter = role;
+  renderOrgContribList();
+}
+
+function renderOrgContribList() {
+  const { org, contribs, threshold } = _ctx;
+  const entries = contribs.map((c, i) => ({ c, i }));
+  const shown = _roleFilter
+    ? entries.filter(({ c }) => roleFor(c.githubHandleArray) === _roleFilter)
+    : entries;
+
+  // Rows keep their original rank (i) — a filtered list makes it obvious the people
+  // are spread across the org's contributor ranking, not re-ranked 1..n within the role.
+  const rows = shown.map(({ c, i }) =>
+    renderPersonRow(c, i, {
+      orgModal: true,
+      orgTotal: org.contributions,
+      activeMode: threshold != null,
+      active: threshold != null && c.contributions >= threshold,
+      atLimit: threshold != null && c.contributions === threshold,
+    })
+  );
+  // The list is sorted by contributions descending, so contributors at or above the
+  // threshold are always a contiguous prefix — the active/occasional divider is placed
+  // at the first below-threshold row of the (possibly filtered) list.
+  if (threshold != null) {
+    const splitIndex = shown.findIndex(({ c }) => c.contributions < threshold);
+    if (splitIndex > 0 && splitIndex < shown.length) {
+      rows.splice(splitIndex, 0, renderActiveDivider(threshold));
+    }
+  }
+  el('org-modal-contrib-list').innerHTML = rows.length
+    ? rows.join('')
+    : `<p class="text-xs text-slate-500 dark:text-gray-400 text-center py-4">No ${_roleFilter ?? 'contributor'}s in this period</p>`;
+  el('org-modal-contrib-more').classList.add('hidden');
+
+  // Filter chip next to the "Contributors" heading, colored like the matching role badge
+  const chip = el('org-modal-role-filter');
+  if (_roleFilter) {
+    el('org-modal-role-filter-label').textContent = _roleFilter === 'maintainer' ? 'Maintainers' : 'Approvers';
+    el('org-modal-role-filter-nums').textContent = `${num(shown.length)} / ${num(contribs.length)}`;
+    chip.className = `inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs cursor-pointer transition-colors ${ROLE_STYLE[_roleFilter]}`;
+    chip.classList.remove('hidden');
+    chip.setAttribute('aria-label', `Clear ${_roleFilter} filter and show all contributors`);
+  } else {
+    chip.classList.add('hidden');
+  }
+
+  // Tile pressed states — the active role tile stays outlined to show what's filtered
+  for (const role of Object.keys(ROLE_TILE_IDS)) {
+    el(ROLE_TILE_IDS[role]).setAttribute('aria-pressed', String(_roleFilter === role));
+  }
+}
+
+function setupRoleTiles(contribs) {
+  for (const role of Object.keys(ROLE_TILE_IDS)) {
+    const count = contribs.filter(c => roleFor(c.githubHandleArray) === role).length;
+    const tile = el(ROLE_TILE_IDS[role]);
+    el(tile.id.replace('-tile', '-count')).textContent = num(count) || '0';
+    tile.disabled = count === 0;
+    tile.setAttribute('aria-label', count === 0
+      ? `No ${role}s in this organization`
+      : `Show only ${role}s (${num(count)} of ${num(contribs.length)} contributors)`);
+    tile.onclick = () => { if (!tile.disabled) setRoleFilter(_roleFilter === role ? null : role); };
+  }
+}
 
 export async function openOrgModal(org) {
   const seq = ++_openSeq;
@@ -58,9 +137,8 @@ export async function openOrgModal(org) {
     noteEl.classList.add('hidden');
   }
 
-  // Maintainer / approver counts
-  el('org-modal-maintainer-count').textContent = contribs.filter(c => roleFor(c.githubHandleArray) === 'maintainer').length || '0';
-  el('org-modal-approver-count').textContent   = contribs.filter(c => roleFor(c.githubHandleArray) === 'approver').length || '0';
+  // Maintainer / approver tiles (counts + click-to-filter behaviour)
+  setupRoleTiles(contribs);
 
   // Repo count tile resets here; filled in (as a link into Coverage, or a plain dash) below
   // once contribs are known. The tile's own markup is always fully replaced (spinner / dash
@@ -68,27 +146,12 @@ export async function openOrgModal(org) {
   const repoCountEl = el('org-modal-repo-count');
   repoCountEl.innerHTML = '<span class="spinner" style="width:14px;height:14px;border-width:1.5px"></span>';
 
-  // Render full contributor list (scrollable), with an active/occasional divider.
-  // The list is sorted by contributions descending, so contributors at or above the
-  // threshold are always a contiguous prefix — no need to reorder, just find the split.
-  const rows = contribs.map((c, i) =>
-    renderPersonRow(c, i, {
-      orgModal: true,
-      orgTotal: org.contributions,
-      activeMode: threshold != null,
-      active: threshold != null && c.contributions >= threshold,
-      atLimit: threshold != null && c.contributions === threshold,
-    })
-  );
-  if (threshold != null) {
-    const splitIndex = contribs.findIndex(c => c.contributions < threshold);
-    if (splitIndex > 0 && splitIndex < contribs.length) {
-      rows.splice(splitIndex, 0, renderActiveDivider(threshold));
-    }
-  }
-  el('org-modal-contrib-list').innerHTML = rows.join('');
-
-  el('org-modal-contrib-more').classList.add('hidden');
+  // Render the contributor list (scrollable) through the shared role-filter path —
+  // a fresh open always starts unfiltered, with the active/occasional divider inserted
+  // at the first below-threshold row (list is sorted by contributions descending).
+  _ctx = { org, contribs, threshold };
+  setRoleFilter(null);
+  el('org-modal-role-filter').onclick = () => setRoleFilter(null);
 
   // Consumed once: only set when this open was reached via the coverage modal's people-count
   // link (coverage.js), so a direct Organizations-tab row click never shows a stale back target.

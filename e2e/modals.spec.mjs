@@ -54,6 +54,121 @@ for (const { tab, rowSelector, modalId, closeLabel } of MODALS) {
   });
 }
 
+// The Maintainers / Approvers stat tiles in the org modal are buttons that filter the
+// contributor list to the people behind each tile's count (highest role org-wide —
+// a maintainer anywhere never also shows up under Approvers). Data-driven off the
+// first org row, same as the modal tests above; skips if that org has neither role.
+test.describe('org modal role tiles', () => {
+  const TILES = [
+    { id: 'maintainer', label: 'Maintainers' },
+    { id: 'approver',   label: 'Approvers' },
+  ];
+
+  test.beforeEach(async ({ page }) => {
+    await gotoTab(page, 'organizations');
+    const rows = page.locator('tr.org-row');
+    if (await rows.count() === 0) test.skip(true, 'no org rows for the default preset/platform');
+    await rows.first().click();
+    await expect(page.locator('#org-modal')).toBeVisible();
+  });
+
+  test('clicking a role tile filters the contributor list, and the chip clears it', async ({ page }) => {
+    const counts = {};
+    for (const t of TILES) {
+      counts[t.id] = parseInt((await page.locator(`#org-modal-${t.id}-count`).innerText()).replace(/,/g, ''), 10);
+    }
+    const clickable = TILES.filter(t => counts[t.id] > 0);
+    test.skip(clickable.length === 0, 'first org has no maintainers or approvers');
+
+    const tile = page.locator(`#org-modal-${clickable[0].id}-tile`);
+    await tile.click();
+
+    // Chip appears next to the Contributors heading, labeled with the role and
+    // "shown / total" — shown must match the tile's own count exactly.
+    await expect(page.locator('#org-modal-role-filter')).toBeVisible();
+    await expect(page.locator('#org-modal-role-filter-label')).toHaveText(clickable[0].label);
+    await expect(page.locator('#org-modal-role-filter-nums')).toHaveText(new RegExp(`^${counts[clickable[0].id]} /`));
+    await expect(tile).toHaveAttribute('aria-pressed', 'true');
+
+    // The filtered list holds exactly that many person rows (rank spans distinguish
+    // person rows from the optional active/inactive divider row).
+    await expect(page.locator('#org-modal-contrib-list > div:has(> span.text-right)'))
+      .toHaveCount(counts[clickable[0].id]);
+
+    // Clicking the chip clears the filter and returns to the full list
+    await page.locator('#org-modal-role-filter').click();
+    await expect(page.locator('#org-modal-role-filter')).toBeHidden();
+    await expect(tile).toHaveAttribute('aria-pressed', 'false');
+  });
+
+  test('clicking the active tile again toggles the filter off, and the other tile switches filters', async ({ page }) => {
+    const counts = {};
+    for (const t of TILES) {
+      counts[t.id] = parseInt((await page.locator(`#org-modal-${t.id}-count`).innerText()).replace(/,/g, ''), 10);
+    }
+    const clickable = TILES.filter(t => counts[t.id] > 0);
+    test.skip(clickable.length === 0, 'first org has no maintainers or approvers');
+
+    const first = page.locator(`#org-modal-${clickable[0].id}-tile`);
+    await first.click();
+    await expect(page.locator('#org-modal-role-filter')).toBeVisible();
+
+    // Toggle off by clicking the same tile again
+    await first.click();
+    await expect(page.locator('#org-modal-role-filter')).toBeHidden();
+    await expect(first).toHaveAttribute('aria-pressed', 'false');
+
+    // If the other role is present too, clicking its tile switches the filter directly
+    if (clickable.length > 1) {
+      const second = page.locator(`#org-modal-${clickable[1].id}-tile`);
+      await first.click();
+      await second.click();
+      await expect(page.locator('#org-modal-role-filter-label')).toHaveText(clickable[1].label);
+      await expect(second).toHaveAttribute('aria-pressed', 'true');
+      await expect(first).toHaveAttribute('aria-pressed', 'false');
+    }
+  });
+
+  test('keyboard activation works and reopening the modal resets the filter', async ({ page }) => {
+    const counts = {};
+    for (const t of TILES) {
+      counts[t.id] = parseInt((await page.locator(`#org-modal-${t.id}-count`).innerText()).replace(/,/g, ''), 10);
+    }
+    const clickable = TILES.filter(t => counts[t.id] > 0);
+    test.skip(clickable.length === 0, 'first org has no maintainers or approvers');
+
+    // Enter on the focused tile activates it like a click
+    const tile = page.locator(`#org-modal-${clickable[0].id}-tile`);
+    await tile.focus();
+    await page.keyboard.press('Enter');
+    await expect(page.locator('#org-modal-role-filter')).toBeVisible();
+
+    // Reopening the modal (close → click the same row) starts unfiltered again
+    await page.locator('#org-modal button[aria-label="Close organization details"]').click();
+    await expect(page.locator('#org-modal')).toBeHidden();
+    await page.locator('tr.org-row').first().click();
+    await expect(page.locator('#org-modal')).toBeVisible();
+    await expect(page.locator('#org-modal-role-filter')).toBeHidden();
+    await expect(tile).toHaveAttribute('aria-pressed', 'false');
+  });
+
+  test('tiles with a zero count are disabled and not clickable', async ({ page }) => {
+    const zeroTiles = [];
+    for (const t of TILES) {
+      const count = parseInt((await page.locator(`#org-modal-${t.id}-count`).innerText()).replace(/,/g, ''), 10);
+      if (count === 0) zeroTiles.push(page.locator(`#org-modal-${t.id}-tile`));
+    }
+    test.skip(zeroTiles.length === 0, 'first org has both maintainers and approvers');
+
+    for (const tile of zeroTiles) {
+      await expect(tile).toBeDisabled();
+      await tile.click({ force: true }); // a disabled button ignores clicks, but force it to make sure nothing fires
+      await expect(page.locator('#org-modal-role-filter')).toBeHidden();
+      await expect(tile).toHaveAttribute('aria-pressed', 'false');
+    }
+  });
+});
+
 test.describe('search then open', () => {
   test('filtering contributors and clicking a filtered row opens the right modal', async ({ page }) => {
     await gotoTab(page, 'contributors');

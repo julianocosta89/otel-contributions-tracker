@@ -506,14 +506,18 @@
         </div>
       </div>
       <div class="grid grid-cols-2 gap-2">
-        <div class="bg-slate-100/60 dark:bg-gray-800/50 rounded-lg p-2.5">
+        <button type="button" id="org-modal-maintainer-tile"
+          class="org-role-tile bg-slate-100/60 dark:bg-gray-800/50 rounded-lg p-2.5 w-full text-left"
+          aria-pressed="false" disabled>
           <div class="text-xs text-slate-600 dark:text-gray-400 mb-1">Maintainers</div>
           <div id="org-modal-maintainer-count" class="text-lg font-bold leading-none"></div>
-        </div>
-        <div class="bg-slate-100/60 dark:bg-gray-800/50 rounded-lg p-2.5">
+        </button>
+        <button type="button" id="org-modal-approver-tile"
+          class="org-role-tile bg-slate-100/60 dark:bg-gray-800/50 rounded-lg p-2.5 w-full text-left"
+          aria-pressed="false" disabled>
           <div class="text-xs text-slate-600 dark:text-gray-400 mb-1">Approvers</div>
           <div id="org-modal-approver-count" class="text-lg font-bold leading-none"></div>
-        </div>
+        </button>
       </div>
     </div>
 
@@ -531,7 +535,15 @@
 
     <!-- Contributors list — flows naturally within the single scrolling body -->
     <div class="px-4 pt-4 pb-4">
-      <h3 class="text-sm font-semibold mb-3">Contributors</h3>
+      <div class="flex items-center justify-between gap-2 mb-3">
+        <h3 class="text-sm font-semibold">Contributors</h3>
+        <button type="button" id="org-modal-role-filter" class="hidden"
+          aria-label="Clear role filter and show all contributors">
+          <span id="org-modal-role-filter-label" class="font-medium"></span>
+          <span id="org-modal-role-filter-nums" class="font-mono opacity-70"></span>
+          <span aria-hidden="true" class="ml-0.5">✕</span>
+        </button>
+      </div>
       <div id="org-modal-contrib-list" class="space-y-1 pr-1"></div>
       <p id="org-modal-contrib-more" class="hidden text-xs text-slate-500 dark:text-gray-400 pt-2 text-center"></p>
     </div>

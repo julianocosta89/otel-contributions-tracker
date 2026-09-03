@@ -98,3 +98,14 @@ html.dark #error-toast { background-color: #111827; }
 html.dark .sort-btn:hover { color: #f1f5f9; }
 .sort-btn:focus-visible { outline: 2px solid #3b82f6; outline-offset: 2px; border-radius: 2px; }
 .sort-arrow { font-size: 9px; }
+
+/* ── Org modal role tiles (Maintainers / Approvers) ──────────────── */
+/* Clicking a tile filters the contributor list below to the people holding
+   that role. Tiles are disabled (no cursor/hover) when the org has none. */
+.org-role-tile { cursor: pointer; }
+.org-role-tile:disabled { cursor: default; }
+.org-role-tile:not(:disabled):hover { outline: 1px solid rgba(100, 116, 139, 0.45); outline-offset: -1px; }
+.org-role-tile:focus-visible { outline: 2px solid #3b82f6; outline-offset: -2px; }
+.org-role-tile[aria-pressed="true"] { outline: 2px solid #3b82f6; outline-offset: -2px; }
+#org-modal-approver-tile[aria-pressed="true"]:focus-visible,
+#org-modal-approver-tile[aria-pressed="true"] { outline-color: #8b5cf6; }

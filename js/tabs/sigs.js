@@ -2,6 +2,36 @@ import { SIGS_CACHE, S } from '../state.js';
 import { el, num, show, hide, computeDependency, dependencyColor } from '../utils.js';
 import { loadSigsCache } from '../cache.js';
 import { toggleSort, sortRows, updateSortIndicators } from '../sort.js';
+import { resolveOrgLogo } from '../companies.js';
+import { SVG_BUILDING } from '../render.js';
+
+const escAttr = s => String(s ?? '').replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+// Organizations cell: the top 3 orgs (by contributions) as an overlapping
+// stack of circular logos, with the first on top, followed by "+N" for the
+// remaining orgs. The building placeholder sits under each <img>, so a
+// missing or broken logo falls back to it.
+function orgStack(orgData, total) {
+  const top = [...(orgData ?? [])]
+    .sort((a, b) => (b.contributions ?? 0) - (a.contributions ?? 0))
+    .slice(0, 3);
+  const rest = Math.max(0, total - top.length);
+  const logos = top.map((o, i) => {
+    const logo = resolveOrgLogo(o);
+    const label = o.percentage != null ? `${o.name} · ${o.percentage}%` : o.name;
+    return `<span class="org-stack-logo relative inline-block w-6 h-6 rounded-full overflow-hidden bg-white ring-2 ring-white dark:ring-gray-900 shrink-0${i ? ' -ml-2' : ''}"
+            style="z-index:${3 - i}" title="${escAttr(label)}">
+        <span class="absolute inset-0">${SVG_BUILDING}</span>
+        ${logo ? `<img src="${escAttr(logo)}" alt="${escAttr(o.name)}" class="absolute inset-0 w-full h-full object-contain bg-white" loading="lazy" onerror="this.remove()">` : ''}
+      </span>`;
+  }).join('');
+  return `
+    <div class="flex items-center justify-end gap-2">
+      <span class="sr-only">${num(total)} organizations</span>
+      <div class="flex items-center" aria-hidden="true">${logos}</div>
+      <span class="min-w-[44px] text-left text-sm text-slate-500 dark:text-gray-400 tabular-nums">${rest > 0 ? `+${num(rest)}` : ''}</span>
+    </div>`;
+}
 
 export async function loadSigs() {
   if (SIGS_CACHE !== null) {
@@ -87,7 +117,7 @@ export function renderSigsList() {
         <td class="px-4 py-2.5 text-right">
           <div class="text-sm font-mono">${num(e.contributors)}</div>
         </td>
-        <td class="px-4 py-2.5 text-right text-sm text-slate-500 dark:text-gray-400">${num(e.organizations)}</td>
+        <td class="px-4 py-2.5 text-right">${orgStack(repoData?.organizations?.data, e.organizations)}</td>
       </tr>`;
   }).join('');
 
